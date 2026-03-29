@@ -1,3 +1,8 @@
+<!-- Chosen Palette: [Herdada do código original - Tons de cinza, branco, azul primário e detalhes em escuro] -->
+<!-- Application Structure Plan: [O aplicativo é uma página única (SPA) de cronograma de estudos. A estrutura foi mantida exatamente como a original, apenas recebendo blocos de comentários educativos para explicar o funcionamento interno do HTML, CSS e JavaScript.] -->
+<!-- Visualization & Content Choices: [A interface usa tabelas dinâmicas do Bootstrap, modais para interações secundárias (configurações, nova matéria) e LocalStorage para persistência de dados. O CKEditor é usado para edição de texto rico.] -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. (As imagens originais SVG foram mantidas nas tags img conforme código fonte). -->
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -5,13 +10,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronograma de Estudos - Expandido</title>
+    
+    <!-- Ícone da aba do navegador -->
     <link rel="icon" type="image/svg+xml" href="image/logo-cronograma.svg">
+    
+    <!-- 
+    ======================================================================
+    🛠️ FERRAMENTAS EXTERNAS (Bibliotecas)
+    Aqui "importamos" ferramentas prontas da internet para não ter que criar tudo do zero.
+    - Bootstrap: Dá um visual bonito e pronto para botões e layout.
+    - Google Fonts (Inter): Fonte do texto do site.
+    - Bootstrap Icons: Biblioteca de ícones (ex: lixeirinha, impressora).
+    - CKEditor: É aquele editor de texto parecido com o Word, usado nas observações.
+    ======================================================================
+    -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
 
+    <!-- 
+    ======================================================================
+    🎨 ÁREA DE ESTILOS (CSS)
+    Aqui definimos a "roupagem" do site. Cores, tamanhos, bordas e animações.
+    ======================================================================
+    -->
     <style>
+        /* Estilizando o editor de texto rico (CKEditor) */
         .ck-editor__editable_inline {
             border: 1px solid #0d6efd !important;
             border-radius: 6px !important;
@@ -19,9 +44,9 @@
             min-height: 60px;
             background: white;
         }
-
         .ck-toolbar { border: none !important; }
 
+        /* Configuração de impressão (quando apertar Ctrl+P, a folha deita) */
         @page { size: landscape; margin: 1cm; }
 
         body {
@@ -30,6 +55,7 @@
             padding: 20px 0;
         }
 
+        /* Estilo da tabela principal de estudos */
         .study-table {
             width: 100%;
             background-color: #fff;
@@ -39,6 +65,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
+        /* Cabeçalho da tabela (parte escura lá em cima) */
         .study-table thead th {
             background-color: #0b0c1e !important;
             color: #ffffff !important;
@@ -48,6 +75,7 @@
             font-size: 0.85rem;
         }
 
+        /* Células comuns da tabela */
         .study-table tbody td {
             vertical-align: middle;
             padding: 5px 4px !important;
@@ -59,20 +87,22 @@
 
         .text-start-custom { text-align: left !important; }
 
+        /* Linhas pares da tabela têm uma borda mais grossa embaixo */
         .study-table tbody tr:nth-child(2n) {
             border-bottom: 2px solid #333 !important;
         }
 
+        /* Estilo dos quadradinhos de marcar (Checkboxes falsos/visuais) */
         .check-toggle {
             cursor: pointer;
             font-size: 1.2rem;
             display: inline-block;
             vertical-align: middle;
         }
+        .bi-check-square-fill { color: #0d6efd !important; } /* Quadrado Azul (marcado) */
+        .bi-square { color: #ccc !important; } /* Quadrado Cinza (vazio) */
 
-        .bi-check-square-fill { color: #0d6efd !important; }
-        .bi-square { color: #ccc !important; }
-
+        /* Estilo do texto de observações no modo normal (sem estar editando) */
         .view-obs {
             white-space: pre-wrap;
             word-break: break-word;
@@ -80,6 +110,7 @@
             font-size: 0.8rem;
         }
 
+        /* Caixinhas para digitar texto */
         .edit-input, .edit-textarea {
             border-radius: 6px;
             border: 1px solid #0d6efd;
@@ -88,6 +119,7 @@
             font-size: 13px;
         }
 
+        /* Título grandão da matéria */
         .title-input {
             border: none;
             border-bottom: 2px solid #0b0c1e;
@@ -98,11 +130,16 @@
             outline: none;
         }
 
+        /* * TRUQUE DE MÁGICA: Alternar entre ver e editar
+         * Se a linha não tem a classe "is-editing", mostramos os textos normais.
+         * Se a linha ganha a classe "is-editing", escondemos os textos e mostramos as caixas de digitar.
+         */
         .view-mode { display: block; }
         .edit-mode { display: none; }
         tr.is-editing .view-mode { display: none !important; }
         tr.is-editing .edit-mode { display: block !important; }
 
+        /* Botõezinhos de ação (lápis e lixeira) */
         .btn-action {
             display: inline;
             transition: 0.1s;
@@ -111,6 +148,7 @@
             font-size: 1rem;
         }
 
+        /* Estilo para renomear as colunas lá no topo da tabela */
         .header-edit-input {
             background: rgba(255, 255, 255, 0.1);
             border: 1px dashed rgba(255, 255, 255, 0.5);
@@ -122,19 +160,18 @@
             padding: 2px;
             border-radius: 4px;
         }
-
         .header-edit-input:focus {
             background: rgba(255, 255, 255, 0.2);
             outline: none;
             border-style: solid;
         }
 
+        /* Animação que faz o botão de Salvar piscar em vermelho quando há alterações */
         @keyframes pulse-red {
             0% { background-color: #28a745; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
             50% { background-color: #dc3545; box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
             100% { background-color: #28a745; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
         }
-
         .btn-save-alert {
             animation: pulse-red 1.5s infinite;
             border-color: #dc3545 !important;
@@ -142,8 +179,9 @@
             font-weight: bold;
         }
 
+        /* Configurações para quando for imprimir a página */
         @media print {
-            .no-print { display: none !important; }
+            .no-print { display: none !important; } /* Esconde botões na impressão */
             .header-edit-input { border: none !important; background: transparent !important; color: white !important; }
             .study-table thead th { background-color: #0b0c1e !important; -webkit-print-color-adjust: exact; }
             .study-table tbody tr:nth-child(2n) { border-bottom: 2.5pt solid #000 !important; }
@@ -154,7 +192,14 @@
 <body>
 
     <div class="container-fluid px-4">
+        <!-- 
+        ======================================================================
+        🏗️ BARRA SUPERIOR DE CONTROLES
+        Onde fica a logo, a lista de matérias e os botões (Salvar, Imprimir, etc).
+        ======================================================================
+        -->
         <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
+            <!-- Esquerda: Logo, Menu de matérias e Lixeira -->
             <div class="col-md-4 d-flex align-items-center gap-2">
                 <div class="d-flex align-items-center me-2">
                     <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2" style="height: 40px;">
@@ -162,25 +207,37 @@
                 </div>
                 
                 <div class="flex-grow-1">
+                    <!-- select: é o botão de 'dropdown' que lista as matérias -->
                     <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)"></select>
                 </div>
                 
+                <!-- Botão de excluir matéria inteira -->
                 <button class="btn btn-outline-danger" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
                     <i class="bi bi-trash3-fill"></i>
                 </button>
             </div>
+            
+            <!-- Direita: Botões de ação principais -->
             <div class="col-md-8 text-end pt-3">
                 <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#modalNovaMateria">Nova Matéria</button>
                 <button id="btnSalvarTudo" class="btn btn-success me-1" onclick="saveAllRows()">Salvar (Ctrl+S)</button>
                 <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
                 <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig"><i class="bi bi-gear-fill"></i></button>
                 <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAbout"><i class="bi bi-info-circle-fill"></i></button>
+                
+                <!-- Input invisível usado apenas para o processo de importar arquivo -->
                 <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
             </div>
         </div>
 
+        <!-- 
+        ======================================================================
+        🏗️ ÁREA DO TÍTULO E BOTÃO DE ADICIONAR
+        ======================================================================
+        -->
         <div class="row mb-2 align-items-center">
             <div class="col-md-9">
+                <!-- Campo para trocar o nome da matéria atual -->
                 <input type="text" id="materiaTitulo" class="title-input" placeholder="Nome da Matéria..." onblur="updateMateriaName()">
             </div>
             <div class="col-md-3 text-end no-print">
@@ -190,12 +247,19 @@
             </div>
         </div>
 
+        <!-- 
+        ======================================================================
+        🏗️ A TABELA PRINCIPAL
+        Aqui é onde os dados vão aparecer de verdade.
+        ======================================================================
+        -->
         <div class="table-responsive">
             <table class="table study-table">
                 <thead>
                     <tr>
                         <th style="width: 110px;">Data</th>
                         <th class="text-start-custom">Conteúdo</th>
+                        <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
                         <th style="width: 70px;"><input type="text" id="colName_t" class="header-edit-input" value="Teoria" onchange="setUnsavedChanges(true)"></th>
                         <th style="width: 70px;"><input type="text" id="colName_e1" class="header-edit-input" value="Ex. 1" onchange="setUnsavedChanges(true)"></th>
                         <th style="width: 70px;"><input type="text" id="colName_e2" class="header-edit-input" value="Ex. 2" onchange="setUnsavedChanges(true)"></th>
@@ -207,11 +271,19 @@
                         <th class="no-print" style="width: 80px;">Ações</th>
                     </tr>
                 </thead>
+                <!-- O corpo da tabela (tbody) começa vazio e é preenchido pelo JavaScript! -->
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
     </div>
 
+    <!-- 
+    ======================================================================
+    📦 MODAIS (Janelas que saltam na tela)
+    ======================================================================
+    -->
+
+    <!-- Modal de Configurações (Backup/Exportar/Importar) -->
     <div class="modal fade" id="modalConfig" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
@@ -229,6 +301,7 @@
         </div>
     </div>
 
+    <!-- Modal Confirmar como Importar os dados (Mesclar ou Substituir tudo) -->
     <div class="modal fade" id="modalImport" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -246,6 +319,7 @@
         </div>
     </div>
 
+    <!-- Modal para Criar Nova Matéria -->
     <div class="modal fade" id="modalNovaMateria" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
@@ -256,56 +330,87 @@
         </div>
     </div>
 
+    <!-- Biblioteca JS do Bootstrap para os modais funcionarem -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 
+    ======================================================================
+    🧠 O CÉREBRO DA APLICAÇÃO (JAVASCRIPT)
+    Aqui está a lógica que faz tudo funcionar. Salvar dados, criar linhas, apagar...
+    ======================================================================
+    -->
     <script>
-        let activeEditors = {};
-        let currentMateria = "";
-        let tempImportData = null;
-        const PREFIX = "study_vBorda_";
+        // --- 📂 VARIÁVEIS GLOBAIS ---
+        // São como caixas que guardam informações que o código precisa lembrar o tempo todo.
+        let activeEditors = {}; // Guarda quais editores de texto (CKEditor) estão abertos
+        let currentMateria = ""; // Nome da matéria que você está vendo agora
+        let tempImportData = null; // Guarda temporariamente dados carregados de um arquivo de backup
+        
+        // As "chaves" (nomes) usadas para salvar as coisas no "localStorage" (a memória do navegador)
+        const PREFIX = "study_vBorda_"; 
         const LIST_KEY = "materias_list_vBorda";
         const CONFIG_PREFIX = "config_vBorda_";
 
+        // ==========================================
+        // 🚀 INÍCIO (Ao carregar a página)
+        // ==========================================
+        // window.onload: Executa automaticamente assim que a página termina de abrir.
         window.onload = () => {
-            updateSelect();
-            const last = localStorage.getItem('last_active');
-            if (last) switchMateria(last);
+            updateSelect(); // Preenche a caixinha de selecionar matérias
+            const last = localStorage.getItem('last_active'); // Verifica qual foi a última matéria que você acessou
+            if (last) switchMateria(last); // Se existe, já abre ela direto!
         };
 
+        // ==========================================
+        // ⌨️ ATALHO DO TECLADO
+        // ==========================================
+        // Fica "escutando" as teclas. Se apertar Ctrl + S, ele salva os dados e bloqueia a janela padrão de "Salvar Página" do navegador.
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveAllRows(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { 
+                e.preventDefault(); 
+                saveAllRows(); 
+            }
         });
 
+        // ==========================================
+        // 📅 FORMATAR DATA
+        // ==========================================
+        // O computador entende data como 2023-12-30. Nós lemos 30/12/2023. Essa função faz a conversão.
         function formatDateToBR(dateStr) {
             if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
             const [year, month, day] = dateStr.split('-');
             return `${day}/${month}/${year}`;
         }
 
+        // ==========================================
+        // 🔄 TROCAR DE MATÉRIA
+        // ==========================================
+        // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         function switchMateria(name) {
             if (!name) return;
-            currentMateria = name;
-            document.getElementById('materiaTitulo').value = name;
-            localStorage.setItem('last_active', name);
-            loadColumnNames();
-            loadRows();
-            updateSelect();
+            currentMateria = name; // Atualiza a variável com o nome da matéria nova
+            document.getElementById('materiaTitulo').value = name; // Muda o título grande na tela
+            localStorage.setItem('last_active', name); // Salva na memória que essa foi a última matéria acessada
+            
+            loadColumnNames(); // Puxa os nomes personalizados das colunas
+            loadRows(); // Carrega todas as linhas de estudo
+            updateSelect(); // Atualiza a lista dropdown
         }
 
+        // ==========================================
+        // 📋 CARREGAR NOMES DAS COLUNAS (Teoria, Ex1...)
+        // ==========================================
+        // Lê a memória do navegador para ver se você mudou o nome da coluna "Teoria" para "Vídeo", por exemplo.
         function loadColumnNames() {
             if (!currentMateria) return;
-            
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
             let cfg = {};
             
             try {
-                if (rawConfig) {
-                    cfg = JSON.parse(rawConfig);
-                }
-            } catch (e) {
-                console.error("Erro ao ler configurações:", e);
-            }
+                if (rawConfig) cfg = JSON.parse(rawConfig);
+            } catch (e) { console.error("Erro ao ler configurações:", e); }
 
-            // Se cfg for null ou não tiver as propriedades, usa o padrão (Evita o erro de 'reading t')
+            // Se encontrar o nome modificado, ele aplica. Se não encontrar, ele põe o nome padrão (Ex. "Teoria").
             document.getElementById('colName_t').value = (cfg && cfg.t) ? cfg.t : "Teoria";
             document.getElementById('colName_e1').value = (cfg && cfg.e1) ? cfg.e1 : "Ex. 1";
             document.getElementById('colName_e2').value = (cfg && cfg.e2) ? cfg.e2 : "Ex. 2";
@@ -315,6 +420,10 @@
             document.getElementById('colName_e6').value = (cfg && cfg.e6) ? cfg.e6 : "Rev. 2";
         }
 
+        // ==========================================
+        // 💾 SALVAR NOMES DAS COLUNAS
+        // ==========================================
+        // Pega os textos que você digitou no cabeçalho da tabela e salva no computador.
         function saveColumnNames() {
             if (!currentMateria) return;
             const config = {
@@ -329,28 +438,47 @@
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
         }
 
+        // ==========================================
+        // 📥 CARREGAR AS LINHAS DA TABELA
+        // ==========================================
+        // Pega os dados salvos da matéria atual e reconstrói a tabela na tela, do zero.
         function loadRows() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = "";
+            tbody.innerHTML = ""; // Limpa a tabela atual
+            
+            // Pega as informações no formato JSON (texto estruturado) e converte de volta para uma lista do JavaScript.
             const data = JSON.parse(localStorage.getItem(PREFIX + currentMateria) || "[]");
+            
+            // Para cada item da lista, cria uma linha na tabela com a função createRow()
             data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6, i.obs));
         }
 
+        // ==========================================
+        // 🏗️ CONSTRUIR UMA LINHA NA TABELA (A mágica do HTML visual)
+        // ==========================================
+        // Essa função cria a estrutura de HTML (`<tr>` e `<td>`) para representar uma linha de estudo.
+        // Ela gera duas versões para cada célula: uma pra você ver (view-mode) e uma pra você editar (edit-mode).
         function createRow(d, c, t, e1, e2, e3, e4, e5, e6, o, isEdit = false) {
             const tbody = document.getElementById('tableBody');
             const tr = document.createElement('tr');
+            
+            // Cria um ID único pra essa linha (ex: row_169992039abcde)
             const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
             tr.id = rowId;
-            if (isEdit) tr.classList.add('is-editing');
+            
+            if (isEdit) tr.classList.add('is-editing'); // Se for nova, já entra no modo edição
+            
+            // Arruma o formato da data para colocar no campo tipo 'date' do HTML
             let dateValue = d && d.includes('/') ? d.split('/').reverse().join('-') : d;
 
-            // Helper para gerar as células de tick
+            // Função ajudante para criar os botões de marcar (Checkboxes azuis)
             const tickCell = (val, field) => `
                 <td>
                     <i class="bi ${val ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'${field}')"></i>
                     <input type="checkbox" class="form-check-input edit-mode ${field}" ${val ? 'checked' : ''}>
                 </td>`;
 
+            // Aqui injetamos um monte de código HTML dentro da linha recém-criada
             tr.innerHTML = `
                 <td>
                     <span class="view-mode">${formatDateToBR(dateValue)}</span>
@@ -376,25 +504,40 @@
                     <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
                 </td>`;
             
-            tbody.appendChild(tr);
+            tbody.appendChild(tr); // Adiciona a linha pronta na tela
+            
+            // Se foi pedido para já abrir editando (ex: criar linha nova), ativa o editor.
             if (isEdit) enableEditMode(rowId);
         }
 
+        // ==========================================
+        // ☑️ MARCAR E DESMARCAR CAIXINHAS
+        // ==========================================
+        // O que acontece quando você clica em um quadradinho cinza para ele ficar azul (ou vice-versa)
         function toggleCheck(icon, field) {
-            const tr = icon.closest('tr');
-            const cb = tr.querySelector('.' + field);
-            cb.checked = !cb.checked;
-            saveData();
-            loadRows();
-            setUnsavedChanges(true);
+            const tr = icon.closest('tr'); // Acha a linha em que você clicou
+            const cb = tr.querySelector('.' + field); // Acha o checkbox verdadeiro (escondido) dessa célula
+            cb.checked = !cb.checked; // Inverte o valor (se era true, vira false)
+            saveData(); // Salva a alteração invisivelmente
+            loadRows(); // Recarrega para pintar de azul ou cinza
+            setUnsavedChanges(true); // Deixa o botão de salvar piscando
         }
 
+        // ==========================================
+        // 💾 SALVAR DADOS (O coração do backup)
+        // ==========================================
+        // Lê linha por linha da tabela, junta tudo e guarda na memória local do navegador (localStorage)
         function saveData() {
             if (!currentMateria) return;
+            
+            // "Pega todas as linhas da tabela, e para cada uma, extrai os valores dos campos"
             const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
                 const rowId = tr.id;
+                
+                // Se a linha estiver sendo editada, pega o texto lá do CKEditor, senão pega o texto normal
                 let obsHtml = activeEditors[rowId] ? activeEditors[rowId].getData() : tr.querySelector('.view-obs').innerHTML;
 
+                // Retorna um objeto arrumadinho com todas as informações da linha
                 return {
                     data: tr.querySelector('.val-data').value,
                     conteudo: tr.querySelector('.val-conteudo').value,
@@ -408,123 +551,211 @@
                     obs: obsHtml
                 };
             });
+            
+            // Transforma esse amontoado de dados num texto compacto (JSON) e salva
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
         }
 
+        // ==========================================
+        // ✏️ LIGAR O MODO EDIÇÃO
+        // ==========================================
+        // Quando você clica no lápis azul. Adiciona a classe 'is-editing' e cria o editor de texto rico.
         function enableEditMode(rowId) {
             const tr = document.getElementById(rowId);
-            tr.classList.add('is-editing');
+            tr.classList.add('is-editing'); // O CSS entra em ação escondendo os textos e mostrando caixas de digitar
+            
+            // Transforma a caixa de observação no editor chique (CKEditor)
             ClassicEditor.create(tr.querySelector('.val-obs-editor'), {
                 toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
-            }).then(editor => { activeEditors[rowId] = editor; setUnsavedChanges(true); });
+            }).then(editor => { 
+                activeEditors[rowId] = editor; // Guarda referência desse editor na memória
+                setUnsavedChanges(true); // O botão salvar começa a piscar
+            });
         }
 
+        // ==========================================
+        // 💾✅ SALVAR TUDO E FECHAR EDIÇÃO
+        // ==========================================
+        // O que acontece ao clicar no botão verde "Salvar" lá em cima.
         function saveAllRows() {
-            Object.keys(activeEditors).forEach(id => { if (activeEditors[id]) activeEditors[id].destroy().then(() => delete activeEditors[id]); });
+            // Destrói os editores ricos de texto de todas as linhas abertas
+            Object.keys(activeEditors).forEach(id => { 
+                if (activeEditors[id]) activeEditors[id].destroy().then(() => delete activeEditors[id]); 
+            });
+            
+            // Tira a classe 'is-editing' de todo mundo, voltando as linhas ao visual normal
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
-            saveData();
-            saveColumnNames();
-            loadRows();
-            setUnsavedChanges(false);
+            
+            saveData(); // Grava os conteúdos novos
+            saveColumnNames(); // Grava os novos nomes das colunas (se houver)
+            loadRows(); // Recarrega a tabela lisinha
+            setUnsavedChanges(false); // Para o botão verde de piscar
         }
 
+        // ==========================================
+        // ➕ ADICIONAR LINHA EM BRANCO
+        // ==========================================
         function addEmptyRow() {
             if (!currentMateria) return alert("Dê nome à matéria.");
+            // Cria uma linha vazia com a data de hoje
             createRow(new Date().toISOString().split('T')[0], "", false, false, false, false, false, false, false, "", true);
             setUnsavedChanges(true);
         }
 
-        function deleteRow(i) { if (confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
+        // ==========================================
+        // 🗑️ EXCLUIR UMA LINHA
+        // ==========================================
+        function deleteRow(i) { 
+            if (confirm("Excluir linha?")) { 
+                i.closest('tr').remove(); // Some com a linha da tela
+                saveData(); // Salva imediatamente para confirmar que ela foi apagada do disco
+            } 
+        }
 
+        // ==========================================
+        // 🏷️ RENOMEAR A MATÉRIA
+        // ==========================================
+        // Se você clicar no título grande e mudar o nome (ex: "História" pra "História Geral")
         function updateMateriaName() {
-            const val = document.getElementById('materiaTitulo').value.trim();
-            if (!val || val === currentMateria) return;
+            const val = document.getElementById('materiaTitulo').value.trim(); // Pega o novo nome
+            if (!val || val === currentMateria) return; // Se não digitou nada ou nome for igual, desiste
+            
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            
+            // Se o nome não existe na lista, nós adicionamos e clonamos as configurações de colunas
             if (!list.includes(val)) {
                 list.push(val);
                 localStorage.setItem(LIST_KEY, JSON.stringify(list));
                 const cfg = localStorage.getItem(CONFIG_PREFIX + currentMateria);
                 if (cfg) localStorage.setItem(CONFIG_PREFIX + val, cfg);
             }
+            
             currentMateria = val;
             localStorage.setItem('last_active', val);
-            saveData();
-            updateSelect();
+            saveData(); // Salva a tabela atual no novo nome
+            updateSelect(); // Atualiza a caixinha de listagem
         }
 
+        // ==========================================
+        // ✨ CRIAR NOVA MATÉRIA PELO MODAL
+        // ==========================================
         function confirmarNovaMateria() {
             const nom = document.getElementById('novoNomeMateria').value.trim();
             if (nom) {
                 let l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
                 if (!l.includes(nom)) { l.push(nom); localStorage.setItem(LIST_KEY, JSON.stringify(l)); }
-                switchMateria(nom);
-                bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide();
+                switchMateria(nom); // Troca para a matéria zerada que acabou de criar
+                bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide(); // Fecha a janela
             }
         }
 
+        // ==========================================
+        // 🔽 ATUALIZAR O DROPDOWN (Menu de Seleção)
+        // ==========================================
         function updateSelect() {
             const sel = document.getElementById('materiaSelect');
             const l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
+            
+            // Monta o menu injetando a tag <option> com todas as matérias que existem salvas
             sel.innerHTML = '<option value="">*** Selecionar Matéria ***</option>' + l.map(m => `<option value="${m}">${m}</option>`).join('');
             sel.value = currentMateria;
         }
 
+        // ==========================================
+        // 💣 APAGAR A MATÉRIA INTEIRA
+        // ==========================================
+        // Cuidado! O botão vermelho de Lixo lá no topo aciona isso.
         function deleteFullMateria() {
             if (!currentMateria || !confirm(`Excluir "${currentMateria}"?`)) return;
+            
+            // Tira tudo que tinha o nome dessa matéria da memória
             localStorage.removeItem(PREFIX + currentMateria);
             localStorage.removeItem(CONFIG_PREFIX + currentMateria);
+            
+            // Remove o nome dela da listinha principal
             let l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").filter(m => m !== currentMateria);
             localStorage.setItem(LIST_KEY, JSON.stringify(l));
-            currentMateria = ""; document.getElementById('tableBody').innerHTML = ""; updateSelect();
+            
+            // Limpa a tela
+            currentMateria = ""; 
+            document.getElementById('tableBody').innerHTML = ""; 
+            updateSelect();
         }
 
+        // ==========================================
+        // 🚨 AVISO DE ALTERAÇÕES NÃO SALVAS
+        // ==========================================
+        // Adiciona a classe que faz o botão de salvar piscar vermelho caso houver algo mudado
         function setUnsavedChanges(h) {
             const b = document.getElementById('btnSalvarTudo');
             h ? b.classList.add('btn-save-alert') : b.classList.remove('btn-save-alert');
         }
 
+        // ==========================================
+        // 📦 EXPORTAR BACKUP (Baixar arquivo pro PC)
+        // ==========================================
         function exportBackup() {
             const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
             const allData = {}, configs = {};
+            
+            // Junta todas as matérias e configurações num "pacotão" gigante
             list.forEach(m => {
                 allData[m] = JSON.parse(localStorage.getItem(PREFIX + m));
                 configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m));
             });
+            
+            // Converte tudo num texto mágico (JSON)
             const blob = new Blob([JSON.stringify({ list, allData, configs })], { type: "application/json" });
+            
+            // Cria um "link invisível", clica nele pro arquivo baixar, e depois descarta
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `backup_${new Date().toISOString().slice(0, 10)}.json`; // Nome do arquivo é a data
             a.click();
         }
 
+        // ==========================================
+        // 📂 ABRIR MODAL PARA IMPORTAR BACKUP
+        // ==========================================
+        // Lê o arquivo que o usuário subiu.
         function openImportModal(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    tempImportData = JSON.parse(e.target.result);
-                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
-                    new bootstrap.Modal(document.getElementById('modalImport')).show();
+                    tempImportData = JSON.parse(e.target.result); // Tenta ler o JSON do arquivo
+                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide(); // Fecha config
+                    new bootstrap.Modal(document.getElementById('modalImport')).show(); // Abre perguntas (Mesclar ou Sobrescrever)
                 } catch (err) { alert("Erro no JSON."); }
             };
             reader.readAsText(input.files[0]);
         }
 
+        // ==========================================
+        // 📥 CONFIRMAR A IMPORTAÇÃO
+        // ==========================================
         function confirmImport(mode) {
             if (!tempImportData) return;
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            
             if (mode === 'replace') {
+                // Modo SUBSTITUIR TUDO: apaga o PC antes de injetar os dados novos
                 currentList.forEach(m => { localStorage.removeItem(PREFIX + m); localStorage.removeItem(CONFIG_PREFIX + m); });
                 currentList = tempImportData.list;
             } else {
+                // Modo MESCLAR: Junta as listas sem apagar o que já tem
                 tempImportData.list.forEach(m => { if (!currentList.includes(m)) currentList.push(m); });
             }
+            
+            // Grava todos os dados na memória do navegador
             for (let m in tempImportData.allData) localStorage.setItem(PREFIX + m, JSON.stringify(tempImportData.allData[m]));
             for (let m in tempImportData.configs) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
+            
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-            location.reload();
+            location.reload(); // Reinicia a página para mostrar tudo carregado
         }
     </script>
 
+    <!-- Modal "Sobre" (Aquelas informações extras sobre versão e autor) -->
     <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
@@ -538,24 +769,20 @@
                         <div class="d-flex align-items-center justify-content-center gap-2">
                             <img src="image/logo-cronograma.svg" alt="Logo Cronograma" style="height: 40px;">
                             <label class="small text-muted fw-bold mb-0">cronograma</label>
-                            <span class="badge bg-primary">Versão 1.6.0</span>
+                            <span class="badge bg-primary">Versão 1.6.1</span>
                         </div>
                     </div>
-                                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
                     <p class="small text-secondary">
                         &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
                     </p>
-
                     <hr>
-
                     <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
                     <p class="small text-secondary">
                         Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
                         modificação, desde que mantida a atribuição ao autor original. Uso comercial proibido.
                     </p>
-
                     <hr>
-
                     <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge border text-dark fw-normal">CKEditor 5</span>
@@ -570,5 +797,6 @@
             </div>
         </div>
     </div>
+
 </body>
 </html>
