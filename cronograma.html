@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
+        @page { size: landscape; margin: 1cm; }
         body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; padding: 20px 0; }
         
         .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -62,16 +63,17 @@
                 border-bottom: 2.5pt solid #000 !important;
             }
             
-            .study-table tbody td { padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; }
             .view-obs { font-size: 9pt !important; color: #000 !important; }
+            
         }
+        .study-table tbody td { padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; }
     </style>
 </head>
 <body>
 
 <div class="container-fluid px-4">
     <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
-        <div class="col-md-5 d-flex align-items-end">
+        <div class="col-md-4 d-flex align-items-end">
             <div class="flex-grow-1">
                 <label class="small text-muted fw-bold">MATÉRIAS SALVAS:</label>
                 <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)">
@@ -82,10 +84,18 @@
                 <i class="bi bi-trash3-fill"></i>
             </button>
         </div>
-        <div class="col-md-7 text-end pt-3">
+        <div class="col-md-8 text-end pt-3">
+            <button class="btn btn-outline-info me-1" onclick="exportBackup()" title="Baixar todos os cronogramas">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <button class="btn btn-outline-info me-3" onclick="document.getElementById('importFile').click()" title="Subir arquivo de cronogramas">
+                <i class="bi bi-upload"></i> Importar
+            </button>
+            <input type="file" id="importFile" class="d-none" onchange="importBackup(this)">
+            
             <button class="btn btn-outline-primary me-1" onclick="novaMateria()">Nova Matéria</button>
             <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
-            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
         </div>
     </div>
 
@@ -123,12 +133,44 @@
     const STORAGE_PREFIX = "study_vBorda_";
     const LIST_KEY = "materias_list_vBorda";
 
-    window.onload = () => {
-        updateSelect();
-        const last = localStorage.getItem('last_active_materia');
-        if (last) switchMateria(last);
-    };
+    window.onload = () => { updateSelect(); const last = localStorage.getItem('last_active_materia'); if (last) switchMateria(last); };
 
+    // --- FUNÇÕES DE BACKUP (INDEPENDÊNCIA DE NAVEGADOR) ---
+    
+    function exportBackup() {
+        const allData = {};
+        const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+        list.forEach(m => {
+            allData[m] = JSON.parse(localStorage.getItem(STORAGE_PREFIX + m));
+        });
+        
+        const blob = new Blob([JSON.stringify({list, allData})], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_cronograma_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function importBackup(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                localStorage.setItem(LIST_KEY, JSON.stringify(data.list));
+                for (let m in data.allData) {
+                    localStorage.setItem(STORAGE_PREFIX + m, JSON.stringify(data.allData[m]));
+                }
+                alert("Importação concluída com sucesso!");
+                location.reload();
+            } catch (err) { alert("Erro ao ler arquivo de backup."); }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- RESTANTE DA LÓGICA (MANTIDA) ---
     function updateSelect() {
         const select = document.getElementById('materiaSelect');
         const materias = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
@@ -159,12 +201,11 @@
 
     function deleteFullMateria() {
         if (!currentMateria) return;
-        if (confirm(`Tem certeza que deseja excluir permanentemente toda a matéria "${currentMateria}"?`)) {
+        if (confirm(`Excluir toda a matéria "${currentMateria}"?`)) {
             localStorage.removeItem(STORAGE_PREFIX + currentMateria);
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
             list = list.filter(m => m !== currentMateria);
             localStorage.setItem(LIST_KEY, JSON.stringify(list));
-            localStorage.removeItem('last_active_materia');
             novaMateria();
             updateSelect();
         }
@@ -174,10 +215,7 @@
         const val = document.getElementById('materiaTitulo').value.trim();
         if (!val || val === currentMateria) return;
         let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-        if (!list.includes(val)) {
-            list.push(val);
-            localStorage.setItem(LIST_KEY, JSON.stringify(list));
-        }
+        if (!list.includes(val)) { list.push(val); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
         currentMateria = val;
         localStorage.setItem('last_active_materia', val);
         saveData();
@@ -215,13 +253,12 @@
         document.getElementById('tableBody').appendChild(tr);
     }
 
+    function addEmptyRow() { if (!currentMateria) return alert("Nomeie a matéria."); createRow(new Date().toLocaleDateString('pt-BR'), "", false, false, false, "", true); }
     function editRow(i) { i.closest('tr').classList.add('is-editing'); }
     function saveSingleRow(i) { const tr = i.closest('tr'); updateRowView(tr); tr.classList.remove('is-editing'); saveData(); }
-    
-    function saveAllRows() {
-        document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); });
-        saveData();
-    }
+    function saveAllRows() { document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); }); saveData(); }
+    function toggleCheck(icon, field) { const tr = icon.closest('tr'); const cb = tr.querySelector('.' + field); cb.checked = !cb.checked; icon.className = `bi ${cb.checked?'bi-check-square-fill':'bi-square'} check-toggle view-mode`; saveData(); }
+    function deleteRow(i) { if(confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
 
     function updateRowView(tr) {
         const d = tr.querySelector('.val-data').value;
@@ -253,17 +290,14 @@
 
     function saveData() {
         if (!currentMateria) return;
-        const items = [];
-        document.querySelectorAll('#tableBody tr').forEach(tr => {
-            items.push({
-                data: tr.querySelector('.val-data').value,
-                conteudo: tr.querySelector('.val-conteudo').value,
-                t: tr.querySelector('.val-t').checked,
-                e1: tr.querySelector('.val-e1').checked,
-                e2: tr.querySelector('.val-e2').checked,
-                obs: tr.querySelector('.val-obs').value
-            });
-        });
+        const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => ({
+            data: tr.querySelector('.val-data').value,
+            conteudo: tr.querySelector('.val-conteudo').value,
+            t: tr.querySelector('.val-t').checked,
+            e1: tr.querySelector('.val-e1').checked,
+            e2: tr.querySelector('.val-e2').checked,
+            obs: tr.querySelector('.val-obs').value
+        }));
         localStorage.setItem(STORAGE_PREFIX + currentMateria, JSON.stringify(items));
     }
 
