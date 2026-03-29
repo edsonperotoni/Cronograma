@@ -1,452 +1,372 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronograma de Estudos - Gestão Pro</title>
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-        @page {
-            size: landscape;
-            margin: 1cm;
-        }
+        @page { size: landscape; margin: 1cm; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; padding: 20px 0; }
+        
+        .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .study-table thead th { background-color: #0b0c1e !important; color: #ffffff !important; padding: 12px 15px; text-align: center; border: none; }
+        
+        .study-table tbody td { vertical-align: middle; padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; text-align: center; line-height: 1.3; }
+        .text-start-custom { text-align: left !important; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-            padding: 20px 0;
-        }
+        .study-table tbody tr:nth-child(2n) { border-bottom: 2px solid #333 !important; }
 
-        .study-table {
-            width: 100%;
-            background-color: #fff;
-            border-collapse: collapse;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
+        .check-toggle { cursor: pointer; font-size: 1.3rem; display: inline-block; vertical-align: middle; }
+        .bi-check-square-fill { color: #0d6efd !important; }
+        .bi-square { color: #ccc !important; }
+        
+        .view-obs { white-space: pre-wrap; word-break: break-word; color: #555; font-size: 0.85rem; }
+        .observation-link { color: #0d6efd; text-decoration: none; font-weight: 500; }
 
-        .study-table thead th {
-            background-color: #0b0c1e !important;
-            color: #ffffff !important;
-            padding: 12px 15px;
-            text-align: center;
-            border: none;
-        }
+        .edit-input, .edit-textarea { border-radius: 6px; border: 1px solid #0d6efd; padding: 5px 10px; width: 100%; font-size: 14px; }
+        .edit-textarea { min-height: 60px; }
+        .title-input { border: none; border-bottom: 2px solid #0b0c1e; font-size: 1.6rem; font-weight: 700; background: transparent; width: 100%; outline: none; }
 
-        .study-table tbody td {
-            vertical-align: middle;
-            padding: 5px 8px !important;
-            font-size: 10pt !important;
-            border: 0.5pt solid #ccc;
-            text-align: center;
-            line-height: 1.3;
-        }
+        .view-mode { display: block; }
+        .edit-mode { display: none; }
+        tr.is-editing .view-mode { display: none !important; }
+        tr.is-editing .edit-mode { display: block !important; }
 
-        .text-start-custom {
-            text-align: left !important;
-        }
+        .btn-action { display: inline; transition: 0.1s; cursor: pointer; margin: 0 4px; font-size: 1.1rem;}
 
-        .study-table tbody tr:nth-child(2n) {
-            border-bottom: 2px solid #333 !important;
-        }
-
-        .check-toggle {
-            cursor: pointer;
-            font-size: 1.3rem;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .bi-check-square-fill {
-            color: #0d6efd !important;
-        }
-
-        .bi-square {
-            color: #ccc !important;
-        }
-
-        .view-obs {
-            white-space: pre-wrap;
-            word-break: break-word;
-            color: #555;
-            font-size: 0.85rem;
-        }
-
-        .observation-link {
-            color: #0d6efd;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .edit-input,
-        .edit-textarea {
-            border-radius: 6px;
-            border: 1px solid #0d6efd;
-            padding: 5px 10px;
-            width: 100%;
-            font-size: 14px;
-        }
-
-        .edit-textarea {
-            min-height: 60px;
-        }
-
-        .title-input {
-            border: none;
-            border-bottom: 2px solid #0b0c1e;
-            font-size: 1.6rem;
-            font-weight: 700;
-            background: transparent;
-            width: 100%;
-            outline: none;
-        }
-
-        .view-mode {
-            display: block;
-        }
-
-        .edit-mode {
-            display: none;
-        }
-
-        tr.is-editing .view-mode {
-            display: none !important;
-        }
-
-        tr.is-editing .edit-mode {
-            display: block !important;
-        }
-
-        .btn-action {
-            display: inline;
-            transition: 0.1s;
-            cursor: pointer;
-            margin: 0 4px;
-            font-size: 1.1rem;
-        }
-
-        @media print {
-            @page {
-                size: landscape;
-                margin: 1cm;
-            }
-
-            body {
-                background-color: white !important;
-                padding: 0 !important;
-            }
-
-            .no-print {
-                display: none !important;
-            }
-
-            .view-mode {
-                display: block !important;
-            }
-
-            .edit-mode {
-                display: none !important;
-            }
-
-            .study-table {
-                box-shadow: none !important;
-                border: 1px solid #000 !important;
-                width: 100% !important;
-            }
-
-            .study-table thead th {
-                background-color: #0b0c1e !important;
-                color: white !important;
-                padding: 8px !important;
-                border: 1px solid #000 !important;
-            }
-
-            .study-table tbody tr:nth-child(2n) {
-                border-bottom: 2.5pt solid #000 !important;
-            }
-
-            .view-obs {
-                font-size: 9pt !important;
-                color: #000 !important;
-            }
+        @media print { 
+            @page { size: landscape; margin: 1cm; }
+            body { background-color: white !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .view-mode { display: block !important; }
+            .edit-mode { display: none !important; }
+            .study-table { box-shadow: none !important; border: 1px solid #000 !important; width: 100% !important; }
+            .study-table thead th { background-color: #0b0c1e !important; color: white !important; padding: 8px !important; border: 1px solid #000 !important; }
+            .study-table tbody tr:nth-child(2n) { border-bottom: 2.5pt solid #000 !important; }
+            .view-obs { font-size: 9pt !important; color: #000 !important; }
         }
     </style>
 </head>
-
 <body>
 
-    <div class="container-fluid px-4">
-        <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
-            <div class="col-md-4 d-flex align-items-end">
-                <div class="flex-grow-1">
-                    <label class="small text-muted fw-bold">MATÉRIAS SALVAS:</label>
-                    <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)"></select>
-                </div>
-                <button class="btn btn-outline-danger ms-2" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
-                    <i class="bi bi-trash3-fill"></i>
-                </button>
+<div class="container-fluid px-4">
+    <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="flex-grow-1">
+                <label class="small text-muted fw-bold">MATÉRIAS SALVAS:</label>
+                <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)"></select>
             </div>
-            <div class="col-md-8 text-end pt-3">
-                <button class="btn btn-outline-primary me-1" onclick="novaMateria()">Nova Matéria</button>
-                <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
-                <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i
-                        class="bi bi-printer"></i></button>
-                <button class="btn btn-outline-info me-1" onclick="exportBackup()"><i class="bi bi-download"></i>
-                    Exportar</button>
-                <button class="btn btn-outline-info me-3" onclick="document.getElementById('importFile').click()"><i
-                        class="bi bi-upload"></i> Importar</button>
-                <input type="file" id="importFile" class="d-none" onchange="handleImport(this)">
-            </div>
+            <button class="btn btn-outline-danger ms-2" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
+                <i class="bi bi-trash3-fill"></i>
+            </button>
         </div>
-
-        <div class="row mb-2 align-items-center">
-            <div class="col-md-9">
-                <input type="text" id="materiaTitulo" class="title-input" placeholder="Nome da Matéria..."
-                    onblur="updateMateriaName()">
-            </div>
-            <div class="col-md-3 text-end no-print">
-                <button class="btn btn-dark w-100" onclick="addEmptyRow()">
-                    <i class="bi bi-plus-lg"></i> Adicionar Conteúdo
-                </button>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table study-table">
-                <thead>
-                    <tr>
-                        <th style="width: 150px;">Data</th>
-                        <th class="text-start-custom">Conteúdo</th>
-                        <th style="width: 75px;">Teoria</th>
-                        <th style="width: 75px;">Ex. 1</th>
-                        <th style="width: 75px;">Ex. 2</th>
-                        <th class="text-start-custom">Observações</th>
-                        <th class="no-print" style="width: 100px;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div class="col-md-8 text-end pt-3">          
+            <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#modalNovaMateria">Nova Matéria</button>
+            <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
+            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            <button class="btn btn-outline-info me-1" onclick="exportBackup()"><i class="bi bi-download"></i> Exportar</button>
+            <button class="btn btn-outline-info me-3" onclick="document.getElementById('importFile').click()"><i class="bi bi-upload"></i> Importar</button>
+            <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
         </div>
     </div>
 
-    <script>
-        let currentMateria = "";
-        const PREFIX = "study_vBorda_";
-        const LIST_KEY = "materias_list_vBorda";
+    <div class="row mb-2 align-items-center">
+        <div class="col-md-9">
+            <input type="text" id="materiaTitulo" class="title-input" placeholder="Nome da Matéria..." onblur="updateMateriaName()">
+        </div>
+        <div class="col-md-3 text-end no-print">
+            <button class="btn btn-dark w-100" onclick="addEmptyRow()">
+                <i class="bi bi-plus-lg"></i> Adicionar Conteúdo
+            </button>
+        </div>
+    </div>
 
-        window.onload = () => {
-            updateSelect();
-            const last = localStorage.getItem('last_active');
-            if (last) switchMateria(last);
+    <div class="table-responsive">
+        <table class="table study-table">
+            <thead>
+                <tr>
+                    <th style="width: 150px;">Data</th>
+                    <th class="text-start-custom">Conteúdo</th>
+                    <th style="width: 75px;">Teoria</th>
+                    <th style="width: 75px;">Ex. 1</th>
+                    <th style="width: 75px;">Ex. 2</th>
+                    <th class="text-start-custom">Observações</th>
+                    <th class="no-print" style="width: 100px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalImport" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Como deseja importar?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>O arquivo contém dados de matérias. Escolha o método:</p>
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action" onclick="confirmImport('merge')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 fw-bold text-primary">Mesclar (Recomendado)</h6>
+                        </div>
+                        <small>Adiciona as novas matérias e linhas sem apagar o que você já tem.</small>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="confirmImport('replace')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 fw-bold text-danger">Substituir Tudo</h6>
+                        </div>
+                        <small>Apaga todas as suas matérias atuais e usa apenas as do arquivo.</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovaMateria" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Matéria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="novoNomeMateria" class="form-control" placeholder="Ex: Física">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="confirmarNovaMateria()">Criar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentMateria = "";
+    let tempImportData = null;
+    const PREFIX = "study_vBorda_";
+    const LIST_KEY = "materias_list_vBorda";
+
+    window.onload = () => { 
+        updateSelect(); 
+        const last = localStorage.getItem('last_active'); 
+        if (last) switchMateria(last); 
+    };
+
+    // --- FUNÇÕES AUXILIARES ---
+    function formatDateToBR(dateStr) {
+        if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    // --- IMPORTAÇÃO COM MODAL ---
+    function openImportModal(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                tempImportData = JSON.parse(e.target.result);
+                new bootstrap.Modal(document.getElementById('modalImport')).show();
+            } catch (err) { alert("Erro no arquivo JSON."); }
         };
+        reader.readAsText(file);
+    }
 
-        // --- FUNÇÕES AUXILIARES DE DATA ---
-        function formatDateToBR(dateStr) {
-            if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
-            const [year, month, day] = dateStr.split('-');
-            return `${day}/${month}/${year}`;
+    function confirmImport(mode) {
+        if (!tempImportData) return;
+        let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+
+        if (mode === 'replace') {
+            currentList.forEach(m => localStorage.removeItem(PREFIX + m));
+            currentList = tempImportData.list;
+            for (let m in tempImportData.allData) localStorage.setItem(PREFIX + m, JSON.stringify(tempImportData.allData[m]));
+        } else {
+            tempImportData.list.forEach(m => {
+                if (!currentList.includes(m)) currentList.push(m);
+                const existingRows = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+                localStorage.setItem(PREFIX + m, JSON.stringify([...existingRows, ...(tempImportData.allData[m] || [])]));
+            });
+        }
+        localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
+        location.reload();
+    }
+
+    function exportBackup() {
+        const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+        const allData = {};
+        list.forEach(m => allData[m] = JSON.parse(localStorage.getItem(PREFIX + m)));
+        const blob = new Blob([JSON.stringify({list, allData})], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_cronograma_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    // --- GESTÃO DE MATÉRIAS ---
+    function confirmarNovaMateria() {
+        const input = document.getElementById('novoNomeMateria');
+        const nome = input.value.trim();
+        if(nome) {
+            let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            if(!list.includes(nome)) { list.push(nome); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
+            switchMateria(nome);
+            input.value = "";
+            bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide();
+        }
+    }
+
+    function updateSelect() {
+        const select = document.getElementById('materiaSelect');
+        const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
+        select.innerHTML = '<option value="">-- Selecionar --</option>' + list.map(m => `<option value="${m}">${m}</option>`).join('');
+        select.value = currentMateria;
+    }
+
+    function switchMateria(name) {
+        if (!name) return;
+        currentMateria = name;
+        document.getElementById('materiaTitulo').value = name;
+        localStorage.setItem('last_active', name);
+        loadRows();
+        updateSelect();
+    }
+
+    function loadRows() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = "";
+        const data = JSON.parse(localStorage.getItem(PREFIX + currentMateria) || "[]");
+        data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.obs));
+    }
+
+    // --- LOGICA DA TABELA ---
+    function createRow(d, c, t, e1, e2, o, isEdit = false) {
+        const tbody = document.getElementById('tableBody');
+        const tr = document.createElement('tr');
+        if(isEdit) tr.classList.add('is-editing');
+        
+        let dateValue = d;
+        if(d && d.includes('/')) {
+            const parts = d.split('/');
+            dateValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
 
-        function getTodayISO() {
-            return new Date().toISOString().split('T')[0];
-        }
-
-        // --- IMPORTAÇÃO E BACKUP ---
-        function handleImport(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    const mode = confirm("Deseja MESCLAR as linhas às matérias existentes?") ? 'merge' : 'replace';
-                    let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-                    if (mode === 'replace') {
-                        currentList.forEach(m => localStorage.removeItem(PREFIX + m));
-                        currentList = data.list;
-                        for (let m in data.allData) localStorage.setItem(PREFIX + m, JSON.stringify(data.allData[m]));
-                    } else {
-                        data.list.forEach(m => {
-                            if (!currentList.includes(m)) currentList.push(m);
-                            const existingRows = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
-                            localStorage.setItem(PREFIX + m, JSON.stringify([...existingRows, ...(data.allData[m] || [])]));
-                        });
-                    }
-                    localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-                    alert("Importação concluída!");
-                    location.reload();
-                } catch (err) { alert("Erro no arquivo JSON."); }
-            };
-            reader.readAsText(file);
-        }
-
-        function exportBackup() {
-            const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            const allData = {};
-            list.forEach(m => allData[m] = JSON.parse(localStorage.getItem(PREFIX + m)));
-            const blob = new Blob([JSON.stringify({ list, allData })], { type: "application/json" });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `backup_cronograma_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-        }
-
-        // --- INTERFACE ---
-        function linkify(text) {
-            if (!text) return '-';
-            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-            let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            return escaped.replace(urlPattern, url => `<a href="${url}" target="_blank" class="observation-link">${url}</a>`);
-        }
-
-        function updateSelect() {
-            const select = document.getElementById('materiaSelect');
-            const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
-            select.innerHTML = '<option value="">-- Selecionar --</option>' + list.map(m => `<option value="${m}">${m}</option>`).join('');
-            select.value = currentMateria;
-        }
-
-        function switchMateria(name) {
-            if (!name) return;
-            currentMateria = name;
-            document.getElementById('materiaTitulo').value = name;
-            localStorage.setItem('last_active', name);
-            loadRows();
-            updateSelect();
-        }
-
-        function loadRows() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = "";
-            const data = JSON.parse(localStorage.getItem(PREFIX + currentMateria) || "[]");
-            data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.obs));
-        }
-
-        function createRow(d, c, t, e1, e2, o, isEdit = false) {
-            const tbody = document.getElementById('tableBody');
-            const tr = document.createElement('tr');
-            if (isEdit) tr.classList.add('is-editing');
-
-            // Se a data antiga estiver no formato DD/MM/AAAA, tentamos converter para o input date aceitar (YYYY-MM-DD)
-            let dateValue = d;
-            if (d && d.includes('/')) {
-                const parts = d.split('/');
-                dateValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-
-            tr.innerHTML = `
+        tr.innerHTML = `
             <td>
                 <span class="view-mode">${formatDateToBR(dateValue)}</span>
                 <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
             </td>
             <td class="text-start-custom"><span class="view-mode fw-bold">${c || '-'}</span><input type="text" class="edit-input edit-mode val-conteudo" value="${c}"></td>
-            <td><i class="bi ${t ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-t')"></i><input type="checkbox" class="form-check-input edit-mode val-t" ${t ? 'checked' : ''}></td>
-            <td><i class="bi ${e1 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e1')"></i><input type="checkbox" class="form-check-input edit-mode val-e1" ${e1 ? 'checked' : ''}></td>
-            <td><i class="bi ${e2 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e2')"></i><input type="checkbox" class="form-check-input edit-mode val-e2" ${e2 ? 'checked' : ''}></td>
+            <td><i class="bi ${t?'bi-check-square-fill':'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-t')"></i><input type="checkbox" class="form-check-input edit-mode val-t" ${t?'checked':''}></td>
+            <td><i class="bi ${e1?'bi-check-square-fill':'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e1')"></i><input type="checkbox" class="form-check-input edit-mode val-e1" ${e1?'checked':''}></td>
+            <td><i class="bi ${e2?'bi-check-square-fill':'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e2')"></i><input type="checkbox" class="form-check-input edit-mode val-e2" ${e2?'checked':''}></td>
             <td class="text-start-custom"><div class="view-mode view-obs">${linkify(o)}</div><textarea class="edit-textarea edit-mode val-obs">${o}</textarea></td>
             <td class="no-print">
                 <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="this.closest('tr').classList.add('is-editing')"></i>
                 <i class="bi bi-check-circle-fill text-success edit-mode btn-action" onclick="saveSingleRow(this)"></i>
                 <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
             </td>`;
-            tbody.appendChild(tr);
-        }
+        tbody.appendChild(tr);
+    }
 
-        function saveSingleRow(i) {
-            const tr = i.closest('tr');
-            updateRowView(tr);
-            tr.classList.remove('is-editing');
-            saveData();
-            loadRows(); // Recarrega para aplicar a nova ordem visualmente
-        }
-        function saveAllRows() { document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); }); saveData(); }
-        function deleteRow(i) { if (confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
+    function saveSingleRow(i) { 
+        const tr = i.closest('tr'); 
+        updateRowView(tr); 
+        tr.classList.remove('is-editing'); 
+        saveData(); 
+        loadRows(); // Para aplicar ordenação
+    }
 
-        function addEmptyRow() {
-            if (!currentMateria) return alert("Dê nome à matéria.");
-            createRow(getTodayISO(), "", false, false, false, "", true);
-        }
+    function saveAllRows() { 
+        document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); }); 
+        saveData(); 
+        loadRows(); 
+    }
 
-        function toggleCheck(icon, field) {
-            const tr = icon.closest('tr');
-            const cb = tr.querySelector('.' + field);
-            cb.checked = !cb.checked;
-            updateRowView(tr);
-            saveData();
-            loadRows(); // Mantém a ordem se houver re-renderização
-        }
+    function addEmptyRow() { 
+        if(!currentMateria) return alert("Dê nome à matéria."); 
+        createRow(new Date().toISOString().split('T')[0], "", false, false, false, "", true); 
+    }
 
-        function updateRowView(tr) {
-            const d = tr.querySelector('.val-data').value;
-            const c = tr.querySelector('.val-conteudo').value;
-            const t = tr.querySelector('.val-t').checked;
-            const e1 = tr.querySelector('.val-e1').checked;
-            const e2 = tr.querySelector('.val-e2').checked;
-            const o = tr.querySelector('.val-obs').value;
+    function deleteRow(i) { if(confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
 
-            const views = tr.querySelectorAll('.view-mode');
-            const checks = tr.querySelectorAll('.check-toggle');
+    function toggleCheck(icon, field) { 
+        const tr = icon.closest('tr'); 
+        const cb = tr.querySelector('.' + field); 
+        cb.checked = !cb.checked; 
+        updateRowView(tr); 
+        saveData(); 
+        loadRows();
+    }
 
-            views[0].innerText = formatDateToBR(d);
-            views[1].innerText = c || '-';
-            checks[0].className = `bi ${t ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
-            checks[1].className = `bi ${e1 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
-            checks[2].className = `bi ${e2 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
-            tr.querySelector('.view-obs').innerHTML = linkify(o);
-        }
+    function updateRowView(tr) {
+        const d = tr.querySelector('.val-data').value;
+        const c = tr.querySelector('.val-conteudo').value;
+        const t = tr.querySelector('.val-t').checked;
+        const e1 = tr.querySelector('.val-e1').checked;
+        const e2 = tr.querySelector('.val-e2').checked;
+        const o = tr.querySelector('.val-obs').value;
+        const views = tr.querySelectorAll('.view-mode'), checks = tr.querySelectorAll('.check-toggle');
+        views[0].innerText = formatDateToBR(d);
+        views[1].innerText = c || '-';
+        checks[0].className = `bi ${t?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
+        checks[1].className = `bi ${e1?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
+        checks[2].className = `bi ${e2?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
+        tr.querySelector('.view-obs').innerHTML = linkify(o);
+    }
 
-        function updateMateriaName() {
-            const val = document.getElementById('materiaTitulo').value.trim();
-            if (!val || val === currentMateria) return;
-            let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            if (!list.includes(val)) { list.push(val); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
-            currentMateria = val; localStorage.setItem('last_active', val); saveData(); updateSelect();
-        }
+    function saveData() {
+        if(!currentMateria) return;
+        const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => ({
+            data: tr.querySelector('.val-data').value, 
+            conteudo: tr.querySelector('.val-conteudo').value, 
+            t: tr.querySelector('.val-t').checked, 
+            e1: tr.querySelector('.val-e1').checked, 
+            e2: tr.querySelector('.val-e2').checked, 
+            obs: tr.querySelector('.val-obs').value
+        }));
+        
+        // ORDENAÇÃO POR DATA
+        items.sort((a, b) => {
+            if (!a.data) return 1; if (!b.data) return -1;
+            return new Date(a.data) - new Date(b.data);
+        });
 
-        function deleteFullMateria() {
-            if (!currentMateria || !confirm(`Excluir toda a matéria "${currentMateria}"?`)) return;
-            localStorage.removeItem(PREFIX + currentMateria);
-            let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").filter(m => m !== currentMateria);
-            localStorage.setItem(LIST_KEY, JSON.stringify(list));
-            currentMateria = ""; document.getElementById('tableBody').innerHTML = ""; document.getElementById('materiaTitulo').value = ""; updateSelect();
-        }
+        localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
+    }
 
-        function novaMateria() {
-            const nome = prompt("Nome da nova matéria:");
-            if (nome) {
-                let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-                if (!list.includes(nome)) { list.push(nome); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
-                switchMateria(nome);
-            }
-        }
+    function updateMateriaName() {
+        const val = document.getElementById('materiaTitulo').value.trim();
+        if(!val || val === currentMateria) return;
+        let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+        if(!list.includes(val)) { list.push(val); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
+        currentMateria = val; localStorage.setItem('last_active', val); saveData(); updateSelect();
+    }
 
-        function saveData() {
-            if (!currentMateria) return;
-            const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => ({
-                data: tr.querySelector('.val-data').value,
-                conteudo: tr.querySelector('.val-conteudo').value,
-                t: tr.querySelector('.val-t').checked,
-                e1: tr.querySelector('.val-e1').checked,
-                e2: tr.querySelector('.val-e2').checked,
-                obs: tr.querySelector('.val-obs').value
-            }));
+    function deleteFullMateria() {
+        if(!currentMateria || !confirm(`Excluir toda a matéria "${currentMateria}"?`)) return;
+        localStorage.removeItem(PREFIX + currentMateria);
+        let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").filter(m => m !== currentMateria);
+        localStorage.setItem(LIST_KEY, JSON.stringify(list));
+        currentMateria = ""; document.getElementById('tableBody').innerHTML = ""; document.getElementById('materiaTitulo').value = ""; updateSelect();
+    }
 
-            // Ordenação: Datas vazias ficam por último
-            items.sort((a, b) => {
-                if (!a.data) return 1;
-                if (!b.data) return -1;
-                return new Date(a.data) - new Date(b.data);
-            });
-
-            localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
-        }
-    </script>
+    function linkify(text) {
+        if (!text) return '-';
+        const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped.replace(urlPattern, url => `<a href="${url}" target="_blank" class="observation-link">${url}</a>`);
+    }
+</script>
 </body>
-
 </html>
