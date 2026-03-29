@@ -16,7 +16,7 @@
         .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .study-table thead th { background-color: #0b0c1e !important; color: #ffffff !important; padding: 12px 15px; text-align: center; border: none; }
         
-        .study-table tbody td { vertical-align: middle; padding: 10px 15px; border-bottom: 1px solid #eee; text-align: center; line-height: 1.3; }
+        .study-table tbody td { vertical-align: middle; padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; text-align: center; line-height: 1.3; }
         .text-start-custom { text-align: left !important; }
 
         /* DIVISÓRIA: Borda a cada 2 linhas */
@@ -44,29 +44,16 @@
 
         /* --- REGRAS DE IMPRESSÃO --- */
         @media print { 
-            /* FORÇAR MODO PAISAGEM */
-            @page { 
-                size: landscape; 
-                margin: 1cm; 
-            }
-            
+            @page { size: landscape; margin: 1cm; }
             body { background-color: white !important; padding: 0 !important; }
             .no-print { display: none !important; }
-            
             .view-mode { display: block !important; }
             .edit-mode { display: none !important; }
-            
             .study-table { box-shadow: none !important; border: 1px solid #000 !important; width: 100% !important; }
             .study-table thead th { background-color: #0b0c1e !important; color: white !important; padding: 8px !important; border: 1px solid #000 !important; }
-            
-            .study-table tbody tr:nth-child(2n) {
-                border-bottom: 2.5pt solid #000 !important;
-            }
-            
+            .study-table tbody tr:nth-child(2n) { border-bottom: 2.5pt solid #000 !important; }
             .view-obs { font-size: 9pt !important; color: #000 !important; }
-            
         }
-        .study-table tbody td { padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; }
     </style>
 </head>
 <body>
@@ -84,7 +71,10 @@
                 <i class="bi bi-trash3-fill"></i>
             </button>
         </div>
-        <div class="col-md-8 text-end pt-3">
+        <div class="col-md-8 text-end pt-3">          
+            <button class="btn btn-outline-primary me-1" onclick="novaMateria()">Nova Matéria</button>
+            <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
+            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
             <button class="btn btn-outline-info me-1" onclick="exportBackup()" title="Baixar todos os cronogramas">
                 <i class="bi bi-download"></i> Exportar
             </button>
@@ -92,10 +82,6 @@
                 <i class="bi bi-upload"></i> Importar
             </button>
             <input type="file" id="importFile" class="d-none" onchange="importBackup(this)">
-            
-            <button class="btn btn-outline-primary me-1" onclick="novaMateria()">Nova Matéria</button>
-            <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
-            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
         </div>
     </div>
 
@@ -133,17 +119,18 @@
     const STORAGE_PREFIX = "study_vBorda_";
     const LIST_KEY = "materias_list_vBorda";
 
-    window.onload = () => { updateSelect(); const last = localStorage.getItem('last_active_materia'); if (last) switchMateria(last); };
+    window.onload = () => { 
+        updateSelect(); 
+        const last = localStorage.getItem('last_active_materia'); 
+        if (last) switchMateria(last); 
+    };
 
-    // --- FUNÇÕES DE BACKUP (INDEPENDÊNCIA DE NAVEGADOR) ---
-    
     function exportBackup() {
         const allData = {};
         const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
         list.forEach(m => {
             allData[m] = JSON.parse(localStorage.getItem(STORAGE_PREFIX + m));
         });
-        
         const blob = new Blob([JSON.stringify({list, allData})], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -170,7 +157,6 @@
         reader.readAsText(file);
     }
 
-    // --- RESTANTE DA LÓGICA (MANTIDA) ---
     function updateSelect() {
         const select = document.getElementById('materiaSelect');
         const materias = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
@@ -229,12 +215,8 @@
         return escaped.replace(urlPattern, url => `<a href="${url}" target="_blank" class="observation-link">${url}</a>`);
     }
 
-    function addEmptyRow() {
-        if (!currentMateria) { alert("Dê um nome à matéria primeiro."); return; }
-        createRow(new Date().toLocaleDateString('pt-BR'), "", false, false, false, "", true);
-    }
-
     function createRow(d, c, t, e1, e2, o, isEdit = false) {
+        const tbody = document.getElementById('tableBody');
         const tr = document.createElement('tr');
         if(isEdit) tr.classList.add('is-editing');
         tr.innerHTML = `
@@ -250,15 +232,45 @@
                 <i class="bi bi-trash btn-action text-danger" onclick="deleteRow(this)"></i>
             </td>
         `;
-        document.getElementById('tableBody').appendChild(tr);
+        tbody.appendChild(tr);
     }
 
-    function addEmptyRow() { if (!currentMateria) return alert("Nomeie a matéria."); createRow(new Date().toLocaleDateString('pt-BR'), "", false, false, false, "", true); }
+    function addEmptyRow() { 
+        if (!currentMateria) return alert("Nomeie a matéria primeiro."); 
+        createRow(new Date().toLocaleDateString('pt-BR'), "", false, false, false, "", true); 
+    }
+    
     function editRow(i) { i.closest('tr').classList.add('is-editing'); }
-    function saveSingleRow(i) { const tr = i.closest('tr'); updateRowView(tr); tr.classList.remove('is-editing'); saveData(); }
-    function saveAllRows() { document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); }); saveData(); }
-    function toggleCheck(icon, field) { const tr = icon.closest('tr'); const cb = tr.querySelector('.' + field); cb.checked = !cb.checked; icon.className = `bi ${cb.checked?'bi-check-square-fill':'bi-square'} check-toggle view-mode`; saveData(); }
-    function deleteRow(i) { if(confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
+    
+    function saveSingleRow(i) { 
+        const tr = i.closest('tr'); 
+        updateRowView(tr); 
+        tr.classList.remove('is-editing'); 
+        saveData(); 
+    }
+    
+    function saveAllRows() { 
+        document.querySelectorAll('.is-editing').forEach(tr => { 
+            updateRowView(tr); 
+            tr.classList.remove('is-editing'); 
+        }); 
+        saveData(); 
+    }
+    
+    function toggleCheck(icon, field) { 
+        const tr = icon.closest('tr'); 
+        const cb = tr.querySelector('.' + field); 
+        cb.checked = !cb.checked; 
+        updateRowView(tr); 
+        saveData(); 
+    }
+    
+    function deleteRow(i) { 
+        if(confirm("Excluir linha?")) { 
+            i.closest('tr').remove(); 
+            saveData(); 
+        } 
+    }
 
     function updateRowView(tr) {
         const d = tr.querySelector('.val-data').value;
@@ -269,24 +281,17 @@
         const o = tr.querySelector('.val-obs').value;
 
         const views = tr.querySelectorAll('.view-mode');
-        const checks = tr.querySelectorAll('.check-toggle');
+        const checkIcons = tr.querySelectorAll('.check-toggle');
+        
         views[0].innerText = d;
         views[1].innerText = c || '-';
-        checks[0].className = `bi ${t?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
-        checks[1].className = `bi ${e1?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
-        checks[2].className = `bi ${e2?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
+        
+        checkIcons[0].className = `bi ${t ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
+        checkIcons[1].className = `bi ${e1 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
+        checkIcons[2].className = `bi ${e2 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode`;
+        
         tr.querySelector('.view-obs').innerHTML = linkify(o);
     }
-
-    function toggleCheck(icon, field) {
-        const tr = icon.closest('tr');
-        const cb = tr.querySelector('.' + field);
-        cb.checked = !cb.checked;
-        icon.className = `bi ${cb.checked?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
-        saveData();
-    }
-
-    function deleteRow(i) { if(confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
 
     function saveData() {
         if (!currentMateria) return;
