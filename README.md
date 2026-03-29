@@ -34,3 +34,4 @@ Sistema web leve e funcional para organização de estudos, com suporte a múlti
 Este projeto é de uso pessoal e educacional. A redistribuição do código é permitida desde que os créditos ao autor original sejam mantidos. O uso comercial é proibido sem autorização prévia.
 
 *Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.*
+*Criado com a juda do Google Gemini*
