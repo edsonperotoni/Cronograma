@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronograma de Estudos - Gestão Pro</title>
+    <title>Cronograma de Estudos</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -208,6 +208,15 @@
                 border-bottom: 2.5pt solid #000 !important;
             }
         }
+
+        #modalAbout .badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.8em;
+        }
+
+        #modalAbout hr {
+            opacity: 0.1;
+        }
     </style>
 </head>
 
@@ -234,6 +243,10 @@
                 <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig"
                     title="Configurações e Backup">
                     <i class="bi bi-gear-fill"></i>
+                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAbout"
+                    title="Sobre o Sistema">
+                    <i class="bi bi-info-circle-fill"></i>
                 </button>
 
                 <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
@@ -667,6 +680,50 @@
             location.reload();
         }
     </script>
+
+    <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Sobre</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold mb-0">Cronograma de Estudos</h4>
+                        <span class="badge bg-primary">Versão 1.5.0</span>
+                    </div>
+
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
+                    <p class="small text-secondary">
+                        &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
+                    </p>
+
+                    <hr>
+
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
+                    <p class="small text-secondary">
+                        Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
+                        modificação, desde que mantida a atribuição ao autor original. Uso comercial proibido.
+                    </p>
+
+                    <hr>
+
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge border text-dark fw-normal">CKEditor 5</span>
+                        <span class="badge border text-dark fw-normal">Bootstrap 5</span>
+                        <span class="badge border text-dark fw-normal">JavaScript ES6</span>
+                        <span class="badge border text-dark fw-normal">LocalStorage API</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
