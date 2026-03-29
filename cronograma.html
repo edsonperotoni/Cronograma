@@ -9,32 +9,146 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
 
     <style>
-        @page { size: landscape; margin: 1cm; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; padding: 20px 0; }
-        .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
-        .study-table thead th { background-color: #0b0c1e !important; color: #ffffff !important; padding: 12px 15px; text-align: center; border: none; }
-        .study-table tbody td { vertical-align: middle; padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; text-align: center; line-height: 1.3; }
-        .text-start-custom { text-align: left !important; }
-        .study-table tbody tr:nth-child(2n) { border-bottom: 2px solid #333 !important; }
-        .check-toggle { cursor: pointer; font-size: 1.3rem; display: inline-block; vertical-align: middle; }
-        .bi-check-square-fill { color: #0d6efd !important; }
-        .bi-square { color: #ccc !important; }
-        .view-obs { white-space: pre-wrap; word-break: break-word; color: #555; font-size: 0.85rem; }
-        .observation-link { color: #0d6efd; text-decoration: none; font-weight: 500; }
-        .edit-input, .edit-textarea { border-radius: 6px; border: 1px solid #0d6efd; padding: 5px 10px; width: 100%; font-size: 14px; }
-        .edit-textarea { min-height: 60px; }
-        .title-input { border: none; border-bottom: 2px solid #0b0c1e; font-size: 1.6rem; font-weight: 700; background: transparent; width: 100%; outline: none; }
-        .view-mode { display: block; }
-        .edit-mode { display: none; }
-        tr.is-editing .view-mode { display: none !important; }
-        tr.is-editing .edit-mode { display: block !important; }
-        .btn-action { display: inline; transition: 0.1s; cursor: pointer; margin: 0 4px; font-size: 1.1rem; }
-        
+        /* Estilo para o CKEditor Inline */
+        .ck-editor__editable_inline {
+            border: 1px solid #0d6efd !important;
+            border-radius: 6px !important;
+            padding: 5px 10px !important;
+            min-height: 60px;
+            background: white;
+        }
+
+        /* Esconde a barra de ferramentas quando não está em foco (opcional) */
+        .ck-toolbar {
+            border: none !important;
+        }
+
+        @page {
+            size: landscape;
+            margin: 1cm;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px 0;
+        }
+
+        .study-table {
+            width: 100%;
+            background-color: #fff;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .study-table thead th {
+            background-color: #0b0c1e !important;
+            color: #ffffff !important;
+            padding: 12px 15px;
+            text-align: center;
+            border: none;
+        }
+
+        .study-table tbody td {
+            vertical-align: middle;
+            padding: 5px 8px !important;
+            font-size: 10pt !important;
+            border: 0.5pt solid #ccc;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .text-start-custom {
+            text-align: left !important;
+        }
+
+        .study-table tbody tr:nth-child(2n) {
+            border-bottom: 2px solid #333 !important;
+        }
+
+        .check-toggle {
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .bi-check-square-fill {
+            color: #0d6efd !important;
+        }
+
+        .bi-square {
+            color: #ccc !important;
+        }
+
+        .view-obs {
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        .observation-link {
+            color: #0d6efd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .edit-input,
+        .edit-textarea {
+            border-radius: 6px;
+            border: 1px solid #0d6efd;
+            padding: 5px 10px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .edit-textarea {
+            min-height: 60px;
+        }
+
+        .title-input {
+            border: none;
+            border-bottom: 2px solid #0b0c1e;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: transparent;
+            width: 100%;
+            outline: none;
+        }
+
+        .view-mode {
+            display: block;
+        }
+
+        .edit-mode {
+            display: none;
+        }
+
+        tr.is-editing .view-mode {
+            display: none !important;
+        }
+
+        tr.is-editing .edit-mode {
+            display: block !important;
+        }
+
+        .btn-action {
+            display: inline;
+            transition: 0.1s;
+            cursor: pointer;
+            margin: 0 4px;
+            font-size: 1.1rem;
+        }
+
         .header-edit-input {
-            background: rgba(255,255,255,0.1);
-            border: 1px dashed rgba(255,255,255,0.5);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px dashed rgba(255, 255, 255, 0.5);
             color: #fff;
             text-align: center;
             width: 100%;
@@ -43,20 +157,56 @@
             padding: 2px;
             border-radius: 4px;
         }
-        .header-edit-input:focus { background: rgba(255,255,255,0.2); outline: none; border-style: solid; }
+
+        .header-edit-input:focus {
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            border-style: solid;
+        }
 
         @keyframes pulse-red {
-            0% { background-color: #28a745; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            50% { background-color: #dc3545; box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-            100% { background-color: #28a745; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+            0% {
+                background-color: #28a745;
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            50% {
+                background-color: #dc3545;
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                background-color: #28a745;
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
         }
-        .btn-save-alert { animation: pulse-red 1.5s infinite; border-color: #dc3545 !important; color: white !important; font-weight: bold; }
+
+        .btn-save-alert {
+            animation: pulse-red 1.5s infinite;
+            border-color: #dc3545 !important;
+            color: white !important;
+            font-weight: bold;
+        }
 
         @media print {
-            .no-print { display: none !important; }
-            .header-edit-input { border: none !important; background: transparent !important; color: white !important; }
-            .study-table thead th { background-color: #0b0c1e !important; -webkit-print-color-adjust: exact; }
-            .study-table tbody tr:nth-child(2n) { border-bottom: 2.5pt solid #000 !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            .header-edit-input {
+                border: none !important;
+                background: transparent !important;
+                color: white !important;
+            }
+
+            .study-table thead th {
+                background-color: #0b0c1e !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .study-table tbody tr:nth-child(2n) {
+                border-bottom: 2.5pt solid #000 !important;
+            }
         }
     </style>
 </head>
@@ -75,11 +225,14 @@
                 </button>
             </div>
             <div class="col-md-8 text-end pt-3">
-                <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#modalNovaMateria">Nova Matéria</button>
-                <button id="btnSalvarTudo" class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
-                <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
-                
-                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig" title="Configurações e Backup">
+                <button class="btn btn-outline-primary me-1" data-bs-toggle="modal"
+                    data-bs-target="#modalNovaMateria">Nova Matéria</button>
+                <button id="btnSalvarTudo" class="btn btn-success me-1" onclick="saveAllRows()">Salvar</button>
+                <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i
+                        class="bi bi-printer"></i></button>
+
+                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig"
+                    title="Configurações e Backup">
                     <i class="bi bi-gear-fill"></i>
                 </button>
 
@@ -89,7 +242,8 @@
 
         <div class="row mb-2 align-items-center">
             <div class="col-md-9">
-                <input type="text" id="materiaTitulo" class="title-input" placeholder="Nome da Matéria..." onblur="updateMateriaName()">
+                <input type="text" id="materiaTitulo" class="title-input" placeholder="Nome da Matéria..."
+                    onblur="updateMateriaName()">
             </div>
             <div class="col-md-3 text-end no-print">
                 <button class="btn btn-dark w-100" onclick="addEmptyRow()">
@@ -104,9 +258,12 @@
                     <tr>
                         <th style="width: 150px;">Data</th>
                         <th class="text-start-custom">Conteúdo</th>
-                        <th style="width: 85px;"><input type="text" id="colName_t" class="header-edit-input" value="Teoria" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 85px;"><input type="text" id="colName_e1" class="header-edit-input" value="Ex. 1" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 85px;"><input type="text" id="colName_e2" class="header-edit-input" value="Ex. 2" onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 85px;"><input type="text" id="colName_t" class="header-edit-input"
+                                value="Teoria" onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 85px;"><input type="text" id="colName_e1" class="header-edit-input"
+                                value="Ex. 1" onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 85px;"><input type="text" id="colName_e2" class="header-edit-input"
+                                value="Ex. 2" onchange="setUnsavedChanges(true)"></th>
                         <th class="text-start-custom">Observações</th>
                         <th class="no-print" style="width: 100px;">Ações</th>
                     </tr>
@@ -128,7 +285,8 @@
                         <button class="btn btn-outline-info text-start" onclick="exportBackup()">
                             <i class="bi bi-download me-2"></i> Exportar Dados (.json)
                         </button>
-                        <button class="btn btn-outline-info text-start" onclick="document.getElementById('importFile').click()">
+                        <button class="btn btn-outline-info text-start"
+                            onclick="document.getElementById('importFile').click()">
                             <i class="bi bi-upload me-2"></i> Importar Backup
                         </button>
                     </div>
@@ -149,11 +307,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="list-group">
-                        <button type="button" class="list-group-item list-group-item-action" onclick="confirmImport('merge')">
+                        <button type="button" class="list-group-item list-group-item-action"
+                            onclick="confirmImport('merge')">
                             <h6 class="mb-1 fw-bold text-primary">Mesclar Inteligente</h6>
                             <small>Adiciona apenas linhas novas. Não duplica o que já existe.</small>
                         </button>
-                        <button type="button" class="list-group-item list-group-item-action" onclick="confirmImport('replace')">
+                        <button type="button" class="list-group-item list-group-item-action"
+                            onclick="confirmImport('replace')">
                             <h6 class="mb-1 fw-bold text-danger">Substituir Tudo</h6>
                             <small>Apaga os dados atuais e carrega os do arquivo.</small>
                         </button>
@@ -182,6 +342,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+
+        let activeEditors = {};
         let currentMateria = "";
         let tempImportData = null;
         const PREFIX = "study_vBorda_";
@@ -193,6 +355,14 @@
             const last = localStorage.getItem('last_active');
             if (last) switchMateria(last);
         };
+
+        // Atalho Ctrl + S para Salvar Tudo
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault(); // Impede o navegador de tentar salvar o arquivo HTML
+                saveAllRows();      // Chama a sua função existente
+            }
+        });
 
         function formatDateToBR(dateStr) {
             if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
@@ -211,18 +381,35 @@
         }
 
         function loadColumnNames() {
-            const config = JSON.parse(localStorage.getItem(CONFIG_PREFIX + currentMateria) || '{"t":"Teoria","e1":"Ex. 1","e2":"Ex. 2"}');
-            document.getElementById('colName_t').value = config.t;
-            document.getElementById('colName_e1').value = config.e1;
-            document.getElementById('colName_e2').value = config.e2;
+            if (!currentMateria) return;
+
+            // Tenta buscar a configuração
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            let config = null;
+
+            try {
+                // Se existir, tenta transformar em objeto
+                if (rawConfig) config = JSON.parse(rawConfig);
+            } catch (e) {
+                console.error("Erro ao ler configurações:", e);
+            }
+
+            // Se config for null ou inválido, usamos valores padrão
+            const defaultConfig = { t: "Teoria", e1: "Ex. 1", e2: "Ex. 2" };
+            const finalConfig = config || defaultConfig;
+
+            // Preenche os inputs (usando || para garantir caso o objeto exista mas as chaves não)
+            document.getElementById('colName_t').value = finalConfig.t || "Teoria";
+            document.getElementById('colName_e1').value = finalConfig.e1 || "Ex. 1";
+            document.getElementById('colName_e2').value = finalConfig.e2 || "Ex. 2";
         }
 
         function saveColumnNames() {
             if (!currentMateria) return;
             const config = {
-                t: document.getElementById('colName_t').value,
-                e1: document.getElementById('colName_e1').value,
-                e2: document.getElementById('colName_e2').value
+                t: document.getElementById('colName_t').value || "Teoria",
+                e1: document.getElementById('colName_e1').value || "Ex. 1",
+                e2: document.getElementById('colName_e2').value || "Ex. 2"
             };
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
         }
@@ -237,47 +424,64 @@
         function createRow(d, c, t, e1, e2, o, isEdit = false) {
             const tbody = document.getElementById('tableBody');
             const tr = document.createElement('tr');
+            const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            tr.id = rowId;
+
             if (isEdit) tr.classList.add('is-editing');
             let dateValue = d && d.includes('/') ? d.split('/').reverse().join('-') : d;
 
             tr.innerHTML = `
-                <td>
-                    <span class="view-mode">${formatDateToBR(dateValue)}</span>
-                    <input type="date" class="edit-input edit-mode val-data" value="${dateValue}" onchange="setUnsavedChanges(true)">
-                </td>
-                <td class="text-start-custom">
-                    <span class="view-mode fw-bold">${c || '-'}</span>
-                    <input type="text" class="edit-input edit-mode val-conteudo" value="${c}" oninput="setUnsavedChanges(true)">
-                </td>
-                <td>
-                    <i class="bi ${t ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-t')"></i>
-                    <input type="checkbox" class="form-check-input edit-mode val-t" ${t ? 'checked' : ''} onchange="setUnsavedChanges(true)">
-                </td>
-                <td>
-                    <i class="bi ${e1 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e1')"></i>
-                    <input type="checkbox" class="form-check-input edit-mode val-e1" ${e1 ? 'checked' : ''} onchange="setUnsavedChanges(true)">
-                </td>
-                <td>
-                    <i class="bi ${e2 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e2')"></i>
-                    <input type="checkbox" class="form-check-input edit-mode val-e2" ${e2 ? 'checked' : ''} onchange="setUnsavedChanges(true)">
-                </td>
-                <td class="text-start-custom">
-                    <div class="view-mode view-obs">${linkify(o)}</div>
-                    <textarea class="edit-textarea edit-mode val-obs" oninput="setUnsavedChanges(true)">${o}</textarea>
-                </td>
-                <td class="no-print">
-                    <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="this.closest('tr').classList.add('is-editing')"></i>
-                    <i class="bi bi-check-circle-fill text-success edit-mode btn-action" onclick="saveSingleRow(this)"></i>
-                    <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this); setUnsavedChanges(true);"></i>
-                </td>`;
+        <td>
+            <span class="view-mode">${formatDateToBR(dateValue)}</span>
+            <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
+        </td>
+        <td class="text-start-custom">
+            <span class="view-mode fw-bold">${c || '-'}</span>
+            <input type="text" class="edit-input edit-mode val-conteudo" value="${c}">
+        </td>
+        <td>
+            <i class="bi ${t ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-t')"></i>
+            <input type="checkbox" class="form-check-input edit-mode val-t" ${t ? 'checked' : ''}>
+        </td>
+        <td>
+            <i class="bi ${e1 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e1')"></i>
+            <input type="checkbox" class="form-check-input edit-mode val-e1" ${e1 ? 'checked' : ''}>
+        </td>
+        <td>
+            <i class="bi ${e2 ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e2')"></i>
+            <input type="checkbox" class="form-check-input edit-mode val-e2" ${e2 ? 'checked' : ''}>
+        </td>
+        <td class="text-start-custom">
+            <div class="view-mode view-obs">${o || '-'}</div>
+            <div class="edit-mode">
+                <div class="val-obs-editor">${o}</div>
+            </div>
+        </td>
+        <td class="no-print">
+            <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="enableEditMode('${rowId}')"></i>
+            <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
+        </td>`;
             tbody.appendChild(tr);
+
+            if (isEdit) enableEditMode(rowId);
         }
 
-        function saveSingleRow(i) {
-            i.closest('tr').classList.remove('is-editing');
-            saveData();
-            loadRows();
+        function enableEditMode(rowId) {
+            const tr = document.getElementById(rowId);
+            tr.classList.add('is-editing');
+            const editorElement = tr.querySelector('.val-obs-editor');
+
+            // ClassicEditor é mais resiliente a protocolos file://
+            ClassicEditor.create(editorElement, {
+            toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
+            })
+                .then(editor => {
+                    activeEditors[rowId] = editor;
+                    setUnsavedChanges(true);
+                })
+                .catch(error => console.error(error));
         }
+
 
         function saveAllRows() {
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
@@ -289,18 +493,40 @@
 
         function saveData() {
             if (!currentMateria) return;
-            const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => ({
-                data: tr.querySelector('.val-data').value,
-                conteudo: tr.querySelector('.val-conteudo').value,
-                t: tr.querySelector('.val-t').checked,
-                e1: tr.querySelector('.val-e1').checked,
-                e2: tr.querySelector('.val-e2').checked,
-                obs: tr.querySelector('.val-obs').value
-            }));
-            items.sort((a, b) => (a.data || '9999') > (b.data || '9999') ? 1 : -1);
+            const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
+                const rowId = tr.id;
+                let obsHtml;
+
+                // Se estiver editando, pega do editor, senão pega da view-obs
+                if (activeEditors[rowId]) {
+                    obsHtml = activeEditors[rowId].getData();
+                } else {
+                    obsHtml = tr.querySelector('.view-obs').innerHTML;
+                }
+
+                return {
+                    data: tr.querySelector('.val-data').value,
+                    conteudo: tr.querySelector('.val-conteudo').value,
+                    t: tr.querySelector('.val-t').checked,
+                    e1: tr.querySelector('.val-e1').checked,
+                    e2: tr.querySelector('.val-e2').checked,
+                    obs: obsHtml
+                };
+            });
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
         }
 
+        function saveSingleRow(i) {
+            const tr = i.closest('tr');
+            const rowId = tr.id;
+            if (activeEditors[rowId]) {
+                activeEditors[rowId].destroy();
+                delete activeEditors[rowId];
+            }
+            tr.classList.remove('is-editing');
+            saveData();
+            loadRows();
+        }
         function toggleCheck(icon, field) {
             const tr = icon.closest('tr');
             const cb = tr.querySelector('.' + field);
@@ -322,11 +548,11 @@
             const val = document.getElementById('materiaTitulo').value.trim();
             if (!val || val === currentMateria) return;
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            if (!list.includes(val)) { 
-                list.push(val); 
-                localStorage.setItem(LIST_KEY, JSON.stringify(list)); 
+            if (!list.includes(val)) {
+                list.push(val);
+                localStorage.setItem(LIST_KEY, JSON.stringify(list));
                 const config = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-                if(config) localStorage.setItem(CONFIG_PREFIX + val, config);
+                if (config) localStorage.setItem(CONFIG_PREFIX + val, config);
             }
             currentMateria = val;
             localStorage.setItem('last_active', val);
@@ -366,7 +592,7 @@
             if (!text) return '-';
             const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                       .replace(urlPattern, url => `<a href="${url}" target="_blank" class="observation-link">${url}</a>`);
+                .replace(urlPattern, url => `<a href="${url}" target="_blank" class="observation-link">${url}</a>`);
         }
 
         function setUnsavedChanges(hasChanges) {
@@ -416,7 +642,7 @@
                     if (!currentList.includes(m)) currentList.push(m);
                     const localRows = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
                     const incomingRows = tempImportData.allData[m] || [];
-                    const newRows = incomingRows.filter(inc => 
+                    const newRows = incomingRows.filter(inc =>
                         !localRows.some(loc => loc.data === inc.data && loc.conteudo === inc.conteudo)
                     );
                     localStorage.setItem(PREFIX + m, JSON.stringify([...localRows, ...newRows]));
