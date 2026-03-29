@@ -473,7 +473,7 @@
 
             // ClassicEditor é mais resiliente a protocolos file://
             ClassicEditor.create(editorElement, {
-            toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
+                toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
             })
                 .then(editor => {
                     activeEditors[rowId] = editor;
@@ -484,7 +484,19 @@
 
 
         function saveAllRows() {
+            // Destrói todos os editores ativos e limpa o objeto activeEditors
+            Object.keys(activeEditors).forEach(rowId => {
+                if (activeEditors[rowId]) {
+                    activeEditors[rowId].destroy()
+                        .then(() => delete activeEditors[rowId])
+                        .catch(err => console.error("Erro ao destruir editor:", err));
+                }
+            });
+
+            // Remove a classe de edição visual de todas as linhas
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
+
+            // Executa o salvamento
             saveData();
             saveColumnNames();
             loadRows();
