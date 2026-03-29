@@ -16,11 +16,9 @@
         .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .study-table thead th { background-color: #0b0c1e !important; color: #ffffff !important; padding: 12px 15px; text-align: center; border: none; }
         
-        /* Células compactas conforme solicitado */
         .study-table tbody td { vertical-align: middle; padding: 5px 8px !important; font-size: 10pt !important; border: 0.5pt solid #ccc; text-align: center; line-height: 1.3; }
         .text-start-custom { text-align: left !important; }
 
-        /* DIVISÓRIA: Borda inferior grossa a cada 2 linhas */
         .study-table tbody tr:nth-child(2n) {
             border-bottom: 2px solid #333 !important;
         }
@@ -94,7 +92,7 @@
         <table class="table study-table">
             <thead>
                 <tr>
-                    <th style="width: 120px;">Data</th>
+                    <th style="width: 150px;">Data</th>
                     <th class="text-start-custom">Conteúdo</th>
                     <th style="width: 75px;">Teoria</th>
                     <th style="width: 75px;">Ex. 1</th>
@@ -119,8 +117,18 @@
         if (last) switchMateria(last); 
     };
 
-    // --- FUNÇÕES DE IMPORTAÇÃO E BACKUP ---
+    // --- FUNÇÕES AUXILIARES DE DATA ---
+    function formatDateToBR(dateStr) {
+        if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+    }
 
+    function getTodayISO() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    // --- IMPORTAÇÃO E BACKUP ---
     function handleImport(input) {
         const file = input.files[0];
         if (!file) return;
@@ -128,30 +136,19 @@
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                const mode = confirm("Deseja MESCLAR as linhas às matérias existentes?\n(Clique em CANCELAR para APAGAR TUDO e usar apenas o arquivo)") ? 'merge' : 'replace';
-                
+                const mode = confirm("Deseja MESCLAR as linhas às matérias existentes?") ? 'merge' : 'replace';
                 let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-
                 if (mode === 'replace') {
-                    // Limpa tudo antes
                     currentList.forEach(m => localStorage.removeItem(PREFIX + m));
                     currentList = data.list;
-                    for (let m in data.allData) {
-                        localStorage.setItem(PREFIX + m, JSON.stringify(data.allData[m]));
-                    }
+                    for (let m in data.allData) localStorage.setItem(PREFIX + m, JSON.stringify(data.allData[m]));
                 } else {
-                    // Mescla matérias e linhas
                     data.list.forEach(m => {
                         if (!currentList.includes(m)) currentList.push(m);
-                        
                         const existingRows = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
-                        const newRows = data.allData[m] || [];
-                        // Evita duplicidade simples se desejar, mas aqui apenas concatena
-                        const mergedRows = [...existingRows, ...newRows];
-                        localStorage.setItem(PREFIX + m, JSON.stringify(mergedRows));
+                        localStorage.setItem(PREFIX + m, JSON.stringify([...existingRows, ...(data.allData[m] || [])]));
                     });
                 }
-                
                 localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
                 alert("Importação concluída!");
                 location.reload();
@@ -171,8 +168,7 @@
         a.click();
     }
 
-    // --- LÓGICA DE INTERFACE E TABELA ---
-
+    // --- INTERFACE ---
     function linkify(text) {
         if (!text) return '-';
         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
@@ -207,8 +203,19 @@
         const tbody = document.getElementById('tableBody');
         const tr = document.createElement('tr');
         if(isEdit) tr.classList.add('is-editing');
+        
+        // Se a data antiga estiver no formato DD/MM/AAAA, tentamos converter para o input date aceitar (YYYY-MM-DD)
+        let dateValue = d;
+        if(d && d.includes('/')) {
+            const parts = d.split('/');
+            dateValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
         tr.innerHTML = `
-            <td><span class="view-mode">${d}</span><input type="text" class="edit-input edit-mode val-data" value="${d}"></td>
+            <td>
+                <span class="view-mode">${formatDateToBR(dateValue)}</span>
+                <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
+            </td>
             <td class="text-start-custom"><span class="view-mode fw-bold">${c || '-'}</span><input type="text" class="edit-input edit-mode val-conteudo" value="${c}"></td>
             <td><i class="bi ${t?'bi-check-square-fill':'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-t')"></i><input type="checkbox" class="form-check-input edit-mode val-t" ${t?'checked':''}></td>
             <td><i class="bi ${e1?'bi-check-square-fill':'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'val-e1')"></i><input type="checkbox" class="form-check-input edit-mode val-e1" ${e1?'checked':''}></td>
@@ -225,7 +232,11 @@
     function saveSingleRow(i) { const tr = i.closest('tr'); updateRowView(tr); tr.classList.remove('is-editing'); saveData(); }
     function saveAllRows() { document.querySelectorAll('.is-editing').forEach(tr => { updateRowView(tr); tr.classList.remove('is-editing'); }); saveData(); }
     function deleteRow(i) { if(confirm("Excluir linha?")) { i.closest('tr').remove(); saveData(); } }
-    function addEmptyRow() { if(!currentMateria) return alert("Dê nome à matéria."); createRow(new Date().toLocaleDateString('pt-BR'), "", false, false, false, "", true); }
+    
+    function addEmptyRow() { 
+        if(!currentMateria) return alert("Dê nome à matéria."); 
+        createRow(getTodayISO(), "", false, false, false, "", true); 
+    }
     
     function toggleCheck(icon, field) { 
         const tr = icon.closest('tr'); 
@@ -236,9 +247,18 @@
     }
 
     function updateRowView(tr) {
-        const d = tr.querySelector('.val-data').value, c = tr.querySelector('.val-conteudo').value, t = tr.querySelector('.val-t').checked, e1 = tr.querySelector('.val-e1').checked, e2 = tr.querySelector('.val-e2').checked, o = tr.querySelector('.val-obs').value;
-        const views = tr.querySelectorAll('.view-mode'), checks = tr.querySelectorAll('.check-toggle');
-        views[0].innerText = d; views[1].innerText = c || '-';
+        const d = tr.querySelector('.val-data').value;
+        const c = tr.querySelector('.val-conteudo').value;
+        const t = tr.querySelector('.val-t').checked;
+        const e1 = tr.querySelector('.val-e1').checked;
+        const e2 = tr.querySelector('.val-e2').checked;
+        const o = tr.querySelector('.val-obs').value;
+        
+        const views = tr.querySelectorAll('.view-mode');
+        const checks = tr.querySelectorAll('.check-toggle');
+        
+        views[0].innerText = formatDateToBR(d);
+        views[1].innerText = c || '-';
         checks[0].className = `bi ${t?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
         checks[1].className = `bi ${e1?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
         checks[2].className = `bi ${e2?'bi-check-square-fill':'bi-square'} check-toggle view-mode`;
@@ -259,6 +279,15 @@
         let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").filter(m => m !== currentMateria);
         localStorage.setItem(LIST_KEY, JSON.stringify(list));
         currentMateria = ""; document.getElementById('tableBody').innerHTML = ""; document.getElementById('materiaTitulo').value = ""; updateSelect();
+    }
+
+    function novaMateria() {
+        const nome = prompt("Nome da nova matéria:");
+        if(nome) {
+            let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            if(!list.includes(nome)) { list.push(nome); localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
+            switchMateria(nome);
+        }
     }
 
     function saveData() {
