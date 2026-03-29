@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronograma de Estudos - Expandido</title>
-
+    <link rel="icon" type="image/png" href="image/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -155,12 +155,17 @@
 
     <div class="container-fluid px-4">
         <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-4 d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center me-2">
+                    <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2" style="height: 40px;">
+                    <label class="small text-muted fw-bold">cronograma</label>
+                </div>
+                
                 <div class="flex-grow-1">
-                    <label class="small text-muted fw-bold">MATÉRIAS SALVAS:</label>
                     <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)"></select>
                 </div>
-                <button class="btn btn-outline-danger ms-2" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
+                
+                <button class="btn btn-outline-danger" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
                     <i class="bi bi-trash3-fill"></i>
                 </button>
             </div>
@@ -460,7 +465,7 @@
         function updateSelect() {
             const sel = document.getElementById('materiaSelect');
             const l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
-            sel.innerHTML = '<option value="">-- Selecionar --</option>' + l.map(m => `<option value="${m}">${m}</option>`).join('');
+            sel.innerHTML = '<option value="">*** Selecionar Matéria ***</option>' + l.map(m => `<option value="${m}">${m}</option>`).join('');
             sel.value = currentMateria;
         }
 
@@ -530,11 +535,13 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="text-center mb-4">
-                        <h4 class="fw-bold mb-0">Cronograma de Estudos</h4>
-                        <span class="badge bg-primary">Versão 1.6.0</span>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <img src="image/logo-cronograma.svg" alt="Logo Cronograma" style="height: 40px;">
+                            <label class="small text-muted fw-bold mb-0">cronograma</label>
+                            <span class="badge bg-primary">Versão 1.6.0</span>
+                        </div>
                     </div>
-
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
+                                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
                     <p class="small text-secondary">
                         &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
                     </p>
