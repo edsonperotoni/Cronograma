@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronograma de Estudos - Gestão Completa</title>
+    <title>Cronograma de Estudos - Gestão Completa (Paisagem)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; padding: 20px 0; }
         
-        /* Tabela */
         .study-table { width: 100%; background-color: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .study-table thead th { background-color: #0b0c1e !important; color: #ffffff !important; padding: 12px 15px; text-align: center; border: none; }
         
@@ -24,7 +23,6 @@
             border-bottom: 2px solid #333 !important;
         }
 
-        /* Checkbox Ícones */
         .check-toggle { cursor: pointer; font-size: 1.3rem; display: inline-block; vertical-align: middle; }
         .bi-check-square-fill { color: #0d6efd !important; }
         .bi-square { color: #ccc !important; }
@@ -32,12 +30,10 @@
         .view-obs { white-space: pre-wrap; word-break: break-word; color: #555; font-size: 0.85rem; }
         .observation-link { color: #0d6efd; text-decoration: none; font-weight: 500; }
 
-        /* Inputs */
         .edit-input, .edit-textarea { border-radius: 6px; border: 1px solid #0d6efd; padding: 5px 10px; width: 100%; font-size: 14px; }
         .edit-textarea { min-height: 60px; }
         .title-input { border: none; border-bottom: 2px solid #0b0c1e; font-size: 1.6rem; font-weight: 700; background: transparent; width: 100%; outline: none; }
 
-        /* Alternância de Modos */
         .view-mode { display: block; }
         .edit-mode { display: none; }
         tr.is-editing .view-mode { display: none !important; }
@@ -47,7 +43,12 @@
 
         /* --- REGRAS DE IMPRESSÃO --- */
         @media print { 
-            @page { margin: 1cm; size: auto; }
+            /* FORÇAR MODO PAISAGEM */
+            @page { 
+                size: landscape; 
+                margin: 1cm; 
+            }
+            
             body { background-color: white !important; padding: 0 !important; }
             .no-print { display: none !important; }
             
@@ -84,7 +85,7 @@
         <div class="col-md-7 text-end pt-3">
             <button class="btn btn-outline-primary me-1" onclick="novaMateria()">Nova Matéria</button>
             <button class="btn btn-success me-1" onclick="saveAllRows()">Salvar Tudo</button>
-            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
         </div>
     </div>
 
