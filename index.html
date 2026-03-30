@@ -13,7 +13,7 @@
     
     <!-- Ícone da aba do navegador -->
     <link rel="icon" type="image/svg+xml" href="image/logo-cronograma.svg">
-    
+    <link rel="stylesheet" href="ckeditor5/ckeditor5.css">
     <!-- 
     ======================================================================
     🛠️ FERRAMENTAS EXTERNAS (Bibliotecas)
@@ -27,7 +27,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "./ckeditor5/ckeditor5.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import './ckeditor5/translations/pt-br.js';
+    </script>
 
     <!-- 
     ======================================================================
@@ -120,14 +129,32 @@
         }
 
         /* Título grandão da matéria */
+        /* Título estilizado como o cabeçalho da tabela */
         .title-input {
-            border: none;
-            border-bottom: 2px solid #0b0c1e;
-            font-size: 1.6rem;
+            background-color: #0b0c1e; /* Mesmo tom escuro das colunas */
+            color: #ffffff;
+            border: 1px dashed rgba(255, 255, 255, 0.5); /* Borda tracejada indicando edição */
+            border-radius: 6px;
+            font-size: 1.4rem;
             font-weight: 700;
-            background: transparent;
+            padding: 8px 15px;
             width: 100%;
             outline: none;
+            transition: all 0.2s;
+            text-transform: uppercase; /* Opcional: para combinar com o "NOVA MATÉRIA" */
+        }
+
+        /* Efeito ao clicar para digitar */
+        .title-input:focus {
+            background-color: #16183a;
+            border-style: solid;
+            border-color: #0d6efd; /* Azul de destaque ao editar */
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        }
+
+        /* Placeholder (texto de fundo) mais claro para leitura no escuro */
+        .title-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
         }
 
         /* * TRUQUE DE MÁGICA: Alternar entre ver e editar
@@ -182,6 +209,14 @@
         /* Configurações para quando for imprimir a página */
         @media print {
             .no-print { display: none !important; } /* Esconde botões na impressão */
+            .title-input {
+            background: transparent !important;
+            color: #000000 !important; /* Texto preto puro */
+            border: none !important;     /* Remove a borda tracejada na impressão */
+            padding: 0 !important;
+            font-size: 20pt !important;  /* Tamanho fixo para papel */
+            text-transform: uppercase;
+            }
             .header-edit-input { border: none !important; background: transparent !important; color: white !important; }
             .study-table thead th { background-color: #0b0c1e !important; -webkit-print-color-adjust: exact; }
             .study-table tbody tr:nth-child(2n) { border-bottom: 2.5pt solid #000 !important; }
@@ -567,17 +602,58 @@
         // ✏️ LIGAR O MODO EDIÇÃO
         // ==========================================
         // Quando você clica no lápis azul. Adiciona a classe 'is-editing' e cria o editor de texto rico.
-        function enableEditMode(rowId) {
+
+        async function enableEditMode(rowId) {
             const tr = document.getElementById(rowId);
             tr.classList.add('is-editing'); // O CSS entra em ação escondendo os textos e mostrando caixas de digitar
+
+            try {
             
-            // Transforma a caixa de observação no editor chique (CKEditor)
-            ClassicEditor.create(tr.querySelector('.val-obs-editor'), {
-                toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
-            }).then(editor => { 
-                activeEditors[rowId] = editor; // Guarda referência desse editor na memória
-                setUnsavedChanges(true); // O botão salvar começa a piscar
-            });
+                // Carrega a tradução primeiro. 
+                // Importante: use o caminho relativo exato de onde está o index.html
+                const translationModule = await import('./ckeditor5/translations/pt-br.js');
+
+                // Registramos manualmente a tradução no dicionário do CKEditor
+                // O arquivo exporta um objeto que contém a chave 'pt-br'
+                if (translationModule && translationModule.default) {
+                    const translationData = translationModule.default['pt-br'];
+                    // Injeta no repositório global de traduções
+                    window.CKEDITOR_TRANSLATIONS = window.CKEDITOR_TRANSLATIONS || {};
+                    window.CKEDITOR_TRANSLATIONS['pt-br'] = translationData;
+                }
+
+                // Importa o módulo dinamicamente
+                const { 
+                    ClassicEditor, Essentials, Paragraph, Underline,
+                    Bold, Italic, FontColor, FontBackgroundColor, 
+                    Link, List, Undo // Undo controla o undo/redo
+                } = await import('ckeditor5');
+
+                // Transforma a caixa de observação no editor chique (CKEditor)
+                ClassicEditor.create(tr.querySelector('.val-obs-editor'), {
+                    licenseKey: 'GPL', 
+                    
+                    // APENAS OBJETOS (sem aspas):
+                    plugins: [ 
+                        Essentials, Paragraph, Bold, Italic, Underline,
+                        FontColor, FontBackgroundColor, Link, List, Undo 
+                    ],
+
+                    // APENAS STRINGS (nomes dos botões):
+                    toolbar: [
+                        'undo', 'redo', '|',
+                        'bold', 'italic', 'underline','|',
+                        'fontColor', 'fontBackgroundColor', '|',
+                        'link', 'bulletedList', 'numberedList'
+                    ],
+                    language: 'pt-br'
+                }).then(editor => {
+                    activeEditors[rowId] = editor; // Guarda referência desse editor na memória
+                            setUnsavedChanges(true); // O botão salvar começa a piscar
+                });
+            } catch (error) {
+                console.error("Erro ao carregar os plugins do CKEditor:", error);
+            }
         }
 
         // ==========================================
