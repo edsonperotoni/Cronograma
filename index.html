@@ -298,38 +298,54 @@
         Onde fica a logo, a lista de matérias e os botões (Salvar, Imprimir, etc).
         ======================================================================
         -->
-        <div class="row mb-4 align-items-center no-print bg-white p-3 mt-2 rounded shadow-sm border">
-            <!-- Esquerda: Logo, Menu de matérias e Lixeira -->
-            <div class="col-md-4 d-flex align-items-center gap-2">
-                <div class="d-flex align-items-center me-2">
-                    <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2" style="height: 40px;">
-                    <label class="small text-muted fw-bold">cronograma</label>
-                </div>
 
-                <div class="flex-grow-1">
-                    <!-- select: é o botão de 'dropdown' que lista as matérias -->
-                    <select id="materiaSelect" class="form-select" onchange="switchMateria(this.value)"></select>
-                </div>
+        <div class="d-flex align-items-center mb-2 px-1">
+            <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2"
+                style="height: 42px; min-width: 42px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+            <div class="d-flex flex-column">
+                <label class="h5 mb-0 fw-bold text-dark text-uppercase tracking-wider"
+                    style="letter-spacing: 1.5px;">Cronograma</label>
+                <small class="text-muted d-none d-sm-block" style="font-size: 0.7rem; margin-top: -4px;">Organização de
+                    Matérias</small>
+            </div>
+        </div>
 
-                <!-- Botão de excluir matéria inteira -->
-                <button class="btn btn-outline-danger" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
-                    <i class="bi bi-trash3-fill"></i>
-                </button>
+        <div class="row mb-4 align-items-center no-print bg-white p-3 mx-0 rounded shadow-sm border">
+
+            <div class="col-12 col-md-4 mb-3 mb-md-0">
+                <div class="d-flex gap-2">
+                    <select id="materiaSelect" class="form-select border-primary-subtle"
+                        onchange="switchMateria(this.value)"></select>
+                    <button class="btn btn-outline-danger" onclick="deleteFullMateria()" title="Excluir Matéria Atual">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                </div>
             </div>
 
-            <!-- Direita: Botões de ação principais -->
-            <div class="col-md-8 text-end pt-3">
-                <button class="btn btn-outline-primary me-1" data-bs-toggle="modal"
-                    data-bs-target="#modalNovaMateria">Nova Matéria</button>
-                <button id="btnSalvarTudo" class="btn btn-success me-1" onclick="saveAllRows()">Salvar (Ctrl+S)</button>
-                <button class="btn btn-outline-secondary me-1" onclick="window.print()"><i
-                        class="bi bi-printer"></i></button>
-                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig"><i
-                        class="bi bi-gear-fill"></i></button>
-                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAbout"><i
-                        class="bi bi-info-circle-fill"></i></button>
+            <div class="col-12 col-md-8 d-flex justify-content-start justify-content-md-end flex-wrap gap-2">
+                <button class="btn btn-primary px-3" data-bs-toggle="modal" data-bs-target="#modalNovaMateria">
+                    <i class="bi bi-plus-lg me-1"></i> Nova Matéria
+                </button>
 
-                <!-- Input invisível usado apenas para o processo de importar arquivo -->
+                <button id="btnSalvarTudo" class="btn btn-success" onclick="saveAllRows()"  title="Salvar (Ctrl + S)">
+                    <span class="d-none d-xl-inline text-nowrap">Salvar (Ctrl+S)</span>
+                    <span class="d-inline d-xl-none"><i class="bi bi-save"></i></span>
+                </button>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary" onclick="window.print()" title="Imprimir">
+                        <i class="bi bi-printer"></i>
+                    </button>
+                    <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#modalConfig"
+                        title="Configurações">
+                        <i class="bi bi-gear-fill"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAbout"
+                        title="Sobre">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </button>
+                </div>
+
                 <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
             </div>
         </div>
@@ -939,7 +955,7 @@
                         <div class="d-flex align-items-center justify-content-center gap-2">
                             <img src="image/logo-cronograma.svg" alt="Logo Cronograma" style="height: 40px;">
                             <label class="small text-muted fw-bold mb-0">cronograma</label>
-                            <span class="badge bg-primary">Versão 1.6.1</span>
+                            <span class="badge bg-primary">Versão 1.6.2</span>
                         </div>
                     </div>
                     <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
