@@ -126,7 +126,18 @@
             color: #ccc !important;
         }
 
-        /* Quadrado Cinza (vazio) */
+        /* Largura da coluna Conteúdo */
+        .val-content-col {
+            min-width: 350px;
+        }
+
+        /* Ajuste para dispositivos móveis (telas menores que 768px) */
+        @media (max-width: 767px) {
+            .val-content-col {
+                min-width: auto !important;
+                width: auto !important;
+            }
+        }
 
         /* Estilo do texto de observações no modo normal (sem estar editando) */
         .view-obs {
@@ -401,7 +412,7 @@
                 <thead>
                     <tr>
                         <th style="width: 110px;">Data</th>
-                        <th class="text-start-custom">Conteúdo</th>
+                        <th class="text-start-custom val-content-col">Conteúdo</th>
                         <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
                         <th style="width: 70px;" data-col="t"><input type="text" id="colName_t"
                                 class="header-edit-input" value="Teoria" oninput="syncModalLabels()"
