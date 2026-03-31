@@ -21,10 +21,19 @@ Sistema web leve e funcional para organização de estudos, com suporte a múlti
 
 ## 📦 Como usar
 
-1.  **Hospedagem rápida:** Basta subir o arquivo `index.html` para o GitHub Pages ou Netlify.
-2.  **Uso Local:** Abra o arquivo `index.html` no seu navegador (recomendado usar um servidor local como *Live Server* para pleno funcionamento do editor de texto).
-3.  **Backup:** Lembre-se de exportar seus dados periodicamente através do ícone de engrenagem (Configurações).
+Para garantir o funcionamento pleno de todas as ferramentas (especialmente o editor de texto rico), siga as orientações abaixo:
 
+1.  **Hospedagem (Web):**
+    * Ao publicar no **GitHub Pages**, **Vercel** ou **Netlify**, certifique-se de enviar a pasta completa do projeto. 
+    * **Importante:** O arquivo `index.html` depende da pasta `ckeditor5/` e da pasta `image/` no mesmo diretório para carregar os scripts e ícones.
+
+2.  **Uso Local (Computador):**
+    * Devido às políticas de segurança dos navegadores para módulos JavaScript (`ES Modules`), este projeto **não funciona** sendo aberto diretamente pelo arquivo (duplo clique no `index.html`).
+    * **Recomendação:** Utilize uma extensão de servidor local, como o **Live Server** do VS Code, para rodar o projeto em um endereço `http://localhost`.
+
+3.  **Persistência e Backup:**
+    * **Armazenamento:** Seus dados são salvos automaticamente no seu navegador através da tecnologia `LocalStorage`.
+    * **Segurança:** Limpezas de cache do navegador podem apagar seus dados. Por isso, utilize o ícone de **Ferramentas (engrenagem)** para exportar um backup em arquivo `.json` periodicamente.
 ---
 
 ## ⚖️ Copyright e Licença
@@ -34,4 +43,5 @@ Sistema web leve e funcional para organização de estudos, com suporte a múlti
 Este projeto é de uso pessoal e educacional. A redistribuição do código é permitida desde que os créditos ao autor original sejam mantidos. O uso comercial é proibido sem autorização prévia.
 
 *Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.*
-*Criado com a juda do Google Gemini*
+
+**Criado com a ajuda do Google Gemini*
