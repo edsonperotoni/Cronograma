@@ -778,6 +778,7 @@
             // Cria um ID único pra essa linha (ex: row_169992039abcde)
             const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
             tr.id = rowId;
+            if (isEdit) tr.classList.add('is-editing');
 
             if (isEdit) tr.classList.add('is-editing'); // Se for nova, já entra no modo edição
 
@@ -817,8 +818,17 @@
                     <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
                 </td>`;
 
-            tbody.appendChild(tr); // Adiciona a linha pronta na tela
+            tbody.appendChild(tr);// Adiciona a linha pronta na tela
 
+            //Aplica a visibilidade imediatamente após criar a linha
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            if (rawConfig) {
+                const cfg = JSON.parse(rawConfig);
+                if (cfg && cfg.hiddenCols) {
+                    applyVisibilityStyles(cfg.hiddenCols);
+                }
+            }
+            
             // Se foi pedido para já abrir editando (ex: criar linha nova), ativa o editor.
             if (isEdit) enableEditMode(rowId);
         }
