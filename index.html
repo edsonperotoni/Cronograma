@@ -252,6 +252,23 @@
             font-weight: bold;
         }
 
+        .col-hidden {
+            display: none !important;
+        }
+
+        /* Estilo para riscar o label quando o checkbox de ocultar estiver marcado */
+        .check-hide-col:checked+.form-check-label {
+            text-decoration: line-through;
+            color: #dc3545;
+            /* Vermelho para dar ênfase de "removido" */
+            opacity: 0.7;
+        }
+
+        /* Transição suave para o efeito */
+        .form-check-label {
+            transition: all 0.2s ease;
+        }
+
         /* Configurações para quando for imprimir a página */
         @media print {
             .no-print {
@@ -284,6 +301,10 @@
 
             .study-table tbody tr:nth-child(2n) {
                 border-bottom: 2.5pt solid #000 !important;
+            }
+
+            .col-hidden {
+                display: none !important;
             }
         }
     </style>
@@ -327,7 +348,7 @@
                     <i class="bi bi-plus-lg me-1"></i> Nova Matéria
                 </button>
 
-                <button id="btnSalvarTudo" class="btn btn-success" onclick="saveAllRows()"  title="Salvar (Ctrl + S)">
+                <button id="btnSalvarTudo" class="btn btn-success" onclick="saveAllRows()" title="Salvar (Ctrl + S)">
                     <span class="d-none d-xl-inline text-nowrap">Salvar (Ctrl+S)</span>
                     <span class="d-inline d-xl-none"><i class="bi bi-save"></i></span>
                 </button>
@@ -381,20 +402,27 @@
                         <th style="width: 110px;">Data</th>
                         <th class="text-start-custom">Conteúdo</th>
                         <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
-                        <th style="width: 70px;"><input type="text" id="colName_t" class="header-edit-input"
-                                value="Teoria" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e1" class="header-edit-input"
-                                value="Ex. 1" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e2" class="header-edit-input"
-                                value="Ex. 2" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e3" class="header-edit-input"
-                                value="Ex. 3" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e4" class="header-edit-input"
-                                value="Ex. 4" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e5" class="header-edit-input"
-                                value="Rev. 1" onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;"><input type="text" id="colName_e6" class="header-edit-input"
-                                value="Rev. 2" onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="t"><input type="text" id="colName_t"
+                                class="header-edit-input" value="Teoria" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e1"><input type="text" id="colName_e1"
+                                class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e2"><input type="text" id="colName_e2"
+                                class="header-edit-input" value="Ex. 2" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e3"><input type="text" id="colName_e3"
+                                class="header-edit-input" value="Ex. 3" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e4"><input type="text" id="colName_e4"
+                                class="header-edit-input" value="Ex. 4" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e5"><input type="text" id="colName_e5"
+                                class="header-edit-input" value="Rev. 1" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="e6"><input type="text" id="colName_e6"
+                                class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
+                                onchange="setUnsavedChanges(true)"></th>
                         <th class="text-start-custom">Observações</th>
                         <th class="no-print" style="width: 80px;">Ações</th>
                     </tr>
@@ -413,17 +441,49 @@
 
     <!-- Modal de Configurações (Backup/Exportar/Importar) -->
     <div class="modal fade" id="modalConfig" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 pb-0">
-                    <h6 class="modal-title fw-bold text-uppercase small text-muted">Backup</h6>
+                    <h6 class="modal-title fw-bold text-uppercase small text-muted">Configurações de Exibição</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <p class="small text-muted mb-2">Marque para <b>OCULTAR</b> as colunas de checkbox:</p>
+                    <div class="row mb-4 px-2">
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1" value="e1">
+                            <label class="form-check-label small" for="hide_e1">Coluna 2 (Ex.1)</label>
+                        </div>
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2" value="e2">
+                            <label class="form-check-label small" for="hide_e2">Coluna 3 (Ex.2)</label>
+                        </div>
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3" value="e3">
+                            <label class="form-check-label small" for="hide_e3">Coluna 4 (Ex.3)</label>
+                        </div>
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4" value="e4">
+                            <label class="form-check-label small" for="hide_e4">Coluna 5 (Ex.4)</label>
+                        </div>
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5" value="e5">
+                            <label class="form-check-label small" for="hide_e5">Coluna 6 (Rev.1)</label>
+                        </div>
+                        <div class="col-6 form-check mb-1">
+                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6" value="e6">
+                            <label class="form-check-label small" for="hide_e6">Coluna 7 (Rev.2)</label>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm w-100 mb-3" onclick="applyVisibility()">Aplicar
+                        Alterações</button>
+
+                    <hr>
+                    <h6 class="fw-bold text-uppercase small text-muted">Dados e Backup</h6>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-info text-start" onclick="exportBackup()"><i
+                        <button class="btn btn-outline-info text-start btn-sm" onclick="exportBackup()"><i
                                 class="bi bi-download me-2"></i> Exportar (.json)</button>
-                        <button class="btn btn-outline-info text-start"
+                        <button class="btn btn-outline-info text-start btn-sm"
                             onclick="document.getElementById('importFile').click()"><i class="bi bi-upload me-2"></i>
                             Importar</button>
                     </div>
@@ -548,22 +608,128 @@
                 if (rawConfig) cfg = JSON.parse(rawConfig);
             } catch (e) { console.error("Erro ao ler configurações:", e); }
 
-            // Se encontrar o nome modificado, ele aplica. Se não encontrar, ele põe o nome padrão (Ex. "Teoria").
-            document.getElementById('colName_t').value = (cfg && cfg.t) ? cfg.t : "Teoria";
-            document.getElementById('colName_e1').value = (cfg && cfg.e1) ? cfg.e1 : "Ex. 1";
-            document.getElementById('colName_e2').value = (cfg && cfg.e2) ? cfg.e2 : "Ex. 2";
-            document.getElementById('colName_e3').value = (cfg && cfg.e3) ? cfg.e3 : "Ex. 3";
-            document.getElementById('colName_e4').value = (cfg && cfg.e4) ? cfg.e4 : "Ex. 4";
-            document.getElementById('colName_e5').value = (cfg && cfg.e5) ? cfg.e5 : "Rev. 1";
-            document.getElementById('colName_e6').value = (cfg && cfg.e6) ? cfg.e6 : "Rev. 2";
+            cfg = cfg || {};
+
+            // 1. Recupera os nomes (ou usa o padrão)
+            const names = {
+                t: cfg.t || "Teoria",
+                e1: cfg.e1 || "Ex. 1",
+                e2: cfg.e2 || "Ex. 2",
+                e3: cfg.e3 || "Ex. 3",
+                e4: cfg.e4 || "Ex. 4",
+                e5: cfg.e5 || "Rev. 1",
+                e6: cfg.e6 || "Rev. 2"
+            };
+
+            // 2. Atualiza os inputs do Header da Tabela
+            document.getElementById('colName_t').value = names.t;
+            document.getElementById('colName_e1').value = names.e1;
+            document.getElementById('colName_e2').value = names.e2;
+            document.getElementById('colName_e3').value = names.e3;
+            document.getElementById('colName_e4').value = names.e4;
+            document.getElementById('colName_e5').value = names.e5;
+            document.getElementById('colName_e6').value = names.e6;
+
+            syncModalLabels();
+
+            //Atualiza os LABELS do Modal de Ocultação
+            // Isso faz com que o modal mostre o nome que você escolheu para a matéria
+            if (document.querySelector('label[for="hide_e1"]')) {
+                // Nota: 't' (Teoria) não está no seu modal de ocultar por padrão, 
+                // mas e1 até e6 sim.
+                document.querySelector('label[for="hide_e1"]').innerText = names.e1;
+                document.querySelector('label[for="hide_e2"]').innerText = names.e2;
+                document.querySelector('label[for="hide_e3"]').innerText = names.e3;
+                document.querySelector('label[for="hide_e4"]').innerText = names.e4;
+                document.querySelector('label[for="hide_e5"]').innerText = names.e5;
+                document.querySelector('label[for="hide_e6"]').innerText = names.e6;
+            }
+
+            // 4. Sincroniza os checkboxes de visibilidade
+            const hiddenCols = cfg.hiddenCols || [];
+            document.querySelectorAll('.check-hide-col').forEach(cb => {
+                cb.checked = hiddenCols.includes(cb.value);
+            });
+
+            applyVisibilityStyles(hiddenCols);
+        }
+
+        function syncModalLabels() {
+            // Mapeia o ID do input no header para o ID do label no modal
+            const mapping = {
+                'colName_e1': 'hide_e1',
+                'colName_e2': 'hide_e2',
+                'colName_e3': 'hide_e3',
+                'colName_e4': 'hide_e4',
+                'colName_e5': 'hide_e5',
+                'colName_e6': 'hide_e6'
+            };
+
+            Object.keys(mapping).forEach(inputId => {
+                const inputVal = document.getElementById(inputId).value;
+                const labelFor = mapping[inputId];
+                const labelElement = document.querySelector(`label[for="${labelFor}"]`);
+
+                if (labelElement) {
+                    labelElement.innerText = inputVal || "Coluna"; // Fallback caso esteja vazio
+                }
+            });
+        }
+
+        // Função para aplicar o CSS de esconder
+        function applyVisibilityStyles(hiddenCols) {
+            // Mapeamento: Chave da configuração => Posição da coluna na tabela (1-based)
+            const colMapping = {
+                't': 3,  // Teoria
+                'e1': 4, // Ex. 1
+                'e2': 5, // Ex. 2
+                'e3': 6, // Ex. 3
+                'e4': 7, // Ex. 4
+                'e5': 8, // Rev. 1
+                'e6': 9  // Rev. 2
+            };
+
+            Object.keys(colMapping).forEach(key => {
+                const colIndex = colMapping[key];
+                const shouldHide = hiddenCols.includes(key);
+
+                // Esconde o Header (th)
+                const th = document.querySelector(`.study-table thead th:nth-child(${colIndex})`);
+                if (th) {
+                    th.style.display = shouldHide ? 'none' : '';
+                    th.classList.toggle('col-hidden', shouldHide);
+                }
+
+                // Esconde todas as células (td) daquela coluna no corpo da tabela
+                const cells = document.querySelectorAll(`#tableBody tr td:nth-child(${colIndex})`);
+                cells.forEach(td => {
+                    td.style.display = shouldHide ? 'none' : '';
+                    td.classList.toggle('col-hidden', shouldHide);
+                });
+            });
+        }
+
+        // Acionado pelo botão "Aplicar" do modal
+        function applyVisibility() {
+            const hidden = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
+            saveColumnNames(hidden); // Salva com a lista de ocultos
+            applyVisibilityStyles(hidden);
+            bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
         }
 
         // ==========================================
         // 💾 SALVAR NOMES DAS COLUNAS
         // ==========================================
         // Pega os textos que você digitou no cabeçalho da tabela e salva no computador.
-        function saveColumnNames() {
+        function saveColumnNames(hiddenCols = null) {
             if (!currentMateria) return;
+
+            // Se não passar os ocultos (chamada via saveAll), tenta pegar do modal ou do que já está salvo
+            if (hiddenCols === null) {
+                const raw = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+                hiddenCols = raw ? JSON.parse(raw).hiddenCols : [];
+            }
+
             const config = {
                 t: document.getElementById('colName_t').value,
                 e1: document.getElementById('colName_e1').value,
@@ -571,7 +737,8 @@
                 e3: document.getElementById('colName_e3').value,
                 e4: document.getElementById('colName_e4').value,
                 e5: document.getElementById('colName_e5').value,
-                e6: document.getElementById('colName_e6').value
+                e6: document.getElementById('colName_e6').value,
+                hiddenCols: hiddenCols // ✨ NOVO
             };
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
         }
@@ -589,6 +756,13 @@
 
             // Para cada item da lista, cria uma linha na tabela com a função createRow()
             data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6, i.obs));
+
+            // Re-checa a visibilidade após as linhas serem criadas fisicamente no HTML
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            if (rawConfig) {
+                const cfg = JSON.parse(rawConfig);
+                if (cfg && cfg.hiddenCols) applyVisibilityStyles(cfg.hiddenCols);
+            }
         }
 
         // ==========================================
@@ -952,10 +1126,24 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="text-center mb-4">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <img src="image/logo-cronograma.svg" alt="Logo Cronograma" style="height: 40px;">
-                            <label class="small text-muted fw-bold mb-0">cronograma</label>
-                            <span class="badge bg-primary">Versão 1.6.2</span>
+                        <div class="d-flex flex-column align-items-center justify-content-center">
+
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2"
+                                    style="height: 48px; min-width: 48px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+                                <div class="text-start">
+                                    <label class="h4 mb-0 fw-bold text-dark text-uppercase tracking-wider"
+                                        style="letter-spacing: 1.5px; line-height: 1;">Cronograma</label>
+                                    <br>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Organização de
+                                        Matérias</small>
+                                </div>
+                            </div>
+
+                            <span
+                                class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
+                                Versão 1.7
+                            </span>
                         </div>
                     </div>
                     <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
