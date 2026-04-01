@@ -47,6 +47,8 @@
     <style>
         .container-fluid {
             max-width: 1400px;
+        }
+        .container-fluid-background {
             background-color: lightsteelblue;
         }
         /* Estilizando o editor de texto rico (CKEditor) */
@@ -291,6 +293,9 @@
                 display: none !important;
             }
 
+            .container-fluid-background {
+                background-color: unset;
+            }
             /* Esconde botões na impressão */
             .title-input {
                 background: transparent !important;
@@ -328,7 +333,7 @@
 
 <body>
 
-    <div class="container-fluid px-4">
+    <div class="container-fluid container-fluid-background px-4">
         <!-- 
         ======================================================================
         🏗️ BARRA SUPERIOR DE CONTROLES
