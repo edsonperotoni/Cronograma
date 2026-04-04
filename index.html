@@ -564,6 +564,7 @@
         let activeEditors = {}; // Guarda quais editores de texto (CKEditor) estão abertos
         let currentMateria = ""; // Nome da matéria que você está vendo agora
         let tempImportData = null; // Guarda temporariamente dados carregados de um arquivo de backup
+        let hasUnsavedChanges = false; // Indica se há mudanças não salvas (para alertar o usuário)
 
         // As "chaves" (nomes) usadas para salvar as coisas no "localStorage" (a memória do navegador)
         const PREFIX = "study_vBorda_";
@@ -579,6 +580,17 @@
             const last = localStorage.getItem('last_active'); // Verifica qual foi a última matéria que você acessou
             if (last) switchMateria(last); // Se existe, já abre ela direto!
         };
+
+        //Aviso de "Você tem mudanças não salvas" caso tente fechar a aba ou o navegador
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                // Cancela o evento (padrão dos navegadores modernos para mostrar o aviso)
+                e.preventDefault();
+                // A mensagem personalizada é ignorada pela maioria dos navegadores modernos por segurança,
+                // mas a propriedade retValue é necessária para disparar o alerta nativo.
+                e.returnValue = 'Você possui alterações não salvas. Deseja realmente sair?';
+            }
+        });
 
         // ==========================================
         // ⌨️ ATALHO DO TECLADO
@@ -1078,6 +1090,7 @@
         // ==========================================
         // Adiciona a classe que faz o botão de salvar piscar vermelho caso houver algo mudado
         function setUnsavedChanges(h) {
+            hasUnsavedChanges = h; // Atualiza o estado global
             const b = document.getElementById('btnSalvarTudo');
             h ? b.classList.add('btn-save-alert') : b.classList.remove('btn-save-alert');
         }
