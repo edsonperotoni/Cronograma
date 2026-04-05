@@ -275,6 +275,10 @@
         }
 
         /* Estilo para riscar o label quando o checkbox de ocultar estiver marcado */
+        .span-ocultar{
+            text-decoration: line-through;
+            color: #dc3545;
+        }
         .check-hide-col:checked+.form-check-label {
             text-decoration: line-through;
             color: #dc3545;
@@ -285,6 +289,15 @@
         /* Transição suave para o efeito */
         .form-check-label {
             transition: all 0.2s ease;
+        }
+
+        #nomeMateriaTab {
+            display: inline-block;
+            max-width: 150px; /* Ajuste conforme necessário */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
         }
 
         /* Configurações para quando for imprimir a página */
@@ -426,22 +439,22 @@
                         <th style="width: 70px;" data-col="t"><input type="text" id="colName_t"
                                 class="header-edit-input" value="Teoria" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e1"><input type="text" id="colName_e1"
+                        <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações"type="text" id="colName_e1"
                                 class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e2"><input type="text" id="colName_e2"
+                        <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações" type="text" id="colName_e2"
                                 class="header-edit-input" value="Ex. 2" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e3"><input type="text" id="colName_e3"
+                        <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações" type="text" id="colName_e3"
                                 class="header-edit-input" value="Ex. 3" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e4"><input type="text" id="colName_e4"
+                        <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações" type="text" id="colName_e4"
                                 class="header-edit-input" value="Ex. 4" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e5"><input type="text" id="colName_e5"
+                        <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações" type="text" id="colName_e5"
                                 class="header-edit-input" value="Rev. 1" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e6"><input type="text" id="colName_e6"
+                        <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações" type="text" id="colName_e6"
                                 class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
                         <th class="text-start-custom">Observações</th>
@@ -465,48 +478,89 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 pb-0">
-                    <h6 class="modal-title fw-bold text-uppercase small text-muted">Configurações de Exibição</h6>
+                    <h5 class="modal-title fw-bold text-uppercase small text-muted">Configurações</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-2">Marque para <b>OCULTAR</b> as colunas de checkbox:</p>
-                    <div class="row mb-4 px-2">
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1" value="e1">
-                            <label class="form-check-label small" for="hide_e1">Coluna 2 (Ex.1)</label>
-                        </div>
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2" value="e2">
-                            <label class="form-check-label small" for="hide_e2">Coluna 3 (Ex.2)</label>
-                        </div>
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3" value="e3">
-                            <label class="form-check-label small" for="hide_e3">Coluna 4 (Ex.3)</label>
-                        </div>
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4" value="e4">
-                            <label class="form-check-label small" for="hide_e4">Coluna 5 (Ex.4)</label>
-                        </div>
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5" value="e5">
-                            <label class="form-check-label small" for="hide_e5">Coluna 6 (Rev.1)</label>
-                        </div>
-                        <div class="col-6 form-check mb-1">
-                            <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6" value="e6">
-                            <label class="form-check-label small" for="hide_e6">Coluna 7 (Rev.2)</label>
+                    <div id="configTabContainer">
+                        <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active small text-uppercase" id="pref-tab" data-bs-toggle="tab" data-bs-target="#tab-pref" type="button" role="tab">Preferências <br><span id="nomeMateriaTab"></span></button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab" data-bs-target="#tab-backup" type="button" role="tab">Backup e <br>Restauração</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="configTabsContent">
+                            
+                            <div class="tab-pane fade show active" id="tab-pref" role="tabpanel">
+                                <p class="small text-muted mb-2">Marque para <span class="span-ocultar"><b>OCULTAR</b></span> as colunas:</p>
+                                <div class="row mb-3 px-2">
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1" value="e1">
+                                        <label class="form-check-label small" for="hide_e1">Coluna 2</label>
+                                    </div>
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2" value="e2">
+                                        <label class="form-check-label small" for="hide_e2">Coluna 3</label>
+                                    </div>
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3" value="e3">
+                                        <label class="form-check-label small" for="hide_e3">Coluna 4</label>
+                                    </div>
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4" value="e4">
+                                        <label class="form-check-label small" for="hide_e4">Coluna 5</label>
+                                    </div>
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5" value="e5">
+                                        <label class="form-check-label small" for="hide_e5">Coluna 6</label>
+                                    </div>
+                                    <div class="col-3 form-check mb-1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6" value="e6">
+                                        <label class="form-check-label small" for="hide_e6">Coluna 7</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3 p-2 border rounded bg-light">
+                                    <label class="fw-bold text-uppercase d-block mb-1" style="font-size: 0.7rem; color: #666;">
+                                        <i class="bi bi-calendar-plus me-1"></i> Intervalo de Dias para novos conteúdos
+                                    </label>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <input type="number" id="inputIntervaloDias" class="form-control form-control-sm" value="7" min="0" style="width: 70px;">
+                                        <span class="ms-2 small text-muted">dias a partir da data do conteúdo anterior</span>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkRepetirIntervalo">
+                                        <label class="form-check-label small text-muted" for="checkRepetirIntervalo">
+                                            Repetir para todas as matérias
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-dark btn-sm w-100" onclick="applyVisibility()">Aplicar Preferências</button>
+                            </div>
+
+                            <div class="tab-pane fade" id="tab-backup" role="tabpanel">
+                                <div class="alert alert-info py-2 small">
+                                    Use estes botões para salvar seus dados em um arquivo ou restaurar de um computador antigo.
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary text-start btn-sm" onclick="exportBackup()">
+                                        <i class="bi bi-download me-2"></i> Exportar Tudo (.json)
+                                    </button>
+                                    <button class="btn btn-outline-primary text-start btn-sm" onclick="document.getElementById('importFile').click()">
+                                        <i class="bi bi-upload me-2"></i> Importar de Arquivo
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <button class="btn btn-dark btn-sm w-100 mb-3" onclick="applyVisibility()">Aplicar
-                        Alterações</button>
-
-                    <hr>
-                    <h6 class="fw-bold text-uppercase small text-muted">Dados e Backup</h6>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-outline-info text-start btn-sm" onclick="exportBackup()"><i
-                                class="bi bi-download me-2"></i> Exportar (.json)</button>
-                        <button class="btn btn-outline-info text-start btn-sm"
-                            onclick="document.getElementById('importFile').click()"><i class="bi bi-upload me-2"></i>
-                            Importar</button>
+                    <div id="noMateriaWarning" class="text-center py-4 d-none">
+                        <i class="bi bi-exclamation-circle text-warning h1"></i>
+                        <p class="mt-2">Selecione ou crie uma matéria primeiro para acessar as preferências.</p>
                     </div>
                 </div>
             </div>
@@ -549,6 +603,67 @@
         </div>
     </div>
 
+    <!-- Modal "Sobre" (Aquelas informações extras sobre versão e autor) -->
+    <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Sobre</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="d-flex flex-column align-items-center justify-content-center">
+
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2"
+                                    style="height: 48px; min-width: 48px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+                                <div class="text-start">
+                                    <label class="h4 mb-0 fw-bold text-dark text-uppercase tracking-wider"
+                                        style="letter-spacing: 1.5px; line-height: 1;">Cronograma</label>
+                                    <br>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Organização de
+                                        Matérias</small>
+                                </div>
+                            </div>
+
+                            <span
+                                class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
+                                Versão 2.0
+                            </span>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
+                    <p class="small text-secondary">
+                        &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
+                    </p>
+                    <hr>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
+                    <p class="small text-secondary">
+                        Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
+                        modificação, desde que mantida a atribuição ao autor original. Uso comercial proibido.
+                    </p>
+                    <hr>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge border text-dark fw-normal">CKEditor 5</span>
+                        <span class="badge border text-dark fw-normal">Bootstrap 5</span>
+                        <span class="badge border text-dark fw-normal">JavaScript ES6</span>
+                        <span class="badge border text-dark fw-normal">LocalStorage API</span>
+                    </div>
+                    <div class="mt-3">
+                        <img src="https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos"
+                            alt="Contador de Acessos" />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Biblioteca JS do Bootstrap para os modais funcionarem -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -579,6 +694,7 @@
             updateSelect(); // Preenche a caixinha de selecionar matérias
             const last = localStorage.getItem('last_active'); // Verifica qual foi a última matéria que você acessou
             if (last) switchMateria(last); // Se existe, já abre ela direto!
+            checkInterfaceState(); // Verifica se deve mostrar o aviso de "Nenhuma matéria criada" ou as preferências
         };
 
         //Aviso de "Você tem mudanças não salvas" caso tente fechar a aba ou o navegador
@@ -603,6 +719,12 @@
             }
         });
 
+        // Quando você muda o número de dias para o intervalo automático, isso é uma mudança importante que deve ser salva.
+        document.getElementById('inputIntervaloDias').addEventListener('change', (e) => {
+              setUnsavedChanges(true); 
+        });
+
+        
         // ==========================================
         // 📅 FORMATAR DATA
         // ==========================================
@@ -618,14 +740,24 @@
         // ==========================================
         // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         function switchMateria(name) {
-            if (!name) return;
+            if (!name) {
+                currentMateria = "";
+                updateTabName(); // Limpa o nome na aba
+                checkInterfaceState(); // Atualiza para estado bloqueado
+                return;
+            }
+            
+            saveAllRows(); // Salva a matéria atual antes de trocar (para não perder nada)
             currentMateria = name; // Atualiza a variável com o nome da matéria nova
             document.getElementById('materiaTitulo').value = name; // Muda o título grande na tela
             localStorage.setItem('last_active', name); // Salva na memória que essa foi a última matéria acessada
 
             loadColumnNames(); // Puxa os nomes personalizados das colunas
+            loadIntervalConfig(); // Carrega a configuração de intervalo automático entre conteúdos
             loadRows(); // Carrega todas as linhas de estudo
             updateSelect(); // Atualiza a lista dropdown
+            updateTabName(); // Limpa o nome na aba
+            checkInterfaceState(); // Atualiza para estado liberado
         }
 
         // ==========================================
@@ -742,12 +874,39 @@
             });
         }
 
-        // Acionado pelo botão "Aplicar" do modal
+        // Quando o usuário clica em "Aplicar Preferências" no modal, essa função é chamada para salvar as escolhas e aplicar as mudanças na interface.
         function applyVisibility() {
             const hidden = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
-            saveColumnNames(hidden); // Salva com a lista de ocultos
+            
+            // 1. Salva visibilidade e nomes das colunas
+            saveColumnNames(hidden); 
             applyVisibilityStyles(hidden);
-            bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
+
+            // 2. Lógica do Intervalo de Dias
+            if (currentMateria) {
+                const novoIntervalo = document.getElementById('inputIntervaloDias').value;
+                const repetirParaTodas = document.getElementById('checkRepetirIntervalo').checked;
+
+                // Salva na matéria atual
+                localStorage.setItem('config_intervalo_dias_' + currentMateria, novoIntervalo);
+
+                // Se o checkbox estiver marcado, replica para TODAS as matérias da lista
+                if (repetirParaTodas) {
+                    const listaMaterias = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+                    listaMaterias.forEach(materia => {
+                        localStorage.setItem('config_intervalo_dias_' + materia, novoIntervalo);
+                    });
+                    console.log(`Global: Intervalo de ${novoIntervalo} dias aplicado a todas as matérias.`);
+                }
+
+            }
+
+            setUnsavedChanges(true);
+            saveAllRows(); // Salva para aplicar o novo intervalo automaticamente na próxima vez que adicionar uma linha
+            // Fecha o modal
+            const modalElement = document.getElementById('modalConfig');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) modalInstance.hide();
         }
 
         // ==========================================
@@ -774,6 +933,15 @@
                 hiddenCols: hiddenCols // ✨ NOVO
             };
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
+        }
+
+        // Atualiza o nome da matéria na aba do modal de preferências
+        function updateTabName() {
+            const spanNome = document.getElementById('nomeMateriaTab');
+            if (spanNome) {
+                // Se houver matéria, mostra "para NOME", senão deixa vazio
+                spanNome.innerText = currentMateria ? `de ${currentMateria}` : "";
+            }
         }
 
         // ==========================================
@@ -884,6 +1052,10 @@
         // Lê linha por linha da tabela, junta tudo e guarda na memória local do navegador (localStorage)
         function saveData() {
             if (!currentMateria) return;
+
+            //Garante que o intervalo atual da tela seja salvo junto com os dados
+            const intervaloAtual = document.getElementById('inputIntervaloDias').value;
+            localStorage.setItem('config_intervalo_dias_' + currentMateria, intervaloAtual);
 
             // "Pega todas as linhas da tabela, e para cada uma, extrai os valores dos campos"
             const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
@@ -999,22 +1171,64 @@
         // ➕ ADICIONAR LINHA EM BRANCO
         // ==========================================
         function addEmptyRow() {
-            if (!currentMateria) return alert("Dê nome à matéria.");
-            // Cria uma linha vazia com a data de hoje
-            createRow(new Date().toISOString().split('T')[0], "", false, false, false, false, false, false, false, "", true);
+                if (!currentMateria) return alert("Selecione ou dê nome à matéria primeiro.");
+
+                // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
+                const inputIntervalo = document.getElementById('inputIntervaloDias');
+                const intervalo = parseInt(inputIntervalo.value) || 1;
+
+                let proximaData = new Date().toISOString().split('T')[0]; // Padrão: Hoje
+                const rows = Array.from(document.querySelectorAll('#tableBody tr'));
+                
+                if (rows.length > 0) {
+                    // 2. Extrai todas as datas e filtra as vazias
+                    const datas = rows.map(tr => tr.querySelector('.val-data').value).filter(d => d !== "");
+                    
+                    if (datas.length > 0) {
+                        // 3. Encontra a MAIOR data (ordenação léxica funciona para YYYY-MM-DD)
+                        const maiorDataStr = datas.sort().reverse()[0];
+                        
+                        // 4. Cria o objeto Date garantindo o meio-dia (12:00) 
+                        // Isso evita que o fuso horário mude o dia ao somar.
+                        let dataBase = new Date(maiorDataStr + 'T12:00:00');
+                        
+                        // 5. Soma os X dias configurados
+                        dataBase.setDate(dataBase.getDate() + intervalo);
+                        
+                        // 6. Converte de volta para o formato de input (YYYY-MM-DD)
+                        proximaData = dataBase.toISOString().split('T')[0];
+                    }
+            }
+
+            // Cria a linha e avisa que há mudanças
+            createRow(proximaData, "", false, false, false, false, false, false, false, "", true);
             setUnsavedChanges(true);
+        }
+
+        // Carrega o valor do intervalo de dias do localStorage e atualiza o input correspondente no modal. Se a opção "Repetir para todas as matérias" estiver marcada, mantém o checkbox desmarcado por padrão ao carregar.
+        function loadIntervalConfig() {
+            const salvo = localStorage.getItem('config_intervalo_dias_' + currentMateria) || 7;
+            document.getElementById('inputIntervaloDias').value = salvo;
+            // Mantém o checkbox desmarcado por padrão ao carregar
+            document.getElementById('checkRepetirIntervalo').checked = false;
         }
 
         // ==========================================
         // 🗑️ EXCLUIR UMA LINHA
         // ==========================================
         function deleteRow(i) {
-            if (confirm("Excluir linha?")) {
-                i.closest('tr').remove(); // Some com a linha da tela
-                saveData(); // Salva imediatamente para confirmar que ela foi apagada do disco
+            // 1. Localiza a linha (tr) mais próxima do botão clicado
+            const tr = i.closest('tr');
+            
+            // 2. Busca o valor do input de conteúdo dentro dessa linha específica
+            const nomeConteudo = tr.querySelector('.val-conteudo').value || "este item";
+
+            // 3. Exibe a confirmação com o nome dinâmico
+            if (confirm(`Excluir conteúdo "${nomeConteudo}"?`)) {
+                tr.remove(); // Remove a linha da tela
+                saveData();  // Atualiza o LocalStorage
             }
         }
-
         // ==========================================
         // 🏷️ RENOMEAR A MATÉRIA
         // ==========================================
@@ -1082,9 +1296,38 @@
             // Limpa a tela
             currentMateria = "";
             document.getElementById('tableBody').innerHTML = "";
+
+            document.getElementById('materiaTitulo').value = ""; // Limpa o campo de título
+            updateTabName(); // Limpa o nome na aba do modal
+            checkInterfaceState(); // 🛠️ FORÇA A INTERFACE A OCULTAR AS PREFERÊNCIAS
+
             updateSelect();
         }
 
+        // oculta ou mostra as abas de configuração dependendo se uma matéria está ativa ou não
+        function checkInterfaceState() {
+            const hasMateria = (currentMateria && currentMateria.trim() !== "");
+            
+            const tabContainer = document.getElementById('configTabContainer');
+            const warning = document.getElementById('noMateriaWarning');
+            const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
+
+            if (hasMateria) {
+                // Mostra as abas e o botão de adicionar
+                if(tabContainer) tabContainer.classList.remove('d-none');
+                if(warning) warning.classList.add('d-none');
+                if(btnAddContent) btnAddContent.disabled = false;
+                
+                // Garante que a aba de Preferências seja a ativa ao abrir
+                const prefTab = document.getElementById('pref-tab');
+                if(prefTab) prefTab.click();
+            } else {
+                // Esconde as abas (ou apenas a de preferências) e avisa o usuário
+                if(tabContainer) tabContainer.classList.add('d-none');
+                if(warning) warning.classList.remove('d-none');
+                if(btnAddContent) btnAddContent.disabled = true;
+            }
+        }
         // ==========================================
         // 🚨 AVISO DE ALTERAÇÕES NÃO SALVAS
         // ==========================================
@@ -1100,21 +1343,34 @@
         // ==========================================
         function exportBackup() {
             const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            const allData = {}, configs = {};
+            const allData = {}, configs = {}, automationConfigs = {};
 
-            // Junta todas as matérias e configurações num "pacotão" gigante
             list.forEach(m => {
-                allData[m] = JSON.parse(localStorage.getItem(PREFIX + m));
-                configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m));
+                allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+                const cfg = localStorage.getItem(CONFIG_PREFIX + m);
+                configs[m] = cfg ? JSON.parse(cfg) : null;
+
+                //Captura a configuração de intervalo de dias de cada matéria
+                const intervalo = localStorage.getItem('config_intervalo_dias_' + m);
+                if (intervalo) {
+                    automationConfigs[m] = intervalo;
+                }
             });
 
-            // Converte tudo num texto mágico (JSON)
-            const blob = new Blob([JSON.stringify({ list, allData, configs })], { type: "application/json" });
+            // Adicionamos 'automationConfigs' ao pacote final
+            const backupPayload = { 
+                list, 
+                allData, 
+                configs, 
+                automationConfigs 
+            };
+
+            const blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" });
 
             // Cria um "link invisível", clica nele pro arquivo baixar, e depois descarta
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `backup_${new Date().toISOString().slice(0, 10)}.json`; // Nome do arquivo é a data
+            a.download = `backup_cronograma_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
         }
 
@@ -1139,86 +1395,137 @@
         // ==========================================
         function confirmImport(mode) {
             if (!tempImportData) return;
+
+            // 1. Recupera a lista atual de matérias
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
+            // 2. Se for Substituir, limpamos o que existe hoje
             if (mode === 'replace') {
-                // Modo SUBSTITUIR TUDO: apaga o PC antes de injetar os dados novos
-                currentList.forEach(m => { localStorage.removeItem(PREFIX + m); localStorage.removeItem(CONFIG_PREFIX + m); });
-                currentList = tempImportData.list;
+                currentList.forEach(m => { 
+                    localStorage.removeItem(PREFIX + m); 
+                    localStorage.removeItem(CONFIG_PREFIX + m);
+                    localStorage.removeItem('config_intervalo_dias_' + m);
+                });
+                // A nova lista será exatamente a do backup (se existir)
+                currentList = tempImportData.list || [];
             } else {
-                // Modo MESCLAR: Junta as listas sem apagar o que já tem
-                tempImportData.list.forEach(m => { if (!currentList.includes(m)) currentList.push(m); });
+                // Se for Mesclar, adiciona apenas nomes novos à lista
+                if (tempImportData.list && Array.isArray(tempImportData.list)) {
+                    tempImportData.list.forEach(m => { 
+                        if (!currentList.includes(m)) currentList.push(m); 
+                    });
+                }
             }
 
-            // Grava todos os dados na memória do navegador
-            for (let m in tempImportData.allData) localStorage.setItem(PREFIX + m, JSON.stringify(tempImportData.allData[m]));
-            for (let m in tempImportData.configs) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
+            // 3. Importação Segura dos Dados das Matérias (allData)
+            if (tempImportData.allData) {
+                for (let m in tempImportData.allData) {
+                    // Garante que não estamos salvando algo nulo
+                    const data = tempImportData.allData[m];
+                    if (data) {
+                        localStorage.setItem(PREFIX + m, JSON.stringify(data));
+                    }
+                }
+            }
 
+            // 4. Importação Segura das Configurações de Coluna (configs)
+            // Se o backup for antigo e não tiver 'configs', ele apenas pula
+            if (tempImportData.configs) {
+                for (let m in tempImportData.configs) {
+                    const cfg = tempImportData.configs[m];
+                    if (cfg) {
+                        localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
+                    }
+                }
+            }
+
+            // 5. Importação Segura das Configurações de Automação (Intervalo)
+            // Esta chave é a mais recente; se não existir no JSON, o app usará o padrão de 7 dias
+            if (tempImportData.automationConfigs) {
+                for (let m in tempImportData.automationConfigs) {
+                    const interval = tempImportData.automationConfigs[m];
+                    if (interval !== undefined && interval !== null) {
+                        localStorage.setItem('config_intervalo_dias_' + m, interval);
+                    }
+                }
+            }
+
+            // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-            location.reload(); // Reinicia a página para mostrar tudo carregado
+            
+            alert("Importação finalizada!");
+            location.reload(); 
         }
+
+
+        // ==========================================
+        // 🛡️ PREVENÇÃO DE PERDA DE DADOS (Auto-Save)
+        // ==========================================
+        // Garante que, ao clicar em Imprimir, Configurações ou Sobre, 
+        // o sistema salve todas as edições em aberto automaticamente.
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Botão Imprimir
+            const btnPrint = document.querySelector('button[onclick="window.print()"]');
+            if (btnPrint) {
+                btnPrint.removeAttribute('onclick'); // Removemos o atributo antigo
+                btnPrint.addEventListener('click', () => {
+                    saveAllRows();
+                    window.print();
+                });
+            }
+
+            // 2. Botão Configurações (Abre o Modal)
+            const btnConfig = document.querySelector('button[data-bs-target="#modalConfig"]');
+            if (btnConfig) {
+                btnConfig.addEventListener('click', () => {
+                    saveAllRows();
+                });
+            }
+
+            // 3. Botão Sobre (Abre o Modal)
+            const btnAbout = document.querySelector('button[data-bs-target="#modalAbout"]');
+            if (btnAbout) {
+                btnAbout.addEventListener('click', () => {
+                    saveAllRows();
+                });
+            }
+        });
+
+        // ==========================================
+        // ⏱️ SALVAMENTO AUTOMÁTICO (5 MINUTOS)
+        // ==========================================
+        let unsavedStartTime = null;
+
+        // Verifica o status do salvamento a cada 30 segundos
+        setInterval(() => {
+            const btnSave = document.getElementById('btnSalvarTudo');
+            
+            // Se o botão estiver em modo de alerta (vermelho)
+            if (btnSave && btnSave.classList.contains('btn-save-alert')) {
+                
+                // Se acabamos de entrar em estado de alerta, marca o início
+                if (!unsavedStartTime) {
+                    unsavedStartTime = Date.now();
+                }
+
+                // Calcula há quantos milissegundos estamos sem salvar
+                const elapsed = Date.now() - unsavedStartTime;
+                const fiveMinutes = 5 * 60 * 1000;
+
+                if (elapsed >= fiveMinutes) {
+                    console.log("Auto-save: 5 minutos atingidos. Salvando alterações...");
+                    saveAllRows();
+                    unsavedStartTime = null; // Reseta o timer após salvar
+                }
+            } else {
+                // Se o botão não está em alerta, reseta o marcador
+                unsavedStartTime = null;
+            }
+        }, 30000); // Checagem a cada 30 segundos para economizar processamento
     </script>
 
-    <!-- Modal "Sobre" (Aquelas informações extras sobre versão e autor) -->
-    <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Sobre</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="text-center mb-4">
-                        <div class="d-flex flex-column align-items-center justify-content-center">
-
-                            <div class="d-flex align-items-center mb-2">
-                                <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2"
-                                    style="height: 48px; min-width: 48px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
-                                <div class="text-start">
-                                    <label class="h4 mb-0 fw-bold text-dark text-uppercase tracking-wider"
-                                        style="letter-spacing: 1.5px; line-height: 1;">Cronograma</label>
-                                    <br>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Organização de
-                                        Matérias</small>
-                                </div>
-                            </div>
-
-                            <span
-                                class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
-                                Versão 1.7
-                            </span>
-                        </div>
-                    </div>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
-                    <p class="small text-secondary">
-                        &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
-                    </p>
-                    <hr>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
-                    <p class="small text-secondary">
-                        Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
-                        modificação, desde que mantida a atribuição ao autor original. Uso comercial proibido.
-                    </p>
-                    <hr>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge border text-dark fw-normal">CKEditor 5</span>
-                        <span class="badge border text-dark fw-normal">Bootstrap 5</span>
-                        <span class="badge border text-dark fw-normal">JavaScript ES6</span>
-                        <span class="badge border text-dark fw-normal">LocalStorage API</span>
-                    </div>
-                    <div class="mt-3">
-                        <img src="https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos"
-                            alt="Contador de Acessos" />
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <div style="display: none;">
         <img src="https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos"
             alt="Contador de Acessos" />
