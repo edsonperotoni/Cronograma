@@ -581,10 +581,6 @@
 
                         </div>
                     </div>
-                    <div id="noMateriaWarning" class="text-center py-4 d-none">
-                        <i class="bi bi-exclamation-circle text-warning h1"></i>
-                        <p class="mt-2">Selecione ou crie uma matéria primeiro para acessar as preferências.</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -845,7 +841,21 @@
         window.onload = () => {
             updateSelect(); // Preenche a caixinha de selecionar matérias
             const last = localStorage.getItem('last_active'); // Verifica qual foi a última matéria que você acessou
-            if (last) switchMateria(last); // Se existe, já abre ela direto!
+            if (last) {
+                switchMateria(last); // Se existe, já abre ela direto!
+            }
+            else {
+                // Se não existe, mostra o aviso para criar uma nova matéria
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center text-muted py-5">
+                    <i class="bi bi-arrow-up-circle d-block h1"></i>
+                    Selecione uma matéria acima para visualizar ou definir preferências
+                </td>
+            </tr>`;
+                currentMateria = ""; // Garante que comece neutro
+            }
             checkInterfaceState(); // Verifica se deve mostrar o aviso de "Nenhuma matéria criada" ou as preferências
 
             // Contador de Acessos (Hits.sh)
@@ -856,8 +866,6 @@
                 // Insere nos locais desejados (ex: no modal e no rodapé)
                 const containers = document.querySelectorAll('#contador-container');
                 containers.forEach(div => div.innerHTML = htmlContador);
-            } else {
-                console.log("🚀 Modo Dev: Contagem de acessos bloqueada.");
             }
 
         };
@@ -905,24 +913,39 @@
         // ==========================================
         // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         function switchMateria(name) {
-            if (!name) {
+            const tableBody = document.getElementById('tableBody');
+
+            if (!name || name.trim() === "") {
+                saveAllRows(); // Tenta salvar a anterior antes de limpar
                 currentMateria = "";
-                updateTabName(); // Limpa o nome na aba
-                checkInterfaceState(); // Atualiza para estado bloqueado
+                localStorage.removeItem('last_active');
+
+                // Limpa visualmente a tabela
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center text-muted py-5">
+                    <i class="bi bi-arrow-up-circle d-block h1"></i>
+                    Selecione uma matéria acima para visualizar ou definir preferências</td>
+            </tr>`;
+
+                document.getElementById('materiaTitulo').value = "";
+                updateTabName();
+                checkInterfaceState();
+                updateSelect();
                 return;
             }
 
-            saveAllRows(); // Salva a matéria atual antes de trocar (para não perder nada)
-            currentMateria = name; // Atualiza a variável com o nome da matéria nova
-            document.getElementById('materiaTitulo').value = name; // Muda o título grande na tela
-            localStorage.setItem('last_active', name); // Salva na memória que essa foi a última matéria acessada
+            saveAllRows();
+            currentMateria = name;
+            document.getElementById('materiaTitulo').value = name;
+            localStorage.setItem('last_active', name);
 
-            loadColumnNames(); // Puxa os nomes personalizados das colunas
-            loadIntervalConfig(); // Carrega a configuração de intervalo automático entre conteúdos
-            loadRows(); // Carrega todas as linhas de estudo
-            updateSelect(); // Atualiza a lista dropdown
-            updateTabName(); // Limpa o nome na aba
-            checkInterfaceState(); // Atualiza para estado liberado
+            loadColumnNames();
+            loadIntervalConfig();
+            loadRows();
+            updateSelect();
+            updateTabName();
+            checkInterfaceState();
         }
 
         // ==========================================
@@ -1459,8 +1482,17 @@
             localStorage.setItem(LIST_KEY, JSON.stringify(l));
 
             // Limpa a tela
+            //Limpa o registro de "última ativa" já que ela foi deletada
+            localStorage.removeItem('last_active');
             currentMateria = "";
-            document.getElementById('tableBody').innerHTML = "";
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = `
+        <tr>
+            <td colspan="11" class="text-center text-muted py-5">
+                <i class="bi bi-arrow-up-circle d-block h1"></i>
+                Selecione uma matéria acima para visualizar ou definir preferências
+            </td>
+        </tr>`;
 
             document.getElementById('materiaTitulo').value = ""; // Limpa o campo de título
             updateTabName(); // Limpa o nome na aba do modal
@@ -1472,27 +1504,27 @@
         // oculta ou mostra as abas de configuração dependendo se uma matéria está ativa ou não
         function checkInterfaceState() {
             const hasMateria = (currentMateria && currentMateria.trim() !== "");
-
             const tabContainer = document.getElementById('configTabContainer');
-            const warning = document.getElementById('noMateriaWarning');
             const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
+            const prefTab = document.getElementById('pref-tab');
+
+            if (tabContainer) tabContainer.classList.remove('d-none');
 
             if (hasMateria) {
-                // Mostra as abas e o botão de adicionar
-                if (tabContainer) tabContainer.classList.remove('d-none');
-                if (warning) warning.classList.add('d-none');
                 if (btnAddContent) btnAddContent.disabled = false;
-
-                // Garante que a aba de Preferências seja a ativa ao abrir
-                const prefTab = document.getElementById('pref-tab');
-                if (prefTab) prefTab.click();
+                if (prefTab) prefTab.style.display = "block";
             } else {
-                // Esconde as abas (ou apenas a de preferências) e avisa o usuário
-                if (tabContainer) tabContainer.classList.add('d-none');
-                if (warning) warning.classList.remove('d-none');
                 if (btnAddContent) btnAddContent.disabled = true;
+                // Oculta a aba de preferências se não houver matéria ativa
+                if (prefTab) prefTab.style.display = "none";
+                // Se o modal estiver aberto, força a ida para o backup
+                const backupTab = document.getElementById('backup-tab');
+                if (backupTab && document.getElementById('modalConfig').classList.contains('show')) {
+                    backupTab.click();
+                }
             }
         }
+
         // ==========================================
         // 🚨 AVISO DE ALTERAÇÕES NÃO SALVAS
         // ==========================================
@@ -1691,7 +1723,6 @@
             const linhas = document.querySelectorAll('#listaEscolherImport tr');
             let visiveis = 0;
 
-            // Resetar o "Marcar Todos" ao filtrar para evitar confusão visual
             document.getElementById('checkMarcarTodosImport').checked = false;
 
             linhas.forEach(tr => {
@@ -1707,7 +1738,7 @@
                     visiveis++;
                 } else {
                     tr.style.display = "none";
-                    // Regra de segurança: se a linha foi ocultada, desmarcamos o checkbox dela
+                    // CRÍTICO: Desmarca o checkbox de linhas que foram escondidas pelo filtro
                     if (cb) cb.checked = false;
                 }
             });
@@ -1787,7 +1818,19 @@
             const btnConfig = document.querySelector('button[data-bs-target="#modalConfig"]');
             if (btnConfig) {
                 btnConfig.addEventListener('click', () => {
-                    saveAllRows();
+                    const hasMateria = (currentMateria && currentMateria.trim() !== "");
+
+                    if (hasMateria) {
+                        saveAllRows();
+                        // Se tem matéria, abre na aba de preferências
+                        document.getElementById('pref-tab').click();
+                    } else {
+                        // Se não tem matéria, força a ida para a aba de backup/restore
+                        // O timeout garante que o Bootstrap terminou de processar a abertura do modal
+                        setTimeout(() => {
+                            document.getElementById('backup-tab').click();
+                        }, 150);
+                    }
                 });
             }
 
