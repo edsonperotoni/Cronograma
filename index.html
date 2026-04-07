@@ -595,18 +595,76 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Importar</h5>
+                    <h5 class="modal-title">Como deseja importar?</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="list-group">
-                        <button class="list-group-item list-group-item-action"
-                            onclick="confirmImport('merge')"><b>Mesclar:</b> Adiciona apenas linhas novas. Não duplica o
-                            que já existe.</button>
-                        <button class="list-group-item list-group-item-action"
-                            onclick="confirmImport('replace')"><b>Substituir:</b> Apaga os dados atuais e carrega os do
-                            arquivo.</button>
+                        <button class="list-group-item list-group-item-action" onclick="confirmImport('merge')">
+                            <i class="bi bi-intersect me-2"></i><b>Mesclar:</b> Adiciona apenas linhas novas.
+                        </button>
+                        <button class="list-group-item list-group-item-action" onclick="confirmImport('replace')">
+                            <i class="bi bi-trash3 me-2"></i><b>Substituir:</b> Apaga tudo e carrega o arquivo.
+                        </button>
+                        <button class="list-group-item list-group-item-action" onclick="prepararEscolhaImport()">
+                            <i class="bi bi-check2-all me-2"></i><b>Escolher:</b> Selecionar itens manualmente.
+                        </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEscolherImport" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Selecionar Conteúdos para Importar</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="p-2 bg-light border-bottom">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-4">
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" id="checkMarcarTodosImport"
+                                    onclick="toggleTodosImport(this)">
+                                <label class="form-check-label small fw-bold" for="checkMarcarTodosImport">Marcar
+                                    Todos</label>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8 d-flex gap-2">
+                            <select id="filtroMateriaImport" class="form-select form-select-sm"
+                                onchange="filtrarTabelaImport()">
+                                <option value="">Todas as Matérias</option>
+                            </select>
+                            <input type="text" id="buscaConteudoImport" class="form-control form-control-sm"
+                                placeholder="Buscar conteúdo..." oninput="filtrarTabelaImport()">
+                        </div>
+                    </div>
+                    <div class="text-end mt-1 me-2">
+                        <small class="text-muted" id="infoQtdImport"></small>
+                    </div>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;" class="text-center">#</th>
+                                    <th style="width: 100px;">Data</th>
+                                    <th style="width: 150px;">Matéria</th>
+                                    <th>Conteúdo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaEscolherImport">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="executarImportacaoSeletiva()">Confirmar
+                        Importação</button>
                 </div>
             </div>
         </div>
@@ -732,7 +790,8 @@
                                 <li><strong>Privacidade Total:</strong> Dados salvos localmente (LocalStorage). Nada sai
                                     do seu PC.</li>
                                 <li><strong>Backup:</strong> Exporte e restaure seu progresso em arquivos
-                                    <code>.json</code>.</li>
+                                    <code>.json</code>.
+                                </li>
                                 <li><strong>Mesclagem Inteligente:</strong> Escolha entre substituir tudo ou apenas
                                     adicionar dados novos.</li>
                             </ul>
@@ -1563,6 +1622,149 @@
             location.reload();
         }
 
+        // --- LÓGICA DE IMPORTAÇÃO SELETIVA ---
+
+        // Abre o modal de escolha e lista os itens do JSON
+        // Prepara o modal e preenche o select de matérias dinamicamente
+        function prepararEscolhaImport() {
+            if (!tempImportData || !tempImportData.allData) return alert("Arquivo inválido.");
+
+            const lista = document.getElementById('listaEscolherImport');
+            const selectFiltro = document.getElementById('filtroMateriaImport');
+
+            lista.innerHTML = "";
+            selectFiltro.innerHTML = '<option value="">Todas as Matérias</option>'; // Reseta o filtro
+
+            // Fecha o modal de escolha inicial
+            const modalIni = bootstrap.Modal.getInstance(document.getElementById('modalImport'));
+            if (modalIni) modalIni.hide();
+
+            let totalItens = 0;
+            const materiasNoJson = Object.keys(tempImportData.allData).sort();
+
+            // Preenche o Select de matérias do filtro
+            materiasNoJson.forEach(materia => {
+                const opt = document.createElement('option');
+                opt.value = materia;
+                opt.innerText = materia;
+                selectFiltro.appendChild(opt);
+
+                // Preenche a tabela com todos os itens inicialmente
+                tempImportData.allData[materia].forEach((item, index) => {
+                    totalItens++;
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-materia-row', materia);
+                    tr.setAttribute('data-conteudo-row', (item.conteudo || "").toLowerCase());
+
+                    tr.innerHTML = `
+                <td class="text-center">
+                    <input class="form-check-input check-item-import" type="checkbox" 
+                        data-materia="${materia}" data-index="${index}">
+                </td>
+                <td class="small">${formatDateToBR(item.data)}</td>
+                <td class="small fw-bold text-primary">${materia}</td>
+                <td class="small">${item.conteudo || '<span class="text-muted italic">Sem título</span>'}</td>
+            `;
+
+                    tr.style.cursor = "pointer";
+                    tr.onclick = (e) => {
+                        if (e.target.type !== 'checkbox') {
+                            const cb = tr.querySelector('.check-item-import');
+                            cb.checked = !cb.checked;
+                        }
+                    };
+                    lista.appendChild(tr);
+                });
+            });
+
+            document.getElementById('infoQtdImport').innerText = `${totalItens} itens no arquivo`;
+            document.getElementById('checkMarcarTodosImport').checked = false;
+            document.getElementById('buscaConteudoImport').value = "";
+
+            new bootstrap.Modal(document.getElementById('modalEscolherImport')).show();
+        }
+
+        // Função para filtrar as linhas visíveis
+        function filtrarTabelaImport() {
+            const filtroMateria = document.getElementById('filtroMateriaImport').value;
+            const buscaTexto = document.getElementById('buscaConteudoImport').value.toLowerCase();
+            const linhas = document.querySelectorAll('#listaEscolherImport tr');
+            let visiveis = 0;
+
+            // Resetar o "Marcar Todos" ao filtrar para evitar confusão visual
+            document.getElementById('checkMarcarTodosImport').checked = false;
+
+            linhas.forEach(tr => {
+                const mat = tr.getAttribute('data-materia-row');
+                const cont = tr.getAttribute('data-conteudo-row');
+                const cb = tr.querySelector('.check-item-import');
+
+                const combinaMateria = filtroMateria === "" || mat === filtroMateria;
+                const combinaTexto = buscaTexto === "" || cont.includes(buscaTexto);
+
+                if (combinaMateria && combinaTexto) {
+                    tr.style.display = "";
+                    visiveis++;
+                } else {
+                    tr.style.display = "none";
+                    // Regra de segurança: se a linha foi ocultada, desmarcamos o checkbox dela
+                    if (cb) cb.checked = false;
+                }
+            });
+
+            document.getElementById('infoQtdImport').innerText = `${visiveis} itens visíveis`;
+        }
+
+        // Função Marcar/Desmarcar Todos
+        function toggleTodosImport(source) {
+            // Selecionamos apenas as linhas que NÃO estão com display: none
+            const linhasVisiveis = document.querySelectorAll('#listaEscolherImport tr:not([style*="display: none"])');
+
+            linhasVisiveis.forEach(tr => {
+                const cb = tr.querySelector('.check-item-import');
+                if (cb) cb.checked = source.checked;
+            });
+        }
+
+        // Executa a importação apenas dos itens selecionados
+        function executarImportacaoSeletiva() {
+            const selecionados = document.querySelectorAll('.check-item-import:checked');
+            if (selecionados.length === 0) return alert("Selecione ao menos um item.");
+
+            if (!confirm(`Importar ${selecionados.length} itens selecionados?`)) return;
+
+            let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+
+            selecionados.forEach(cb => {
+                const materia = cb.getAttribute('data-materia');
+                const index = cb.getAttribute('data-index');
+                const itemParaImportar = tempImportData.allData[materia][index];
+
+                // 1. Garante que a matéria exista na lista principal
+                if (!currentList.includes(materia)) {
+                    currentList.push(materia);
+                    // Copia a configuração da coluna se existir no backup
+                    if (tempImportData.configs && tempImportData.configs[materia]) {
+                        localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(tempImportData.configs[materia]));
+                    }
+                }
+
+                // 2. Recupera dados atuais da matéria no LocalStorage
+                let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+
+                // 3. Evita duplicados (checa data e conteúdo idênticos)
+                const existe = dadosLocais.some(d => d.data === itemParaImportar.data && d.conteudo === itemParaImportar.conteudo);
+
+                if (!existe) {
+                    dadosLocais.push(itemParaImportar);
+                    localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
+                }
+            });
+
+            localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
+
+            location.reload();
+        }
 
         // ==========================================
         // 🛡️ PREVENÇÃO DE PERDA DE DADOS (Auto-Save)
