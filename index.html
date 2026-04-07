@@ -871,13 +871,7 @@
             else {
                 // Se não existe, mostra o aviso para criar uma nova matéria
                 const tableBody = document.getElementById('tableBody');
-                tableBody.innerHTML = `
-            <tr>
-                <td colspan="11" class="text-center text-muted py-5">
-                    <i class="bi bi-arrow-up-circle d-block h1"></i>
-                    Selecione uma matéria acima para visualizar ou definir preferências
-                </td>
-            </tr>`;
+                tableBody.innerHTML = setInitialTableContent(); // Coloca a mensagem de "Selecione uma matéria" no meio da tabela
                 currentMateria = ""; // Garante que comece neutro
             }
             checkInterfaceState(); // Verifica se deve mostrar o aviso de "Nenhuma matéria criada" ou as preferências
@@ -932,6 +926,15 @@
             setUnsavedChanges(true);
         });
 
+        function setInitialTableContent(){
+            return `
+            <tr>
+                <td colspan="11" class="text-center text-muted py-5">
+                    <i class="bi bi-arrow-up-circle d-block h1"></i>
+                    Selecione uma matéria acima para visualizar ou definir preferências
+                </td>
+            </tr>`;
+        }
 
         // ==========================================
         // 📅 FORMATAR DATA
@@ -956,12 +959,7 @@
                 localStorage.removeItem('last_active');
 
                 // Limpa visualmente a tabela
-                tableBody.innerHTML = `
-            <tr>
-                <td colspan="11" class="text-center text-muted py-5">
-                    <i class="bi bi-arrow-up-circle d-block h1"></i>
-                    Selecione uma matéria acima para visualizar ou definir preferências</td>
-            </tr>`;
+                tableBody.innerHTML = setInitialTableContent();// Coloca a mensagem de "Selecione uma matéria" no meio da tabela
 
                 document.getElementById('materiaTitulo').value = "";
                 updateTabName();
@@ -1536,13 +1534,7 @@
             localStorage.removeItem('last_active');
             currentMateria = "";
             const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = `
-        <tr>
-            <td colspan="11" class="text-center text-muted py-5">
-                <i class="bi bi-arrow-up-circle d-block h1"></i>
-                Selecione uma matéria acima para visualizar ou definir preferências
-            </td>
-        </tr>`;
+            tableBody.innerHTML = setInitialTableContent(); // Coloca a mensagem de "Selecione uma matéria" no meio da tabela
 
             document.getElementById('materiaTitulo').value = ""; // Limpa o campo de título
             updateTabName(); // Limpa o nome na aba do modal
