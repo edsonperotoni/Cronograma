@@ -28,7 +28,7 @@ Sistema web leve e funcional para organização de estudos, com suporte a múlti
 * **Modo Impressão Otimizado:** Layout inteligente que oculta botões de controle e ajusta a tabela perfeitamente para papel A4 (paisagem) ou geração de PDF.
 * **Design Moderno:** Interface limpa baseada em **Bootstrap 5**, otimizada para legibilidade e organização visual.
 
-## 🛠️ Tecnologias Utilizadas ![Tecnologias](https://img.shields.io/badge/Tecnologias-JS_ES6_%7C_Bootstrap_5_%7C_CKEditor_5-0d6efd)
+## 🛠️ ![Tecnologias](https://img.shields.io/badge/Tecnologias-JS_ES6_%7C_Bootstrap_5_%7C_CKEditor_5-0d6efd)
 
 - **HTML5 / CSS3** (Custom Properties & Flexbox)
 - **Bootstrap 5** (Layout Responsivo)
