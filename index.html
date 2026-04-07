@@ -48,9 +48,11 @@
         .container-fluid {
             max-width: 1400px;
         }
+
         .container-fluid-background {
             background-color: lightsteelblue;
         }
+
         /* Estilizando o editor de texto rico (CKEditor) */
         .ck-editor__editable_inline {
             border: 1px solid #0d6efd !important;
@@ -265,7 +267,7 @@
         .btn-save-alert {
             animation: pulse-red 1.5s;
             border-color: #dc3545 !important;
-            background-color:  #dc3545 !important;
+            background-color: #dc3545 !important;
             color: white !important;
             font-weight: bold;
         }
@@ -275,10 +277,11 @@
         }
 
         /* Estilo para riscar o label quando o checkbox de ocultar estiver marcado */
-        .span-ocultar{
+        .span-ocultar {
             text-decoration: line-through;
             color: #dc3545;
         }
+
         .check-hide-col:checked+.form-check-label {
             text-decoration: line-through;
             color: #dc3545;
@@ -293,7 +296,8 @@
 
         #nomeMateriaTab {
             display: inline-block;
-            max-width: 150px; /* Ajuste conforme necessário */
+            max-width: 150px;
+            /* Ajuste conforme necessário */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -309,6 +313,7 @@
             .container-fluid-background {
                 background-color: unset;
             }
+
             /* Esconde botões na impressão */
             .title-input {
                 background: transparent !important;
@@ -439,23 +444,23 @@
                         <th style="width: 70px;" data-col="t"><input type="text" id="colName_t"
                                 class="header-edit-input" value="Teoria" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações"type="text" id="colName_e1"
-                                class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e1" class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações" type="text" id="colName_e2"
-                                class="header-edit-input" value="Ex. 2" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e2" class="header-edit-input" value="Ex. 2" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações" type="text" id="colName_e3"
-                                class="header-edit-input" value="Ex. 3" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e3" class="header-edit-input" value="Ex. 3" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações" type="text" id="colName_e4"
-                                class="header-edit-input" value="Ex. 4" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e4" class="header-edit-input" value="Ex. 4" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações" type="text" id="colName_e5"
-                                class="header-edit-input" value="Rev. 1" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e5" class="header-edit-input" value="Rev. 1" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações" type="text" id="colName_e6"
-                                class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
+                        <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações" type="text"
+                                id="colName_e6" class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
                         <th class="text-start-custom">Observações</th>
                         <th class="no-print" style="width: 80px;">Ações</th>
@@ -485,51 +490,65 @@
                     <div id="configTabContainer">
                         <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active small text-uppercase" id="pref-tab" data-bs-toggle="tab" data-bs-target="#tab-pref" type="button" role="tab">Preferências <br><span id="nomeMateriaTab"></span></button>
+                                <button class="nav-link active small text-uppercase" id="pref-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tab-pref" type="button" role="tab">Preferências <br><span
+                                        id="nomeMateriaTab"></span></button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab" data-bs-target="#tab-backup" type="button" role="tab">Backup e <br>Restauração</button>
+                                <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tab-backup" type="button" role="tab">Backup e
+                                    <br>Restauração</button>
                             </li>
                         </ul>
 
                         <div class="tab-content" id="configTabsContent">
-                            
+
                             <div class="tab-pane fade show active" id="tab-pref" role="tabpanel">
-                                <p class="small text-muted mb-2">Marque para <span class="span-ocultar"><b>OCULTAR</b></span> as colunas:</p>
+                                <p class="small text-muted mb-2">Marque para <span
+                                        class="span-ocultar"><b>OCULTAR</b></span> as colunas:</p>
                                 <div class="row mb-3 px-2">
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1" value="e1">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1"
+                                            value="e1">
                                         <label class="form-check-label small" for="hide_e1">Coluna 2</label>
                                     </div>
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2" value="e2">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2"
+                                            value="e2">
                                         <label class="form-check-label small" for="hide_e2">Coluna 3</label>
                                     </div>
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3" value="e3">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3"
+                                            value="e3">
                                         <label class="form-check-label small" for="hide_e3">Coluna 4</label>
                                     </div>
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4" value="e4">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4"
+                                            value="e4">
                                         <label class="form-check-label small" for="hide_e4">Coluna 5</label>
                                     </div>
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5" value="e5">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5"
+                                            value="e5">
                                         <label class="form-check-label small" for="hide_e5">Coluna 6</label>
                                     </div>
                                     <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6" value="e6">
+                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6"
+                                            value="e6">
                                         <label class="form-check-label small" for="hide_e6">Coluna 7</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3 p-2 border rounded bg-light">
-                                    <label class="fw-bold text-uppercase d-block mb-1" style="font-size: 0.7rem; color: #666;">
+                                    <label class="fw-bold text-uppercase d-block mb-1"
+                                        style="font-size: 0.7rem; color: #666;">
                                         <i class="bi bi-calendar-plus me-1"></i> Intervalo de Dias para novos conteúdos
                                     </label>
                                     <div class="d-flex align-items-center mb-2">
-                                        <input type="number" id="inputIntervaloDias" class="form-control form-control-sm" value="7" min="0" style="width: 70px;">
-                                        <span class="ms-2 small text-muted">dias a partir da data do conteúdo anterior</span>
+                                        <input type="number" id="inputIntervaloDias"
+                                            class="form-control form-control-sm" value="7" min="0" style="width: 70px;">
+                                        <span class="ms-2 small text-muted">dias a partir da data do conteúdo
+                                            anterior</span>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="checkRepetirIntervalo">
@@ -539,18 +558,21 @@
                                     </div>
                                 </div>
 
-                                <button class="btn btn-dark btn-sm w-100" onclick="applyVisibility()">Aplicar Preferências</button>
+                                <button class="btn btn-dark btn-sm w-100" onclick="applyVisibility()">Aplicar
+                                    Preferências</button>
                             </div>
 
                             <div class="tab-pane fade" id="tab-backup" role="tabpanel">
                                 <div class="alert alert-info py-2 small">
-                                    Use estes botões para salvar seus dados em um arquivo ou restaurar de um computador antigo.
+                                    Use estes botões para salvar seus dados em um arquivo ou restaurar de um computador
+                                    antigo.
                                 </div>
                                 <div class="d-grid gap-2">
                                     <button class="btn btn-outline-primary text-start btn-sm" onclick="exportBackup()">
                                         <i class="bi bi-download me-2"></i> Exportar Tudo (.json)
                                     </button>
-                                    <button class="btn btn-outline-primary text-start btn-sm" onclick="document.getElementById('importFile').click()">
+                                    <button class="btn btn-outline-primary text-start btn-sm"
+                                        onclick="document.getElementById('importFile').click()">
                                         <i class="bi bi-upload me-2"></i> Importar de Arquivo
                                     </button>
                                 </div>
@@ -605,62 +627,134 @@
 
     <!-- Modal "Sobre" (Aquelas informações extras sobre versão e autor) -->
     <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Sobre</h5>
+                    <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Sobre o Sistema</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="text-center mb-4">
-                        <div class="d-flex flex-column align-items-center justify-content-center">
 
-                            <div class="d-flex align-items-center mb-2">
-                                <img src="image/logo-cronograma.svg" alt="Logo Cronograma" class="me-2"
-                                    style="height: 48px; min-width: 48px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
-                                <div class="text-start">
-                                    <label class="h4 mb-0 fw-bold text-dark text-uppercase tracking-wider"
-                                        style="letter-spacing: 1.5px; line-height: 1;">Cronograma</label>
-                                    <br>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Organização de
-                                        Matérias</small>
+                <ul class="nav nav-tabs px-4 pt-3" id="aboutTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="info-tab" data-bs-toggle="tab"
+                            data-bs-target="#info-pane" type="button" role="tab">Informações</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold" id="features-tab" data-bs-toggle="tab"
+                            data-bs-target="#features-pane" type="button" role="tab">🚀 Funcionalidades</button>
+                    </li>
+                </ul>
+
+                <div class="modal-body p-4 tab-content" id="aboutTabsContent">
+
+                    <div class="tab-pane fade show active" id="info-pane" role="tabpanel" tabindex="0">
+                        <div class="text-center mb-4">
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="image/logo-cronograma.svg" alt="Logo" class="me-2"
+                                        style="height: 48px; min-width: 48px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+                                    <div class="text-start">
+                                        <label class="h4 mb-0 fw-bold text-dark text-uppercase tracking-wider"
+                                            style="letter-spacing: 1.5px; line-height: 1;">Cronograma</label>
+                                        <br>
+                                        <small class="text-muted" style="font-size: 0.75rem;">Organização de
+                                            Matérias</small>
+                                    </div>
                                 </div>
+                                <span
+                                    class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">Versão
+                                    2.0</span>
                             </div>
+                        </div>
 
-                            <span
-                                class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
-                                Versão 2.0
-                            </span>
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
+                        <p class="small text-secondary">
+                            &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
+                        </p>
+                        <hr>
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
+                        <p class="small text-secondary">
+                            Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
+                            modificação, desde que mantida a atribuição ao autor original.
+                        </p>
+                        <hr>
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge border text-dark fw-normal">CKEditor 5</span>
+                            <span class="badge border text-dark fw-normal">Bootstrap 5</span>
+                            <span class="badge border text-dark fw-normal">JavaScript ES6</span>
+                            <span class="badge border text-dark fw-normal">LocalStorage API</span>
+                        </div>
+                        <div class="mt-3" id="contador-container"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="features-pane" role="tabpanel" tabindex="0">
+                        <div class="pe-2" style="max-height: 400px; overflow-y: auto;">
+                            <p>O <strong>Cronograma de Estudos v2.0</strong> foi projetado para ser uma ferramenta de
+                                organização offline robusta, intuitiva e totalmente personalizável.</p>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-book me-2"></i>Gestão de Matérias</h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Múltiplas Matérias:</strong> Crie, renomeie e gerencie cronogramas
+                                    independentes em uma única interface.</li>
+                                <li><strong>Alternância Rápida:</strong> Troque de matéria instantaneamente; o sistema
+                                    lembra o último acesso.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-pencil-square me-2"></i>Edição e
+                                Personalização</h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Edição Rica (CKEditor 5):</strong> Suporte a negrito, cores, listas e links
+                                    nas observações.</li>
+                                <li><strong>Colunas Personalizáveis:</strong> Renomeie os cabeçalhos das colunas
+                                    diretamente na tabela.</li>
+                                <li><strong>Visibilidade Seletiva:</strong> Oculte colunas que você não utiliza pelo
+                                    painel de preferências.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-robot me-2"></i>Automação e
+                                Produtividade</h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Cálculo de Datas:</strong> Sugestão automática da próxima data baseada no
+                                    intervalo configurado.</li>
+                                <li><strong>Atalhos de Teclado:</strong> Use <code>Ctrl + S</code> para salvar
+                                    instantaneamente.</li>
+                                <li><strong>Auto-Save:</strong> Sistema de salvamento automático a cada 5 minutos.</li>
+                                <li><strong>Prevenção de Perda:</strong> Alerta visual e aviso do navegador ao tentar
+                                    fechar sem salvar.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-hdd me-2"></i>Dados e Portabilidade
+                            </h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Privacidade Total:</strong> Dados salvos localmente (LocalStorage). Nada sai
+                                    do seu PC.</li>
+                                <li><strong>Backup:</strong> Exporte e restaure seu progresso em arquivos
+                                    <code>.json</code>.</li>
+                                <li><strong>Mesclagem Inteligente:</strong> Escolha entre substituir tudo ou apenas
+                                    adicionar dados novos.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-printer me-2"></i>Saída e Layout</h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Modo Impressão:</strong> Layout otimizado para papel A4 (paisagem) ou PDF.
+                                </li>
+                                <li><strong>Design Moderno:</strong> Baseado em Bootstrap 5 para máxima legibilidade.
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Copyright</h6>
-                    <p class="small text-secondary">
-                        &copy; 2026 <strong>Edson Perotoni</strong>. Todos os direitos reservados.
-                    </p>
-                    <hr>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Termos de Uso</h6>
-                    <p class="small text-secondary">
-                        Este software é destinado ao uso pessoal e educacional. É permitida a redistribuição e
-                        modificação, desde que mantida a atribuição ao autor original. Uso comercial proibido.
-                    </p>
-                    <hr>
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge border text-dark fw-normal">CKEditor 5</span>
-                        <span class="badge border text-dark fw-normal">Bootstrap 5</span>
-                        <span class="badge border text-dark fw-normal">JavaScript ES6</span>
-                        <span class="badge border text-dark fw-normal">LocalStorage API</span>
-                    </div>
-                    
-                    <div class="mt-3" id="contador-container"></div>
+
                 </div>
+
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Biblioteca JS do Bootstrap para os modais funcionarem -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -695,17 +789,17 @@
             checkInterfaceState(); // Verifica se deve mostrar o aviso de "Nenhuma matéria criada" ou as preferências
 
             // Contador de Acessos (Hits.sh)
-                if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-                    const urlContador = "https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos";
-                    const htmlContador = `<img src="${urlContador}" alt="Contador de Acessos" />`;
-                    
-                    // Insere nos locais desejados (ex: no modal e no rodapé)
-                    const containers = document.querySelectorAll('#contador-container');
-                    containers.forEach(div => div.innerHTML = htmlContador);
-                } else {
-                    console.log("🚀 Modo Dev: Contagem de acessos bloqueada.");
-                }
-            
+            if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+                const urlContador = "https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos";
+                const htmlContador = `<img src="${urlContador}" alt="Contador de Acessos" />`;
+
+                // Insere nos locais desejados (ex: no modal e no rodapé)
+                const containers = document.querySelectorAll('#contador-container');
+                containers.forEach(div => div.innerHTML = htmlContador);
+            } else {
+                console.log("🚀 Modo Dev: Contagem de acessos bloqueada.");
+            }
+
         };
 
         //Aviso de "Você tem mudanças não salvas" caso tente fechar a aba ou o navegador
@@ -732,10 +826,10 @@
 
         // Quando você muda o número de dias para o intervalo automático, isso é uma mudança importante que deve ser salva.
         document.getElementById('inputIntervaloDias').addEventListener('change', (e) => {
-              setUnsavedChanges(true); 
+            setUnsavedChanges(true);
         });
 
-        
+
         // ==========================================
         // 📅 FORMATAR DATA
         // ==========================================
@@ -757,7 +851,7 @@
                 checkInterfaceState(); // Atualiza para estado bloqueado
                 return;
             }
-            
+
             saveAllRows(); // Salva a matéria atual antes de trocar (para não perder nada)
             currentMateria = name; // Atualiza a variável com o nome da matéria nova
             document.getElementById('materiaTitulo').value = name; // Muda o título grande na tela
@@ -888,9 +982,9 @@
         // Quando o usuário clica em "Aplicar Preferências" no modal, essa função é chamada para salvar as escolhas e aplicar as mudanças na interface.
         function applyVisibility() {
             const hidden = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
-            
+
             // 1. Salva visibilidade e nomes das colunas
-            saveColumnNames(hidden); 
+            saveColumnNames(hidden);
             applyVisibilityStyles(hidden);
 
             // 2. Lógica do Intervalo de Dias
@@ -1039,7 +1133,7 @@
                     applyVisibilityStyles(cfg.hiddenCols);
                 }
             }
-            
+
             // Se foi pedido para já abrir editando (ex: criar linha nova), ativa o editor.
             if (isEdit) enableEditMode(rowId);
         }
@@ -1182,33 +1276,33 @@
         // ➕ ADICIONAR LINHA EM BRANCO
         // ==========================================
         function addEmptyRow() {
-                if (!currentMateria) return alert("Selecione ou dê nome à matéria primeiro.");
+            if (!currentMateria) return alert("Selecione ou dê nome à matéria primeiro.");
 
-                // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
-                const inputIntervalo = document.getElementById('inputIntervaloDias');
-                const intervalo = parseInt(inputIntervalo.value) || 1;
+            // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
+            const inputIntervalo = document.getElementById('inputIntervaloDias');
+            const intervalo = parseInt(inputIntervalo.value) || 1;
 
-                let proximaData = new Date().toISOString().split('T')[0]; // Padrão: Hoje
-                const rows = Array.from(document.querySelectorAll('#tableBody tr'));
-                
-                if (rows.length > 0) {
-                    // 2. Extrai todas as datas e filtra as vazias
-                    const datas = rows.map(tr => tr.querySelector('.val-data').value).filter(d => d !== "");
-                    
-                    if (datas.length > 0) {
-                        // 3. Encontra a MAIOR data (ordenação léxica funciona para YYYY-MM-DD)
-                        const maiorDataStr = datas.sort().reverse()[0];
-                        
-                        // 4. Cria o objeto Date garantindo o meio-dia (12:00) 
-                        // Isso evita que o fuso horário mude o dia ao somar.
-                        let dataBase = new Date(maiorDataStr + 'T12:00:00');
-                        
-                        // 5. Soma os X dias configurados
-                        dataBase.setDate(dataBase.getDate() + intervalo);
-                        
-                        // 6. Converte de volta para o formato de input (YYYY-MM-DD)
-                        proximaData = dataBase.toISOString().split('T')[0];
-                    }
+            let proximaData = new Date().toISOString().split('T')[0]; // Padrão: Hoje
+            const rows = Array.from(document.querySelectorAll('#tableBody tr'));
+
+            if (rows.length > 0) {
+                // 2. Extrai todas as datas e filtra as vazias
+                const datas = rows.map(tr => tr.querySelector('.val-data').value).filter(d => d !== "");
+
+                if (datas.length > 0) {
+                    // 3. Encontra a MAIOR data (ordenação léxica funciona para YYYY-MM-DD)
+                    const maiorDataStr = datas.sort().reverse()[0];
+
+                    // 4. Cria o objeto Date garantindo o meio-dia (12:00) 
+                    // Isso evita que o fuso horário mude o dia ao somar.
+                    let dataBase = new Date(maiorDataStr + 'T12:00:00');
+
+                    // 5. Soma os X dias configurados
+                    dataBase.setDate(dataBase.getDate() + intervalo);
+
+                    // 6. Converte de volta para o formato de input (YYYY-MM-DD)
+                    proximaData = dataBase.toISOString().split('T')[0];
+                }
             }
 
             // Cria a linha e avisa que há mudanças
@@ -1230,7 +1324,7 @@
         function deleteRow(i) {
             // 1. Localiza a linha (tr) mais próxima do botão clicado
             const tr = i.closest('tr');
-            
+
             // 2. Busca o valor do input de conteúdo dentro dessa linha específica
             const nomeConteudo = tr.querySelector('.val-conteudo').value || "este item";
 
@@ -1318,25 +1412,25 @@
         // oculta ou mostra as abas de configuração dependendo se uma matéria está ativa ou não
         function checkInterfaceState() {
             const hasMateria = (currentMateria && currentMateria.trim() !== "");
-            
+
             const tabContainer = document.getElementById('configTabContainer');
             const warning = document.getElementById('noMateriaWarning');
             const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
 
             if (hasMateria) {
                 // Mostra as abas e o botão de adicionar
-                if(tabContainer) tabContainer.classList.remove('d-none');
-                if(warning) warning.classList.add('d-none');
-                if(btnAddContent) btnAddContent.disabled = false;
-                
+                if (tabContainer) tabContainer.classList.remove('d-none');
+                if (warning) warning.classList.add('d-none');
+                if (btnAddContent) btnAddContent.disabled = false;
+
                 // Garante que a aba de Preferências seja a ativa ao abrir
                 const prefTab = document.getElementById('pref-tab');
-                if(prefTab) prefTab.click();
+                if (prefTab) prefTab.click();
             } else {
                 // Esconde as abas (ou apenas a de preferências) e avisa o usuário
-                if(tabContainer) tabContainer.classList.add('d-none');
-                if(warning) warning.classList.remove('d-none');
-                if(btnAddContent) btnAddContent.disabled = true;
+                if (tabContainer) tabContainer.classList.add('d-none');
+                if (warning) warning.classList.remove('d-none');
+                if (btnAddContent) btnAddContent.disabled = true;
             }
         }
         // ==========================================
@@ -1369,11 +1463,11 @@
             });
 
             // Adicionamos 'automationConfigs' ao pacote final
-            const backupPayload = { 
-                list, 
-                allData, 
-                configs, 
-                automationConfigs 
+            const backupPayload = {
+                list,
+                allData,
+                configs,
+                automationConfigs
             };
 
             const blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" });
@@ -1412,8 +1506,8 @@
 
             // 2. Se for Substituir, limpamos o que existe hoje
             if (mode === 'replace') {
-                currentList.forEach(m => { 
-                    localStorage.removeItem(PREFIX + m); 
+                currentList.forEach(m => {
+                    localStorage.removeItem(PREFIX + m);
                     localStorage.removeItem(CONFIG_PREFIX + m);
                     localStorage.removeItem('config_intervalo_dias_' + m);
                 });
@@ -1422,8 +1516,8 @@
             } else {
                 // Se for Mesclar, adiciona apenas nomes novos à lista
                 if (tempImportData.list && Array.isArray(tempImportData.list)) {
-                    tempImportData.list.forEach(m => { 
-                        if (!currentList.includes(m)) currentList.push(m); 
+                    tempImportData.list.forEach(m => {
+                        if (!currentList.includes(m)) currentList.push(m);
                     });
                 }
             }
@@ -1463,9 +1557,9 @@
 
             // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-            
+
             alert("Importação finalizada!");
-            location.reload(); 
+            location.reload();
         }
 
 
@@ -1511,10 +1605,10 @@
         // Verifica o status do salvamento a cada 30 segundos
         setInterval(() => {
             const btnSave = document.getElementById('btnSalvarTudo');
-            
+
             // Se o botão estiver em modo de alerta (vermelho)
             if (btnSave && btnSave.classList.contains('btn-save-alert')) {
-                
+
                 // Se acabamos de entrar em estado de alerta, marca o início
                 if (!unsavedStartTime) {
                     unsavedStartTime = Date.now();
@@ -1536,7 +1630,7 @@
         }, 30000); // Checagem a cada 30 segundos para economizar processamento
     </script>
 
-    
+
     <div id="contador-container" style="display: none;"></div>
 </body>
 
