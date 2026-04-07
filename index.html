@@ -506,82 +506,90 @@
                         </ul>
 
                         <div class="tab-content" id="configTabsContent">
-
                             <div class="tab-pane fade show active" id="tab-pref" role="tabpanel">
-                                <p class="small text-muted mb-2">Marque para <span
-                                        class="span-ocultar"><b>OCULTAR</b></span> as colunas:</p>
-                                <div class="row mb-3 px-2">
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e1"
-                                            value="e1">
-                                        <label class="form-check-label small" for="hide_e1">Coluna 2</label>
-                                    </div>
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e2"
-                                            value="e2">
-                                        <label class="form-check-label small" for="hide_e2">Coluna 3</label>
-                                    </div>
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e3"
-                                            value="e3">
-                                        <label class="form-check-label small" for="hide_e3">Coluna 4</label>
-                                    </div>
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e4"
-                                            value="e4">
-                                        <label class="form-check-label small" for="hide_e4">Coluna 5</label>
-                                    </div>
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e5"
-                                            value="e5">
-                                        <label class="form-check-label small" for="hide_e5">Coluna 6</label>
-                                    </div>
-                                    <div class="col-3 form-check mb-1">
-                                        <input class="form-check-input check-hide-col" type="checkbox" id="hide_e6"
-                                            value="e6">
-                                        <label class="form-check-label small" for="hide_e6">Coluna 7</label>
+                                
+                                <div class="mb-3">
+                                    <label class="fw-bold text-uppercase mb-2 d-block" style="font-size: 0.75rem; color: #555;">
+                                        <i class="bi bi-eye-slash me-1"></i> Visibilidade das Colunas
+                                    </label>
+                                    <p class="text-muted mb-3" style="font-size: 0.75rem;">Marque as colunas que deseja <strong>ocultar</strong> na tabela:</p>
+                                    
+                                    <div class="row g-2 px-1">
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded-start bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e1" value="e1">
+                                                <label class="form-check-label small text-truncate" for="hide_e1" style="max-width: 100px;">Coluna 2</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e2" value="e2">
+                                                <label class="form-check-label small text-truncate" for="hide_e2" style="max-width: 100px;">Coluna 3</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e3" value="e3">
+                                                <label class="form-check-label small text-truncate" for="hide_e3" style="max-width: 100px;">Coluna 4</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e4" value="e4">
+                                                <label class="form-check-label small text-truncate" for="hide_e4" style="max-width: 100px;">Coluna 5</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e5" value="e5">
+                                                <label class="form-check-label small text-truncate" for="hide_e5" style="max-width: 100px;">Coluna 6</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
+                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox" id="hide_e6" value="e6">
+                                                <label class="form-check-label small text-truncate" for="hide_e6" style="max-width: 100px;">Coluna 7</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="mb-3 p-2 border rounded bg-light">
-                                    <label class="fw-bold text-uppercase d-block mb-1"
-                                        style="font-size: 0.7rem; color: #666;">
-                                        <i class="bi bi-calendar-plus me-1"></i> Intervalo de Dias para novos conteúdos
+                                <div class="mb-4 p-3 border rounded bg-light border-primary-subtle shadow-sm">
+                                    <label class="fw-bold text-uppercase d-block mb-2 text-primary" style="font-size: 0.7rem;">
+                                        <i class="bi bi-magic me-1"></i> Sugestão de Próxima Data
                                     </label>
                                     <div class="d-flex align-items-center mb-2">
-                                        <input type="number" id="inputIntervaloDias"
-                                            class="form-control form-control-sm" value="7" min="0" style="width: 70px;">
-                                        <span class="ms-2 small text-muted">dias a partir da data do conteúdo
-                                            anterior</span>
+                                        <input type="number" id="inputIntervaloDias" class="form-control form-control-sm shadow-sm" value="7" min="0" style="width: 75px; border-color: #0d6efd;">
+                                        <span class="ms-2 small fw-semibold text-dark">dias de intervalo</span>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="checkRepetirIntervalo">
-                                        <label class="form-check-label small text-muted" for="checkRepetirIntervalo">
-                                            Repetir para todas as matérias
+                                        <label class="form-check-label small text-muted" for="checkRepetirIntervalo" style="font-size: 0.75rem;">
+                                            Aplicar este padrão a todas as matérias
                                         </label>
                                     </div>
                                 </div>
 
-                                <button class="btn btn-dark btn-sm w-100" onclick="applyVisibility()">Aplicar
-                                    Preferências</button>
+                                <button class="btn btn-primary btn-sm w-100 fw-bold shadow-sm py-2" onclick="applyVisibility()">
+                                    <i class="bi bi-check2-circle me-1"></i> SALVAR PREFERÊNCIAS
+                                </button>
                             </div>
 
                             <div class="tab-pane fade" id="tab-backup" role="tabpanel">
-                                <div class="alert alert-info py-2 small">
-                                    Use estes botões para salvar seus dados em um arquivo ou restaurar de um computador
-                                    antigo.
+                                <div class="alert alert-warning border-0 shadow-sm py-2 px-3 small d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                                    <div>Mantenha seus dados seguros exportando um backup regularmente.</div>
                                 </div>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-primary text-start btn-sm" onclick="exportBackup()">
-                                        <i class="bi bi-download me-2"></i> Exportar Tudo (.json)
+                                
+                                <div class="d-grid gap-2 mt-3">
+                                    <button class="btn btn-success text-start btn-sm py-2 px-3 shadow-sm" onclick="exportBackup()">
+                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> <strong>Exportar Tudo</strong> (.json)
                                     </button>
-                                    <button class="btn btn-outline-primary text-start btn-sm"
-                                        onclick="document.getElementById('importFile').click()">
-                                        <i class="bi bi-upload me-2"></i> Importar de Arquivo
+                                    <button class="btn btn-outline-dark text-start btn-sm py-2 px-3 shadow-sm" onclick="document.getElementById('importFile').click()">
+                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i> <strong>Importar Arquivo</strong> (Restaurar)
                                     </button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
