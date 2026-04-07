@@ -1,15 +1,32 @@
 # 📚 Cronograma de Estudos
 
-Sistema web leve e funcional para organização de estudos, com suporte a múltiplas matérias, edição de texto rico (Rich Text) e armazenamento local.
+Sistema web leve e funcional para organização de estudos, com suporte a múltiplas matérias, edição de texto rico (Rich Text), armazenamento local e personalizações.
 
 ## 🚀 Funcionalidades
 
-- **Múltiplas Matérias:** Crie e gerencie cronogramas separados para cada disciplina.
-- **Edição Rica:** Coluna de observações com CKEditor 5 (Negrito, Listas, Links).
-- **Atalho de Produtividade:** `Ctrl + S` para salvar rapidamente sem tirar as mãos do teclado.
-- **Backup Inteligente:** Exporte seus dados em JSON e importe em qualquer outro navegador.
-- **Modo Impressão:** Layout otimizado para gerar PDFs ou imprimir seu cronograma.
-- **Privacidade:** Todos os dados são salvos localmente no seu navegador (`LocalStorage`).
+### 📚 Gestão de Matérias
+* **Múltiplas Matérias:** Crie, renomeie e gerencie cronogramas independentes para diferentes disciplinas em uma única interface.
+* **Alternância Rápida:** Troque de matéria instantaneamente através do menu de seleção; o sistema lembra qual foi a última matéria acessada.
+
+### ✍️ Edição e Personalização
+* **Edição Rica (CKEditor 5):** Coluna de observações com suporte a negrito, itálico, sublinhado, cores de texto, listas numeradas/marcadores e links.
+* **Colunas Personalizáveis:** Renomeie os cabeçalhos das colunas diretamente na tabela (ex: mude "Teoria" para "Vídeo" ou "Revisão").
+* **Visibilidade Seletiva:** Oculte colunas que você não utiliza através do painel de preferências para manter a interface limpa e focada.
+
+### 🤖 Automação e Produtividade
+* **Cálculo Inteligente de Datas:** Ao adicionar um novo conteúdo, o sistema sugere automaticamente a próxima data com base no intervalo de dias configurado (ex: a cada 7 dias a partir do último conteúdo).
+* **Atalhos de Teclado:** Use `Ctrl + S` para salvar todas as alterações instantaneamente sem tirar as mãos do teclado.
+* **Auto-Save de Segurança:** Sistema de salvamento automático a cada 5 minutos caso haja alterações pendentes.
+* **Prevenção de Perda:** Alerta visual (botão piscante) e aviso nativo do navegador caso você tente fechar a página sem salvar.
+
+### 💾 Dados e Portabilidade
+* **Privacidade Total (LocalStorage):** Seus dados nunca saem do seu computador. Tudo é salvo localmente no seu navegador.
+* **Backup e Restauração:** Exporte todo o seu progresso em um arquivo `.json` e restaure-o em qualquer outro navegador ou computador.
+* **Mesclagem Inteligente:** Ao importar um backup, escolha entre *Substituir tudo* ou *Mesclar* apenas os dados novos aos existentes.
+
+### 📄 Saída e Layout
+* **Modo Impressão Otimizado:** Layout inteligente que oculta botões de controle e ajusta a tabela perfeitamente para papel A4 (paisagem) ou geração de PDF.
+* **Design Moderno:** Interface limpa baseada em **Bootstrap 5**, otimizada para legibilidade e organização visual.
 
 ## 🛠️ Tecnologias Utilizadas ![Tecnologias](https://img.shields.io/badge/Tecnologias-JS_ES6_%7C_Bootstrap_5_%7C_CKEditor_5-0d6efd)
 
