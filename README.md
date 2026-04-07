@@ -11,7 +11,7 @@ Sistema web leve e funcional para organização de estudos, com suporte a múlti
 - **Modo Impressão:** Layout otimizado para gerar PDFs ou imprimir seu cronograma.
 - **Privacidade:** Todos os dados são salvos localmente no seu navegador (`LocalStorage`).
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas ![Tecnologias](https://img.shields.io/badge/Tecnologias-JS_ES6_%7C_Bootstrap_5_%7C_CKEditor_5-0d6efd)
 
 - **HTML5 / CSS3** (Custom Properties & Flexbox)
 - **Bootstrap 5** (Layout Responsivo)
