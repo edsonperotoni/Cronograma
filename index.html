@@ -407,6 +407,48 @@
             border-radius: 8px;
             overflow: hidden;
         }
+        /* Estilo para o contêiner do select personalizado */
+        /* 1. Forçar o contêiner a ter a mesma altura exata que o Bootstrap calcula para o input */
+        .custom-select-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 60px;
+            /* Isso garante que ele ignore margens e se estique no input-group */
+            height: auto;
+            align-self: stretch;
+            cursor: pointer;
+        }
+
+        /* 2. O Select precisa cobrir 100% da área esticada */
+        .materia-select-hidden {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        /* 3. O ícone ocupando os 80% que você pediu */
+        .select-icon-large {
+            height: 80%;
+            width: auto;
+            color: #0d6efd;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* 4. Reset crucial para o form-floating dentro de input-groups */
+        .input-group>.form-floating>.form-control {
+            height: 100%;
+            /* Força o input a ocupar o espaço total */
+            min-height: 58px;
+            /* Altura padrão do floating do Bootstrap */
+        }
 
         /* Na tela, o cabeçalho de impressão nunca aparece */
         .print-only-header {
@@ -503,7 +545,8 @@
         <div class="row g-3 align-items-center no-print bg-white p-2 mx-0 rounded shadow-sm border">
 
             <div class="col-12 col-lg-8">
-                <div class="input-group">
+                <div class="input-group align-items-stretch">
+
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaMateria"
                         title="Nova Matéria">
                         <i class="bi bi-plus-lg"></i>
@@ -511,16 +554,18 @@
 
                     <div class="form-floating flex-grow-1">
                         <input type="text" id="materiaTitulo" class="form-control border-primary-subtle fw-bold"
-                            placeholder="Nome da Matéria" style="font-size: 1.1rem; border-radius: 0;"
+                            placeholder="Nome da Matéria" style="font-size: 1.1rem; border-radius: 0; box-shadow: none;"
                             onblur="updateMateriaName()">
                         <label for="materiaTitulo" class="text-muted small">Matéria Atual</label>
                     </div>
 
-                    <div class="position-relative d-flex align-items-center bg-light border-top border-bottom border-primary-subtle px-3 shadow-sm"
-                        style="min-width: 50px;">
-                        <i class="bi bi-chevron-expand text-primary"></i>
-                        <select id="materiaSelect" class="position-absolute w-100 h-100 opacity-0"
-                            style="left:0; top:0; cursor: pointer;" onchange="switchMateria(this.value)"
+                    <div class="custom-select-container bg-light border-top border-bottom border-primary-subtle">
+                        <svg class="select-icon-large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        <select id="materiaSelect" class="materia-select-hidden" onchange="switchMateria(this.value)"
                             title="Selecionar Matéria">
                         </select>
                     </div>
@@ -640,7 +685,8 @@
                                         <i class="bi bi-eye-slash me-1"></i> Visibilidade das Colunas
                                     </label>
                                     <p class="text-muted mb-3" style="font-size: 0.75rem;">Marque as colunas que deseja
-                                        <strong>ocultar</strong> na tabela:</p>
+                                        <strong>ocultar</strong> na tabela:
+                                    </p>
 
                                     <div class="row g-2 px-1">
                                         <div class="col-6">
