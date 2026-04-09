@@ -408,21 +408,66 @@
             overflow: hidden;
         }
 
-        /* Estilo para o contêiner do select personalizado */
-        /* 1. Forçar o contêiner a ter a mesma altura exata que o Bootstrap calcula para o input */
+        /* Container da Setinha - A "âncora" */
         .custom-select-container {
-            position: relative;
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: center;
-            min-width: 60px;
-            height: auto;
+            width: 45px;
             align-self: stretch;
+            background-color: #f8f9fa;
+            position: relative;
+            /* Importante para o absolute do select */
+            border-left: none !important;
+            z-index: 5;
+        }
+
+        /* O Select Invisível - O "Gigante" */
+        .materia-select-hidden {
+            position: absolute;
+            top: 0;
+            right: 0;
+            /* Forçamos uma largura bem grande (ex: 500px) para garantir que cubra o título. 
+       O 'right: 0' garante que ele alinhe pela direita (pela seta). */
+            width: 500px;
+            height: 100%;
+            opacity: 0;
             cursor: pointer;
-            overflow: hidden;
-            /* CRÍTICO: Impede que o select invisível cubra os botões vizinhos */
+            /* z-index baixo para o Título (input) ficar por cima e ser editável */
             z-index: 1;
-            /* Mantém o seletor em uma camada base */
+        }
+
+        /* Título da Matéria - Ocupa o espaço visual */
+        #materiaTitulo {
+            border-right: none !important;
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            position: relative;
+            /* z-index alto para permitir o clique de edição (cursor de texto) */
+            z-index: 10;
+            background-color: transparent;
+        }
+
+        /* A Seta Azul - Precisa estar ACIMA do Título para abrir o select no clique */
+        .select-icon-large {
+            width: 20px;
+            height: 20px;
+            color: #0d6efd;
+            position: relative;
+            z-index: 15;
+            /* Maior que o Título */
+            pointer-events: none;
+            /* Clique atravessa o ícone e acerta o select atrás */
+        }
+
+        /* Garante que o form-floating não quebre o alinhamento */
+        .input-group>.form-floating {
+            flex-grow: 1;
+        }
+
+        .custom-select-container:hover .select-icon-large {
+            transform: translateY(2px);
+            opacity: 1;
         }
 
         /* 1.1. O input dentro do form-floating precisa ocupar 100% da altura do grupo para alinhar com o select */
@@ -434,33 +479,11 @@
 
         .input-group .btn {
             position: relative;
-            z-index: 3 !important;
-            /* Coloca os botões (Lixeira e Plus) acima de qualquer camada do seletor */
+            z-index: 20 !important;
         }
 
-        /* 2. O Select precisa cobrir 100% da área esticada */
-        .materia-select-hidden {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 2;
-            /* Fica acima do ícone SVG, mas dentro do overflow:hidden do pai */
-        }
 
-        /* 3. O ícone ocupando os 80% que você pediu */
-        .select-icon-large {
-            height: 80%;
-            width: auto;
-            color: #0d6efd;
-            opacity: 0.7;
-            pointer-events: none;
-        }
 
-        /* 4. Reset crucial para o form-floating dentro de input-groups */
         .input-group>.form-floating>.form-control {
             height: 100%;
             /* Força o input a ocupar o espaço total */
@@ -631,7 +654,7 @@
 
                     <div class="form-floating flex-grow-1">
                         <input type="text" id="materiaTitulo" class="form-control border-primary-subtle fw-bold"
-                            placeholder="Nome da Matéria" style="font-size: 1.1rem; border-radius: 0; box-shadow: none;"
+                            placeholder="Nome da Matéria" style="font-size: 1.1rem; box-shadow: none;"
                             onblur="updateMateriaName()">
                         <label for="materiaTitulo" class="text-muted small">Matéria Atual</label>
                     </div>
@@ -692,9 +715,10 @@
                             </div>
                         </th>
                         <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
-                        <th style="width: 70px;" data-col="t"><input type="text" id="colName_t"
-                                class="header-edit-input" value="Teoria" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
+                        <th style="width: 70px;" data-col="t">
+                            <input type="text" id="colName_t" class="header-edit-input" value="Teoria"
+                                oninput="syncModalLabels()" onchange="setUnsavedChanges(true)">
+                        </th>
                         <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações" type="text"
                                 id="colName_e1" class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
                                 onchange="setUnsavedChanges(true)"></th>
@@ -1876,11 +1900,19 @@
         // ==========================================
         function updateSelect() {
             const sel = document.getElementById('materiaSelect');
+            const titulo = document.getElementById('materiaTitulo');
+            const containerSeta = document.querySelector('.custom-select-container');
             const l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
 
             // Monta o menu injetando a tag <option> com todas as matérias que existem salvas
             sel.innerHTML = '<option value="">*** Matéria ***</option>' + l.map(m => `<option value="${m}">${m}</option>`).join('');
             sel.value = currentMateria;
+            // Ajuste de largura dinâmica para o dropdown abrir do tamanho total
+            if (titulo && containerSeta && sel) {
+                // Largura total = largura do campo de texto + largura da setinha
+                const larguraTotal = titulo.offsetWidth + containerSeta.offsetWidth;
+                sel.style.width = larguraTotal + "px";
+            }
         }
 
         // ==========================================
@@ -2233,16 +2265,10 @@
                     saveAllRows();
                     // Preenche os dados no cabeçalho de impressão
                     const printMateria = document.getElementById('print-materia-name');
-                    const printDate = document.getElementById('print-date-now');
 
                     // Se houver uma matéria ativa, usa o nome dela, senão coloca "Geral"
                     if (printMateria) printMateria.innerText = currentMateria || "Geral";
 
-                    if (printDate) {
-                        const agora = new Date();
-                        // Formato: 07/04/2026 às 22:15
-                        printDate.innerText = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    }
                     window.print();
                 });
             }
