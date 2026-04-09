@@ -794,6 +794,17 @@
                                             <div class="input-group input-group-sm shadow-sm">
                                                 <span class="input-group-text bg-white">
                                                     <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_t" value="t">
+                                                </span>
+                                                <input type="text" id="modalColName_t"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('t')" placeholder="Teoria">
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
                                                         id="hide_e1" value="e1">
                                                 </span>
                                                 <input type="text" id="modalColName_e1"
@@ -1282,12 +1293,28 @@
 
         // Ao abrir o modal de configurações, ele precisa preparar os dados para mostrar lá dentro. Essa função é responsável por isso. Ela captura os nomes atuais das colunas, salva os dados para garantir que o modal mostre a configuração real, e sincroniza os checkboxes de visibilidade.
         function prepararConfiguracoes() {
+            const prefTab = document.getElementById('pref-tab');
+            const backupTab = document.getElementById('backup-tab');
+            const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
+
             if (!currentMateria) {
-                // Se não houver matéria, apenas abre o modal na aba de backup
-                const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
+                // 1. Esconde fisicamente o botão da aba de preferências
+                if (prefTab) prefTab.style.display = "none";
+
+                // 2. Mostra o modal
                 myModal.show();
+
+                // 3. Força a ativação da aba de backup (com um pequeno delay para o Bootstrap processar)
+                setTimeout(() => {
+                    if (backupTab) {
+                        const trigger = new bootstrap.Tab(backupTab);
+                        trigger.show();
+                    }
+                }, 150);
                 return;
             }
+            // Se houver matéria, garante que a aba de preferências volte a aparecer
+            if (prefTab) prefTab.style.display = "block";
 
             // --- PASSO 1: CAPTURA "CONGELADA" ---
             // Pegamos os valores dos inputs da tabela enquanto eles ainda estão intactos
@@ -1328,8 +1355,15 @@
 
             // --- PASSO 5: ABERTURA MANUAL DO MODAL ---
             // Agora que tudo está preenchido corretamente, mostramos o modal
-            const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
             myModal.show();
+
+            // Força abrir na aba de preferências se houver matéria
+            setTimeout(() => {
+                if (prefTab) {
+                    const trigger = new bootstrap.Tab(prefTab);
+                    trigger.show();
+                }
+            }, 150);
         }
 
         // Quando você marca ou desmarca a opção de "Repetir Intervalo para todas as matérias", isso também é uma mudança importante.
@@ -1485,7 +1519,6 @@
         function applyVisibility() {
             // Agora pegamos os CHECKED para salvar como VISÍVEIS
             const visible = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
-            if (!visible.includes('t')) visible.push('t'); // Teoria sempre visível por segurança
 
             saveColumnNames(visible);
             applyVisibilityStyles(visible);
