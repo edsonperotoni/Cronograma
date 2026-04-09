@@ -228,7 +228,7 @@
         }
 
         tr.is-editing .edit-mode {
-            display: block !important;
+            display: inline-block !important;
         }
 
         /* Botõezinhos de ação (lápis e lixeira) */
@@ -407,6 +407,7 @@
             border-radius: 8px;
             overflow: hidden;
         }
+
         /* Estilo para o contêiner do select personalizado */
         /* 1. Forçar o contêiner a ter a mesma altura exata que o Bootstrap calcula para o input */
         .custom-select-container {
@@ -415,10 +416,26 @@
             align-items: center;
             justify-content: center;
             min-width: 60px;
-            /* Isso garante que ele ignore margens e se estique no input-group */
             height: auto;
             align-self: stretch;
             cursor: pointer;
+            overflow: hidden;
+            /* CRÍTICO: Impede que o select invisível cubra os botões vizinhos */
+            z-index: 1;
+            /* Mantém o seletor em uma camada base */
+        }
+
+        /* 1.1. O input dentro do form-floating precisa ocupar 100% da altura do grupo para alinhar com o select */
+        .input-group>.form-floating>.form-control {
+            height: 100%;
+            /* Força o input a ocupar a altura total do grupo */
+            border-radius: 0;
+        }
+
+        .input-group .btn {
+            position: relative;
+            z-index: 3 !important;
+            /* Coloca os botões (Lixeira e Plus) acima de qualquer camada do seletor */
         }
 
         /* 2. O Select precisa cobrir 100% da área esticada */
@@ -430,7 +447,8 @@
             height: 100%;
             opacity: 0;
             cursor: pointer;
-            z-index: 5;
+            z-index: 2;
+            /* Fica acima do ícone SVG, mas dentro do overflow:hidden do pai */
         }
 
         /* 3. O ícone ocupando os 80% que você pediu */
@@ -448,6 +466,65 @@
             /* Força o input a ocupar o espaço total */
             min-height: 58px;
             /* Altura padrão do floating do Bootstrap */
+        }
+
+        /* Ajusta o tamanho do checkbox real (modo edição) para alinhar com o ícone (modo visualização) */
+        .edit-mode.form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-top: 0;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 2px solid #0d6efd;
+            /* Borda mais grossa para combinar com o tom de azul */
+        }
+
+        /* Garante que o checkbox real não apareça fora do modo edição */
+        tr:not(.is-editing) .edit-mode {
+            display: none !important;
+        }
+
+        /* Garante que o ícone suma quando o checkbox real aparecer */
+        tr.is-editing .view-mode {
+            display: none !important;
+        }
+
+        /* Ajuste fino para o checkbox que aumentamos de tamanho */
+        .edit-mode.form-check-input {
+            display: none;
+            /* Inicia escondido via CSS */
+        }
+
+        /* Garante que o ícone e o checkbox ocupem o mesmo espaço na célula */
+        .study-table td .check-toggle,
+        .study-table td .form-check-input {
+            display: inline-block;
+            transition: transform 0.1s ease;
+        }
+
+        /* O checkbox real só aparece no modo edição, e o ícone só aparece no modo visualização. Ambos ocupam o mesmo espaço para evitar saltos de layout.*/
+        .study-table td .form-check-input.edit-mode {
+            display: none;
+            /* Escondido por padrão */
+            width: 1.25rem;
+            height: 1.25rem;
+            margin: 0 auto;
+            /* Centraliza horizontalmente */
+            float: none;
+            /* Garante que o Bootstrap não o jogue para a esquerda */
+            vertical-align: middle;
+            cursor: pointer;
+            border: 2px solid #0d6efd;
+        }
+
+        /* Efeito de escala ao passar o mouse para dar feedback de clique */
+        .study-table td .form-check-input:hover {
+            transform: scale(1.1);
+        }
+
+        .study-table td {
+            text-align: center;
+            vertical-align: middle;
         }
 
         /* Na tela, o cabeçalho de impressão nunca aparece */
@@ -528,8 +605,8 @@
                         <i class="bi bi-printer"></i>
                     </button>
                     <div class="vr opacity-25 my-2"></div>
-                    <button class="btn btn-light border-0 text-dark px-3" data-bs-toggle="modal"
-                        data-bs-target="#modalConfig" title="Configurações">
+                    <button class="btn btn-light border-0 text-dark px-3" onclick="prepararConfiguracoes()"
+                        title="Configurações">
                         <i class="bi bi-gear-fill"></i>
                     </button>
                     <div class="vr opacity-25 my-2"></div>
@@ -608,7 +685,7 @@
                                 <span>Conteúdo</span>
                                 <button
                                     class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm no-print"
-                                    onclick="addEmptyRow()" title="Adicionar Conteúdo"
+                                    onclick="addEmptyRow()" title="Adicionar Conteúdo (Ctrl + B)"
                                     style="width: 28px; height: 28px; border: 1px solid rgba(255,255,255,0.2);">
                                     <i class="bi bi-plus-lg"></i>
                                 </button>
@@ -682,65 +759,77 @@
                                 <div class="mb-3">
                                     <label class="fw-bold text-uppercase mb-2 d-block"
                                         style="font-size: 0.75rem; color: #555;">
-                                        <i class="bi bi-eye-slash me-1"></i> Visibilidade das Colunas
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        <p class="text-muted mb-3" style="font-size: 0.75rem;">
+                                            Marque as colunas que deseja exibir e renomeie os títulos como preferir.
+                                        </p>
                                     </label>
-                                    <p class="text-muted mb-3" style="font-size: 0.75rem;">Marque as colunas que deseja
-                                        <strong>ocultar</strong> na tabela:
-                                    </p>
 
                                     <div class="row g-2 px-1">
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded-start bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e1" value="e1">
-                                                <label class="form-check-label small text-truncate" for="hide_e1"
-                                                    style="max-width: 100px;">Coluna 2</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e1" value="e1">
+                                                </span>
+                                                <input type="text" id="modalColName_e1"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e1')" placeholder="Coluna 1">
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e2" value="e2">
-                                                <label class="form-check-label small text-truncate" for="hide_e2"
-                                                    style="max-width: 100px;">Coluna 3</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e2" value="e2">
+                                                </span>
+                                                <input type="text" id="modalColName_e2"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e2')" placeholder="Coluna 2">
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e3" value="e3">
-                                                <label class="form-check-label small text-truncate" for="hide_e3"
-                                                    style="max-width: 100px;">Coluna 4</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e3" value="e3">
+                                                </span>
+                                                <input type="text" id="modalColName_e3"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e3')" placeholder="Coluna 3">
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e4" value="e4">
-                                                <label class="form-check-label small text-truncate" for="hide_e4"
-                                                    style="max-width: 100px;">Coluna 5</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e4" value="e4">
+                                                </span>
+                                                <input type="text" id="modalColName_e4"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e4')" placeholder="Coluna 4">
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e5" value="e5">
-                                                <label class="form-check-label small text-truncate" for="hide_e5"
-                                                    style="max-width: 100px;">Coluna 6</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e5" value="e5">
+                                                </span>
+                                                <input type="text" id="modalColName_e5"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e5')" placeholder="Coluna 5">
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div
-                                                class="form-check form-switch p-2 border rounded bg-white shadow-sm h-100">
-                                                <input class="form-check-input ms-0 me-2 check-hide-col" type="checkbox"
-                                                    id="hide_e6" value="e6">
-                                                <label class="form-check-label small text-truncate" for="hide_e6"
-                                                    style="max-width: 100px;">Coluna 7</label>
+                                        <div class="col-6 mb-2">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-white">
+                                                    <input class="form-check-input mt-0 check-hide-col" type="checkbox"
+                                                        id="hide_e6" value="e6">
+                                                </span>
+                                                <input type="text" id="modalColName_e6"
+                                                    class="form-control fw-bold text-primary"
+                                                    oninput="syncFromModal('e6')" placeholder="Coluna 6">
                                             </div>
                                         </div>
                                     </div>
@@ -1116,6 +1205,8 @@
 
         };
 
+
+
         // Configura o clique do botão "Excluir" dentro do Modal
         document.getElementById('btnConfirmarAcaoExclusao').addEventListener('click', () => {
             if (isDeletingFullMateria) {
@@ -1138,14 +1229,25 @@
             }
         });
 
+        // Quando o modal de configurações for aberto, ele recarrega os nomes das colunas e as configurações de visibilidade para garantir que tudo esteja atualizado.
+        document.getElementById('modalConfig').addEventListener('show.bs.modal', function () {
+            loadColumnNames(); // Recarrega tudo para garantir que o modal abra com os nomes certos
+        });
         // ==========================================
         // ⌨️ ATALHO DO TECLADO
         // ==========================================
         // Fica "escutando" as teclas. Se apertar Ctrl + S, ele salva os dados e bloqueia a janela padrão de "Salvar Página" do navegador.
         document.addEventListener('keydown', (e) => {
+            // Atalho: CTRL + S (Salvar)
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 saveAllRows();
+            }
+            // Atalho: CTRL + B (Novo Conteúdo)
+            // Seguro no Firefox e Chrome, próximo do S e do Espaço.
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault();
+                addEmptyRow();
             }
         });
 
@@ -1154,6 +1256,125 @@
             setUnsavedChanges(true);
         });
 
+        // Ao abrir o modal de configurações, ele precisa preparar os dados para mostrar lá dentro. Essa função é responsável por isso. Ela captura os nomes atuais das colunas, salva os dados para garantir que o modal mostre a configuração real, e sincroniza os checkboxes de visibilidade.
+        function prepararConfiguracoes() {
+            if (!currentMateria) {
+                // Se não houver matéria, apenas abre o modal na aba de backup
+                const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
+                myModal.show();
+                return;
+            }
+
+            // --- PASSO 1: CAPTURA "CONGELADA" ---
+            // Pegamos os valores dos inputs da tabela enquanto eles ainda estão intactos
+            const nomesDaTabela = {
+                t: document.getElementById('colName_t').value,
+                e1: document.getElementById('colName_e1').value,
+                e2: document.getElementById('colName_e2').value,
+                e3: document.getElementById('colName_e3').value,
+                e4: document.getElementById('colName_e4').value,
+                e5: document.getElementById('colName_e5').value,
+                e6: document.getElementById('colName_e6').value
+            };
+
+            // --- PASSO 2: SALVAMENTO E RESET ---
+            // Isso vai reconstruir a tabela com dados antigos no fundo, 
+            // mas não importa, pois já temos os nomes novos na variável acima.
+            saveAllRows();
+
+            // --- PASSO 3: INJEÇÃO MANUAL NO MODAL ---
+            // Forçamos os nomes capturados para dentro dos campos do modal
+            Object.keys(nomesDaTabela).forEach(k => {
+                const modalInput = document.getElementById('modalColName_' + k);
+                if (modalInput) {
+                    modalInput.value = nomesDaTabela[k];
+                }
+            });
+
+            // --- PASSO 4: SINCRONIZAÇÃO DE VISIBILIDADE ---
+            // Carregamos os checkboxes (que não mudam via digitação)
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            if (rawConfig) {
+                const cfg = JSON.parse(rawConfig);
+                const visibleCols = cfg.visibleCols || ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+                document.querySelectorAll('.check-hide-col').forEach(cb => {
+                    cb.checked = visibleCols.includes(cb.value);
+                });
+            }
+
+            // --- PASSO 5: ABERTURA MANUAL DO MODAL ---
+            // Agora que tudo está preenchido corretamente, mostramos o modal
+            const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
+            myModal.show();
+        }
+
+        // Quando você marca ou desmarca a opção de "Repetir Intervalo para todas as matérias", isso também é uma mudança importante.
+        function syncFromModal(key) {
+            const modalVal = document.getElementById('modalColName_' + key).value;
+            const headerInput = document.getElementById('colName_' + key);
+            if (headerInput) {
+                headerInput.value = modalVal;
+            }
+            setUnsavedChanges(true);
+        }
+
+        // Sincroniza os inputs do modal com os inputs do header da tabela
+        function syncModalLabels() {
+            const keys = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+            keys.forEach(k => {
+                const hInput = document.getElementById('colName_' + k);
+                const mInput = document.getElementById('modalColName_' + k);
+                if (hInput && mInput) {
+                    mInput.value = hInput.value;
+                }
+            });
+        }
+
+        // Lê os nomes das colunas e as configurações de visibilidade do localStorage e atualiza tanto os inputs do header da tabela quanto os inputs do modal de preferências.
+        function loadColumnNames() {
+            if (!currentMateria) return;
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            let cfg = {};
+            try { if (rawConfig) cfg = JSON.parse(rawConfig); } catch (e) { }
+
+            const defaults = { t: "Teoria", e1: "Ex. 1", e2: "Ex. 2", e3: "Ex. 3", e4: "Ex. 4", e5: "Rev. 1", e6: "Rev. 2" };
+            const keys = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+
+            keys.forEach(k => {
+                const val = (cfg && cfg[k]) ? cfg[k] : defaults[k];
+                if (document.getElementById('colName_' + k)) document.getElementById('colName_' + k).value = val;
+                if (document.getElementById('modalColName_' + k)) document.getElementById('modalColName_' + k).value = val;
+            });
+
+            // Se for a primeira vez (sem config), todas as colunas são visíveis por padrão
+            const visibleCols = (cfg && cfg.visibleCols) ? cfg.visibleCols : ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+
+            document.querySelectorAll('.check-hide-col').forEach(cb => {
+                cb.checked = visibleCols.includes(cb.value);
+            });
+
+            applyVisibilityStyles(visibleCols);
+        }
+
+        //  Sincroniza do Modal para a Tabela enquanto digita - (caso o usuário prefira editar os nomes das colunas dentro do modal de preferências)
+        function syncFromModal(key) {
+            const modalVal = document.getElementById('modalColName_' + key).value;
+            const headerInput = document.getElementById('colName_' + key);
+            if (headerInput) headerInput.value = modalVal;
+            setUnsavedChanges(true); // Ativa o alerta de salvar
+        }
+
+        // Sincroniza da Tabela para o Modal enquanto digita - (caso o usuário prefira editar os nomes das colunas diretamente na tabela)
+        function syncModalLabels() {
+            const keys = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+            keys.forEach(k => {
+                const hVal = document.getElementById('colName_' + k).value;
+                const mInput = document.getElementById('modalColName_' + k);
+                if (mInput) mInput.value = hVal;
+            });
+        }
+
+        // Coloca a mensagem de "Selecione uma matéria" no meio da tabela quando não há matéria ativa
         function setInitialTableContent() {
             return `
             <tr>
@@ -1209,112 +1430,25 @@
             checkInterfaceState();
         }
 
-        // ==========================================
-        // 📋 CARREGAR NOMES DAS COLUNAS (Teoria, Ex1...)
-        // ==========================================
-        // Lê a memória do navegador para ver se você mudou o nome da coluna "Teoria" para "Vídeo", por exemplo.
-        function loadColumnNames() {
-            if (!currentMateria) return;
-            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-            let cfg = {};
 
-            try {
-                if (rawConfig) cfg = JSON.parse(rawConfig);
-            } catch (e) { console.error("Erro ao ler configurações:", e); }
 
-            cfg = cfg || {};
-
-            // 1. Recupera os nomes (ou usa o padrão)
-            const names = {
-                t: cfg.t || "Teoria",
-                e1: cfg.e1 || "Ex. 1",
-                e2: cfg.e2 || "Ex. 2",
-                e3: cfg.e3 || "Ex. 3",
-                e4: cfg.e4 || "Ex. 4",
-                e5: cfg.e5 || "Rev. 1",
-                e6: cfg.e6 || "Rev. 2"
-            };
-
-            // 2. Atualiza os inputs do Header da Tabela
-            document.getElementById('colName_t').value = names.t;
-            document.getElementById('colName_e1').value = names.e1;
-            document.getElementById('colName_e2').value = names.e2;
-            document.getElementById('colName_e3').value = names.e3;
-            document.getElementById('colName_e4').value = names.e4;
-            document.getElementById('colName_e5').value = names.e5;
-            document.getElementById('colName_e6').value = names.e6;
-
-            syncModalLabels();
-
-            //Atualiza os LABELS do Modal de Ocultação
-            // Isso faz com que o modal mostre o nome que você escolheu para a matéria
-            if (document.querySelector('label[for="hide_e1"]')) {
-                // Nota: 't' (Teoria) não está no seu modal de ocultar por padrão, 
-                // mas e1 até e6 sim.
-                document.querySelector('label[for="hide_e1"]').innerText = names.e1;
-                document.querySelector('label[for="hide_e2"]').innerText = names.e2;
-                document.querySelector('label[for="hide_e3"]').innerText = names.e3;
-                document.querySelector('label[for="hide_e4"]').innerText = names.e4;
-                document.querySelector('label[for="hide_e5"]').innerText = names.e5;
-                document.querySelector('label[for="hide_e6"]').innerText = names.e6;
-            }
-
-            // 4. Sincroniza os checkboxes de visibilidade
-            const hiddenCols = cfg.hiddenCols || [];
-            document.querySelectorAll('.check-hide-col').forEach(cb => {
-                cb.checked = hiddenCols.includes(cb.value);
-            });
-
-            applyVisibilityStyles(hiddenCols);
-        }
-
-        function syncModalLabels() {
-            // Mapeia o ID do input no header para o ID do label no modal
-            const mapping = {
-                'colName_e1': 'hide_e1',
-                'colName_e2': 'hide_e2',
-                'colName_e3': 'hide_e3',
-                'colName_e4': 'hide_e4',
-                'colName_e5': 'hide_e5',
-                'colName_e6': 'hide_e6'
-            };
-
-            Object.keys(mapping).forEach(inputId => {
-                const inputVal = document.getElementById(inputId).value;
-                const labelFor = mapping[inputId];
-                const labelElement = document.querySelector(`label[for="${labelFor}"]`);
-
-                if (labelElement) {
-                    labelElement.innerText = inputVal || "Coluna"; // Fallback caso esteja vazio
-                }
-            });
-        }
-
-        // Função para aplicar o CSS de esconder
-        function applyVisibilityStyles(hiddenCols) {
-            // Mapeamento: Chave da configuração => Posição da coluna na tabela (1-based)
+        // Aplica estilos de visibilidade às colunas
+        function applyVisibilityStyles(visibleCols) {
             const colMapping = {
-                't': 3,  // Teoria
-                'e1': 4, // Ex. 1
-                'e2': 5, // Ex. 2
-                'e3': 6, // Ex. 3
-                'e4': 7, // Ex. 4
-                'e5': 8, // Rev. 1
-                'e6': 9  // Rev. 2
+                't': 3, 'e1': 4, 'e2': 5, 'e3': 6, 'e4': 7, 'e5': 8, 'e6': 9
             };
 
             Object.keys(colMapping).forEach(key => {
                 const colIndex = colMapping[key];
-                const shouldHide = hiddenCols.includes(key);
+                // LOGICA INVERTIDA: Se NÃO estiver na lista de visíveis, esconde.
+                const shouldHide = !visibleCols.includes(key);
 
-                // Esconde o Header (th)
                 const th = document.querySelector(`.study-table thead th:nth-child(${colIndex})`);
                 if (th) {
                     th.style.display = shouldHide ? 'none' : '';
                     th.classList.toggle('col-hidden', shouldHide);
                 }
 
-                // Esconde todas as células (td) daquela coluna no corpo da tabela
                 const cells = document.querySelectorAll(`#tableBody tr td:nth-child(${colIndex})`);
                 cells.forEach(td => {
                     td.style.display = shouldHide ? 'none' : '';
@@ -1325,62 +1459,48 @@
 
         // Quando o usuário clica em "Aplicar Preferências" no modal, essa função é chamada para salvar as escolhas e aplicar as mudanças na interface.
         function applyVisibility() {
-            const hidden = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
+            // Agora pegamos os CHECKED para salvar como VISÍVEIS
+            const visible = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
+            if (!visible.includes('t')) visible.push('t'); // Teoria sempre visível por segurança
 
-            // 1. Salva visibilidade e nomes das colunas
-            saveColumnNames(hidden);
-            applyVisibilityStyles(hidden);
+            saveColumnNames(visible);
+            applyVisibilityStyles(visible);
 
-            // 2. Lógica do Intervalo de Dias
             if (currentMateria) {
                 const novoIntervalo = document.getElementById('inputIntervaloDias').value;
-                const repetirParaTodas = document.getElementById('checkRepetirIntervalo').checked;
-
-                // Salva na matéria atual
                 localStorage.setItem('config_intervalo_dias_' + currentMateria, novoIntervalo);
-
-                // Se o checkbox estiver marcado, replica para TODAS as matérias da lista
-                if (repetirParaTodas) {
-                    const listaMaterias = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-                    listaMaterias.forEach(materia => {
-                        localStorage.setItem('config_intervalo_dias_' + materia, novoIntervalo);
-                    });
-                    console.log(`Global: Intervalo de ${novoIntervalo} dias aplicado a todas as matérias.`);
-                }
-
             }
 
             setUnsavedChanges(true);
-            saveAllRows(); // Salva para aplicar o novo intervalo automaticamente na próxima vez que adicionar uma linha
-            // Fecha o modal
-            const modalElement = document.getElementById('modalConfig');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            saveAllRows();
+
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('modalConfig'));
             if (modalInstance) modalInstance.hide();
         }
 
         // ==========================================
         // 💾 SALVAR NOMES DAS COLUNAS
         // ==========================================
-        // Pega os textos que você digitou no cabeçalho da tabela e salva no computador.
-        function saveColumnNames(hiddenCols = null) {
+        // Essa função lê os nomes das colunas (t, e1, e2, e3, e4, e5, e6) dos inputs do header da tabela e do modal de preferências, e salva tudo no localStorage para a matéria atual. Se a função for chamada sem argumentos, ela tenta pegar a visibilidade atual do localStorage para não perder essa informação.
+        function saveColumnNames(visibleCols = null) {
             if (!currentMateria) return;
 
-            // Se não passar os ocultos (chamada via saveAll), tenta pegar do modal ou do que já está salvo
-            if (hiddenCols === null) {
+            if (visibleCols === null) {
                 const raw = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-                hiddenCols = raw ? JSON.parse(raw).hiddenCols : [];
+                visibleCols = raw ? JSON.parse(raw).visibleCols : ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
             }
 
             const config = {
-                t: document.getElementById('colName_t').value,
-                e1: document.getElementById('colName_e1').value,
-                e2: document.getElementById('colName_e2').value,
-                e3: document.getElementById('colName_e3').value,
-                e4: document.getElementById('colName_e4').value,
-                e5: document.getElementById('colName_e5').value,
-                e6: document.getElementById('colName_e6').value,
-                hiddenCols: hiddenCols // ✨ NOVO
+                t: document.getElementById('colName_t').value, // Teoria é o único que fica no header
+                e1: document.getElementById('modalColName_e1').value,
+                e2: document.getElementById('modalColName_e2').value,
+                e3: document.getElementById('modalColName_e3').value,
+                e4: document.getElementById('modalColName_e4').value,
+                e5: document.getElementById('modalColName_e5').value,
+                e6: document.getElementById('modalColName_e6').value,
+                visibleCols: visibleCols
             };
+
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
         }
 
@@ -1418,67 +1538,62 @@
         // ==========================================
         // 🏗️ CONSTRUIR UMA LINHA NA TABELA (A mágica do HTML visual)
         // ==========================================
-        // Essa função cria a estrutura de HTML (`<tr>` e `<td>`) para representar uma linha de estudo.
-        // Ela gera duas versões para cada célula: uma pra você ver (view-mode) e uma pra você editar (edit-mode).
+        // Essa função é responsável por criar o código HTML de uma linha da tabela, preenchendo com os dados passados como argumento. Ela também configura os ícones de check e os campos de edição.
         function createRow(d, c, t, e1, e2, e3, e4, e5, e6, o, isEdit = false) {
             const tbody = document.getElementById('tableBody');
             const tr = document.createElement('tr');
 
-            // Cria um ID único pra essa linha (ex: row_169992039abcde)
             const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
             tr.id = rowId;
             if (isEdit) tr.classList.add('is-editing');
 
-            if (isEdit) tr.classList.add('is-editing'); // Se for nova, já entra no modo edição
-
-            // Arruma o formato da data para colocar no campo tipo 'date' do HTML
             let dateValue = d && d.includes('/') ? d.split('/').reverse().join('-') : d;
 
-            // Função ajudante para criar os botões de marcar (Checkboxes azuis)
             const tickCell = (val, field) => `
-                <td>
-                    <i class="bi ${val ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'${field}')"></i>
-                    <input type="checkbox" class="form-check-input edit-mode ${field}" ${val ? 'checked' : ''}>
-                </td>`;
+    <td>
+        <i class="bi ${val ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'${field}')"></i>
+        <input type="checkbox" class="form-check-input edit-mode ${field}" ${val ? 'checked' : ''} style="display: none;">
+    </td>`;
 
-            // Aqui injetamos um monte de código HTML dentro da linha recém-criada
             tr.innerHTML = `
-                <td>
-                    <span class="view-mode">${formatDateToBR(dateValue)}</span>
-                    <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
-                </td>
-                <td class="text-start-custom">
-                    <span class="view-mode fw-bold">${c || '-'}</span>
-                    <input type="text" class="edit-input edit-mode val-conteudo" value="${c}">
-                </td>
-                ${tickCell(t, 'val-t')}
-                ${tickCell(e1, 'val-e1')}
-                ${tickCell(e2, 'val-e2')}
-                ${tickCell(e3, 'val-e3')}
-                ${tickCell(e4, 'val-e4')}
-                ${tickCell(e5, 'val-e5')}
-                ${tickCell(e6, 'val-e6')}
-                <td class="text-start-custom">
-                    <div class="view-mode view-obs">${o || '-'}</div>
-                    <div class="edit-mode"><div class="val-obs-editor">${o}</div></div>
-                </td>
-                <td class="no-print">
-                    <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="enableEditMode('${rowId}')"></i>
-                    <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
-                </td>`;
+        <td>
+            <span class="view-mode">${formatDateToBR(dateValue)}</span>
+            <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
+        </td>
+        <td class="text-start-custom">
+            <span class="view-mode fw-bold">${c || '-'}</span>
+            <input type="text" class="edit-input edit-mode val-conteudo" value="${c}">
+        </td>
+        ${tickCell(t, 'val-t')}
+        ${tickCell(e1, 'val-e1')}
+        ${tickCell(e2, 'val-e2')}
+        ${tickCell(e3, 'val-e3')}
+        ${tickCell(e4, 'val-e4')}
+        ${tickCell(e5, 'val-e5')}
+        ${tickCell(e6, 'val-e6')}
+        <td class="text-start-custom">
+            <div class="view-mode view-obs">${o || '-'}</div>
+            <div class="edit-mode"><div class="val-obs-editor">${o}</div></div>
+        </td>
+        <td class="no-print">
+            <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="enableEditMode('${rowId}')"></i>
+            <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
+        </td>`;
 
-            tbody.appendChild(tr);// Adiciona a linha pronta na tela
+            tbody.appendChild(tr);
 
-            //Aplica a visibilidade imediatamente após criar a linha
+            // --- CORREÇÃO DO BLOCO DE VISIBILIDADE ---
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
             if (rawConfig) {
                 const cfg = JSON.parse(rawConfig);
-                if (cfg && cfg.hiddenCols) {
-                    applyVisibilityStyles(cfg.hiddenCols);
-                }
+                // Alterado de hiddenCols para visibleCols para bater com a nova lógica
+                const colunasParaExibir = cfg.visibleCols || ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+                applyVisibilityStyles(colunasParaExibir);
+            } else {
+                // Se não houver config nenhuma, garante que a linha nova mostre tudo (padrão)
+                applyVisibilityStyles(['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']);
             }
 
-            // Se foi pedido para já abrir editando (ex: criar linha nova), ativa o editor.
             if (isEdit) enableEditMode(rowId);
             return tr;
         }
@@ -1499,22 +1614,22 @@
         // ==========================================
         // 💾 SALVAR DADOS (O coração do backup)
         // ==========================================
-        // Lê linha por linha da tabela, junta tudo e guarda na memória local do navegador (localStorage)
+        /* Essa função é chamada para salvar os dados da tabela no localStorage. 
+        Ela lê cada linha da tabela, pega os valores dos campos, e constrói uma lista de objetos. Antes de salvar, 
+        ela FILTRA essa lista para remover linhas que não têm conteúdo significativo (nem conteúdo na coluna "conteúdo" 
+        nem texto real nas observações). Depois, ela ordena as linhas por data e salva tudo como JSON no localStorage.*/
         function saveData() {
             if (!currentMateria) return;
 
-            //Garante que o intervalo atual da tela seja salvo junto com os dados
+            // Garante que o intervalo atual da tela seja salvo junto com os dados
             const intervaloAtual = document.getElementById('inputIntervaloDias').value;
             localStorage.setItem('config_intervalo_dias_' + currentMateria, intervaloAtual);
 
-            // "Pega todas as linhas da tabela, e para cada uma, extrai os valores dos campos"
+            // 1. MAPEIA os dados da tabela
             const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
                 const rowId = tr.id;
-
-                // Se a linha estiver sendo editada, pega o texto lá do CKEditor, senão pega o texto normal
                 let obsHtml = activeEditors[rowId] ? activeEditors[rowId].getData() : tr.querySelector('.view-obs').innerHTML;
 
-                // Retorna um objeto arrumadinho com todas as informações da linha
                 return {
                     data: tr.querySelector('.val-data').value,
                     conteudo: tr.querySelector('.val-conteudo').value,
@@ -1527,16 +1642,30 @@
                     e6: tr.querySelector('.val-e6').checked,
                     obs: obsHtml
                 };
-            });
+            })
+                // 2. FILTRA: Aqui está a mágica! 
+                // Se o conteúdo estiver vazio (mesmo com espaços), a linha é removida da lista.
+                .filter(item => {
+                    // Remove espaços em branco do conteúdo para validar
+                    const temConteudo = item.conteudo.trim() !== "" && item.conteudo.trim() !== "-";
 
-            // Ordenação: Datas vazias ficam por último
+                    // Verifica se a observação tem texto real
+                    // Removemos tags HTML básicas e espaços para ver se sobrou algo escrito
+                    const textoObsLimpo = item.obs.replace(/<[^>]*>/g, '').trim();
+                    const temObs = textoObsLimpo !== "" && textoObsLimpo !== "&nbsp;";
+
+                    // REGRA: Salva se tiver um OU outro
+                    return temConteudo || temObs;
+                });
+
+            // 3. ORDENA (Agora apenas as linhas válidas)
             items.sort((a, b) => {
                 if (!a.data) return 1;
                 if (!b.data) return -1;
                 return new Date(a.data) - new Date(b.data);
             });
 
-            // Transforma esse amontoado de dados num texto compacto (JSON) e salva
+            // 4. SALVA no banco local
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
         }
 
@@ -1601,20 +1730,30 @@
         // ==========================================
         // 💾✅ SALVAR TUDO E FECHAR EDIÇÃO
         // ==========================================
-        // O que acontece ao clicar no botão verde "Salvar" lá em cima.
+        // Essa função é chamada quando você clica no botão "Salvar" (ou quando o modal de preferências é aberto, para garantir que nada fique perdido). Ela fecha todos os editores abertos, remove as classes de edição e salva os dados.
         function saveAllRows() {
-            // Destrói os editores ricos de texto de todas as linhas abertas
+            // Fecha todos os editores ricos (CKEditor) ativos
             Object.keys(activeEditors).forEach(id => {
-                if (activeEditors[id]) activeEditors[id].destroy().then(() => delete activeEditors[id]);
+                if (activeEditors[id]) {
+                    activeEditors[id].destroy().then(() => delete activeEditors[id]);
+                }
             });
 
-            // Tira a classe 'is-editing' de todo mundo, voltando as linhas ao visual normal
+            // Remove a classe de edição visual de todas as linhas
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
 
-            saveData(); // Grava os conteúdos novos
-            saveColumnNames(); // Grava os novos nomes das colunas (se houver)
-            loadRows(); // Recarrega a tabela lisinha
-            setUnsavedChanges(false); // Para o botão verde de piscar
+            // Executa a lógica de coleta de dados e gravação no LocalStorage
+            saveData();
+
+            // Salva os nomes das colunas e visibilidade
+            // (Passando null ele busca o que já está configurado ou usa o padrão)
+            saveColumnNames();
+
+            // Recarrega as linhas para atualizar a interface com os dados salvos (importante para pintar os checks corretamente e atualizar as datas formatadas)
+            loadRows();
+
+            // Atualiza o estado do botão (para de piscar)
+            setUnsavedChanges(false);
         }
 
         // ==========================================
@@ -1655,6 +1794,8 @@
             setTimeout(() => {
                 const inputConteudo = tr_new.querySelector('.val-conteudo');
                 if (inputConteudo) {
+                    // Faz a nova linha deslizar suavemente para o centro da tela
+                    tr_new.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     inputConteudo.focus();
                     // Opcional: seleciona o texto se houver algo
                     inputConteudo.select();
