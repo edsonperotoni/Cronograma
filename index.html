@@ -587,7 +587,7 @@
                 background-color: transparent !important;
                 padding: 0 !important;
             }
-            
+
             .header-obs::after {
                 content: attr(data-texto-desktop);
             }
@@ -654,7 +654,6 @@
                     </button>
                 </div>
 
-                <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
             </div>
         </div>
         <div class="row g-3 align-items-center no-print bg-white p-2 mx-0 rounded shadow-sm border">
@@ -925,11 +924,20 @@
                                         <i class="bi bi-cloud-arrow-down-fill me-2"></i> <strong>Exportar Tudo</strong>
                                         (.json)
                                     </button>
-                                    <button class="btn btn-outline-dark text-start btn-sm py-2 px-3 shadow-sm"
-                                        onclick="document.getElementById('importFile').click()">
-                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i> <strong>Importar Arquivo</strong>
-                                        (Restaurar)
-                                    </button>
+
+
+                                    <label for="importFile"
+                                        class="btn btn-outline-dark text-start btn-sm py-2 px-3 shadow-sm">
+                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>
+                                        <strong>Importar Arquivo</strong> (Restaurar)
+                                    </label>
+                                    <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
+
+
+                                    <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
+
+
+
                                 </div>
                             </div>
                         </div>
@@ -1313,7 +1321,9 @@
             const prefTab = document.getElementById('pref-tab');
             const backupTab = document.getElementById('backup-tab');
             const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
+            const importFile = document.getElementById('importFile');
 
+            importFile.value = ""; // Reseta o input de arquivo para evitar confusão se o usuário quiser importar algo novo depois de abrir as configurações    
             if (!currentMateria) {
                 // 1. Esconde fisicamente o botão da aba de preferências
                 if (prefTab) prefTab.style.display = "none";
@@ -1364,7 +1374,13 @@
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
             if (rawConfig) {
                 const cfg = JSON.parse(rawConfig);
-                const visibleCols = cfg.visibleCols || ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+
+                let visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']; // Padrão: todas visíveis
+                if (cfg && cfg.hiddenCols) {
+                    visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => !cfg.hiddenCols.includes(col));
+                } else if (cfg && cfg.visibleCols) {
+                    visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => cfg.visibleCols.includes(col));
+                }
                 document.querySelectorAll('.check-hide-col').forEach(cb => {
                     cb.checked = visibleCols.includes(cb.value);
                 });
@@ -1421,8 +1437,7 @@
                 if (document.getElementById('modalColName_' + k)) document.getElementById('modalColName_' + k).value = val;
             });
 
-            // Se for a primeira vez (sem config), todas as colunas são visíveis por padrão
-            const visibleCols = (cfg && cfg.visibleCols) ? cfg.visibleCols : ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+            const visibleCols = getVisibleColumns();
 
             document.querySelectorAll('.check-hide-col').forEach(cb => {
                 cb.checked = visibleCols.includes(cb.value);
@@ -1450,12 +1465,12 @@
         }
 
         // Coloca a mensagem de "Selecione uma matéria" no meio da tabela quando não há matéria ativa
-        function setInitialTableContent() {
+        function setInitialTableContent(message = "Selecione uma matéria acima para visualizar ou definir preferências") {
             return `
             <tr>
                 <td colspan="11" class="text-center text-muted py-5">
                     <i class="bi bi-arrow-up-circle d-block h1"></i>
-                    Selecione uma matéria acima para visualizar ou definir preferências
+                    ${message}
                 </td>
             </tr>`;
         }
@@ -1476,7 +1491,7 @@
         // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         function switchMateria(name) {
             const tableBody = document.getElementById('tableBody');
-
+            currentMateria = name;
             if (!name || name.trim() === "") {
                 saveAllRows(); // Tenta salvar a anterior antes de limpar
                 currentMateria = "";
@@ -1493,7 +1508,7 @@
             }
 
             saveAllRows();
-            currentMateria = name;
+
             document.getElementById('materiaTitulo').value = name;
             localStorage.setItem('last_active', name);
 
@@ -1515,7 +1530,7 @@
 
             Object.keys(colMapping).forEach(key => {
                 const colIndex = colMapping[key];
-                // LOGICA INVERTIDA: Se NÃO estiver na lista de visíveis, esconde.
+                // Se NÃO estiver na lista de visíveis, esconde.
                 const shouldHide = !visibleCols.includes(key);
 
                 const th = document.querySelector(`.study-table thead th:nth-child(${colIndex})`);
@@ -1534,15 +1549,29 @@
 
         // Quando o usuário clica em "Aplicar Preferências" no modal, essa função é chamada para salvar as escolhas e aplicar as mudanças na interface.
         function applyVisibility() {
-            // Agora pegamos os CHECKED para salvar como VISÍVEIS
             const visible = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
+            const novoIntervalo = parseInt(document.getElementById('inputIntervaloDias').value) || 7;
+            const deveRepetir = document.getElementById('checkRepetirIntervalo').checked;
 
+            // 1. Salva a matéria atual (saveColumnNames já deve lidar com o intervalo interno)
             saveColumnNames(visible);
             applyVisibilityStyles(visible);
 
-            if (currentMateria) {
-                const novoIntervalo = document.getElementById('inputIntervaloDias').value;
-                localStorage.setItem('config_intervalo_dias_' + currentMateria, novoIntervalo);
+            // 2. Se o check estiver marcado, replica o intervalo nos objetos de config das outras matérias
+            if (currentMateria && deveRepetir) {
+                const materiasList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+
+                materiasList.forEach(m => {
+                    const rawConfig = localStorage.getItem(CONFIG_PREFIX + m);
+                    let cfg = rawConfig ? JSON.parse(rawConfig) : {};
+
+                    cfg.intervalo = novoIntervalo;
+                    // Salva apenas o objeto de configuração consolidado
+                    localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
+
+                    // OPCIONAL: Limpa o legado se ele existir para manter o banco limpo
+                    localStorage.removeItem('config_intervalo_dias_' + m);
+                });
             }
 
             setUnsavedChanges(true);
@@ -1560,22 +1589,26 @@
             if (!currentMateria) return;
 
             if (visibleCols === null) {
-                const raw = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-                visibleCols = raw ? JSON.parse(raw).visibleCols : ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+                visibleCols = getVisibleColumns();
             }
 
+            const intervaloValor = parseInt(document.getElementById('inputIntervaloDias').value) || 7;
+
             const config = {
-                t: document.getElementById('colName_t').value, // Teoria é o único que fica no header
+                t: document.getElementById('colName_t').value,
                 e1: document.getElementById('modalColName_e1').value,
                 e2: document.getElementById('modalColName_e2').value,
                 e3: document.getElementById('modalColName_e3').value,
                 e4: document.getElementById('modalColName_e4').value,
                 e5: document.getElementById('modalColName_e5').value,
                 e6: document.getElementById('modalColName_e6').value,
-                visibleCols: visibleCols
+                visibleCols: visibleCols,
+                intervalo: intervaloValor
             };
 
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
+            //limpa chave deprecated
+            localStorage.removeItem('config_intervalo_dias_' + currentMateria);
         }
 
         // Atualiza o nome da matéria na aba do modal de preferências
@@ -1593,19 +1626,50 @@
         // Pega os dados salvos da matéria atual e reconstrói a tabela na tela, do zero.
         function loadRows() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ""; // Limpa a tabela atual
+            tbody.innerHTML = "";
 
             // Pega as informações no formato JSON (texto estruturado) e converte de volta para uma lista do JavaScript.
             const data = JSON.parse(localStorage.getItem(PREFIX + currentMateria) || "[]");
 
-            // Para cada item da lista, cria uma linha na tabela com a função createRow()
-            data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6, i.obs));
+            if (data.length > 0) {
+                // Para cada item da lista, cria uma linha na tabela com a função createRow()
+                data.forEach(i => createRow(i.data, i.conteudo, i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6, i.obs));
+            } else {
+                tbody.innerHTML = setInitialTableContent("Matéria sem conteúdo"); // Limpa a tabela atual
+            }
 
-            // Re-checa a visibilidade após as linhas serem criadas fisicamente no HTML
+        }
+
+        function getVisibleColumns() {
+            let visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']; // Padrão: todas visíveis
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
             if (rawConfig) {
                 const cfg = JSON.parse(rawConfig);
-                if (cfg && cfg.hiddenCols) applyVisibilityStyles(cfg.hiddenCols);
+                if (cfg && cfg.hiddenCols) {
+                    visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => !cfg.hiddenCols.includes(col));
+                } else if (cfg && cfg.visibleCols) {
+                    visibleCols = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => cfg.visibleCols.includes(col));
+                }
+
+            }
+            return visibleCols
+        }
+
+        function setVisibility() {
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            if (rawConfig) {
+                let visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']; // Padrão: todas visíveis
+                const cfg = JSON.parse(rawConfig);
+                if (cfg && cfg.hiddenCols) {
+                    visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => !cfg.hiddenCols.includes(col));
+                    applyVisibilityStyles(visibles);
+                } else if (cfg && cfg.visibleCols) {
+                    visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => cfg.visibleCols.includes(col));
+                    applyVisibilityStyles(visibles);
+                } else {
+                    applyVisibilityStyles(visibles); // Se não tiver configuração, mostra tudo
+                }
+
             }
         }
 
@@ -1656,17 +1720,8 @@
 
             tbody.appendChild(tr);
 
-            // --- CORREÇÃO DO BLOCO DE VISIBILIDADE ---
-            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-            if (rawConfig) {
-                const cfg = JSON.parse(rawConfig);
-                // Alterado de hiddenCols para visibleCols para bater com a nova lógica
-                const colunasParaExibir = cfg.visibleCols || ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
-                applyVisibilityStyles(colunasParaExibir);
-            } else {
-                // Se não houver config nenhuma, garante que a linha nova mostre tudo (padrão)
-                applyVisibilityStyles(['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']);
-            }
+            // Re-checa a visibilidade após as linhas serem criadas fisicamente no HTML
+            setVisibility();
 
             if (isEdit) enableEditMode(rowId);
             return tr;
@@ -1726,8 +1781,8 @@
                     // Verifica se a observação tem texto real
                     // Removemos tags HTML básicas e espaços para ver se sobrou algo escrito
                     const textoObsLimpo = item.obs.replace(/<[^>]*>/g, '').trim();
-                    const temObs = textoObsLimpo !== "" && textoObsLimpo !== "&nbsp;";
-
+                    // Substitua a lógica de temObs por esta, que é mais agressiva contra espaços vazios de HTML:
+                    const temObs = item.obs.replace(/<[^>]*>|&nbsp;|\s+/g, '').trim() !== "";
                     // REGRA: Salva se tiver um OU outro
                     return temConteudo || temObs;
                 });
@@ -1806,6 +1861,7 @@
         // ==========================================
         // Essa função é chamada quando você clica no botão "Salvar" (ou quando o modal de preferências é aberto, para garantir que nada fique perdido). Ela fecha todos os editores abertos, remove as classes de edição e salva os dados.
         function saveAllRows() {
+            if (!currentMateria || !hasUnsavedChanges) return;
             // Fecha todos os editores ricos (CKEditor) ativos
             Object.keys(activeEditors).forEach(id => {
                 if (activeEditors[id]) {
@@ -1878,11 +1934,19 @@
             setUnsavedChanges(true);
         }
 
-        // Carrega o valor do intervalo de dias do localStorage e atualiza o input correspondente no modal. Se a opção "Repetir para todas as matérias" estiver marcada, mantém o checkbox desmarcado por padrão ao carregar.
+
         function loadIntervalConfig() {
-            const salvo = localStorage.getItem('config_intervalo_dias_' + currentMateria) || 7;
-            document.getElementById('inputIntervaloDias').value = salvo;
-            // Mantém o checkbox desmarcado por padrão ao carregar
+            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
+            let intervalo = 7; // Padrão se não houver nada salvo
+
+            if (rawConfig) {
+                const cfg = JSON.parse(rawConfig);
+                if (cfg.intervalo !== undefined) {
+                    intervalo = cfg.intervalo;
+                }
+            }
+
+            document.getElementById('inputIntervaloDias').value = intervalo;
             document.getElementById('checkRepetirIntervalo').checked = false;
         }
 
@@ -1913,23 +1977,33 @@
         // ==========================================
         // Se você clicar no título grande e mudar o nome (ex: "História" pra "História Geral")
         function updateMateriaName() {
-            const val = document.getElementById('materiaTitulo').value.trim(); // Pega o novo nome
-            if (!val || val === currentMateria) return; // Se não digitou nada ou nome for igual, desiste
+            const newVal = document.getElementById('materiaTitulo').value.trim();
+            const oldVal = currentMateria;
+            if (!newVal || newVal === oldVal) return;
 
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
-            // Se o nome não existe na lista, nós adicionamos e clonamos as configurações de colunas
-            if (!list.includes(val)) {
-                list.push(val);
-                localStorage.setItem(LIST_KEY, JSON.stringify(list));
-                const cfg = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-                if (cfg) localStorage.setItem(CONFIG_PREFIX + val, cfg);
-            }
+            // 1. Move os dados
+            const data = localStorage.getItem(PREFIX + oldVal);
+            const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
+            const interval = localStorage.getItem('config_intervalo_dias_' + oldVal);
 
-            currentMateria = val;
-            localStorage.setItem('last_active', val);
-            saveData(); // Salva a tabela atual no novo nome
-            updateSelect(); // Atualiza a caixinha de listagem
+            if (data) localStorage.setItem(PREFIX + newVal, data);
+            if (config) localStorage.setItem(CONFIG_PREFIX + newVal, config);
+            if (interval) localStorage.setItem('config_intervalo_dias_' + newVal, interval);
+
+            // 2. Limpa o antigo
+            localStorage.removeItem(PREFIX + oldVal);
+            localStorage.removeItem(CONFIG_PREFIX + oldVal);
+            localStorage.removeItem('config_intervalo_dias_' + oldVal);
+
+            // 3. Atualiza a lista
+            list = list.map(m => m === oldVal ? newVal : m);
+            localStorage.setItem(LIST_KEY, JSON.stringify(list));
+
+            currentMateria = newVal;
+            localStorage.setItem('last_active', newVal);
+            updateSelect();
         }
 
         // ==========================================
@@ -2049,20 +2123,13 @@
                 allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
                 const cfg = localStorage.getItem(CONFIG_PREFIX + m);
                 configs[m] = cfg ? JSON.parse(cfg) : null;
-
-                //Captura a configuração de intervalo de dias de cada matéria
-                const intervalo = localStorage.getItem('config_intervalo_dias_' + m);
-                if (intervalo) {
-                    automationConfigs[m] = intervalo;
-                }
             });
 
             // Adicionamos 'automationConfigs' ao pacote final
             const backupPayload = {
                 list,
                 allData,
-                configs,
-                automationConfigs
+                configs
             };
 
             const blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" });
@@ -2140,16 +2207,34 @@
             }
 
             // 5. Importação Segura das Configurações de Automação (Intervalo)
-            // Esta chave é a mais recente; se não existir no JSON, o app usará o padrão de 7 dias
-            if (tempImportData.automationConfigs) {
-                for (let m in tempImportData.automationConfigs) {
-                    const interval = tempImportData.automationConfigs[m];
-                    if (interval !== undefined && interval !== null) {
-                        localStorage.setItem('config_intervalo_dias_' + m, interval);
+            if (tempImportData.configs) {
+                for (let m in tempImportData.configs) {
+                    const cfg = tempImportData.configs[m];
+                    if (cfg && cfg.intervalo) {
+                        localStorage.setItem('config_intervalo_dias_' + m, cfg.intervalo);
                     }
                 }
             }
 
+            // Se o backup for de uma versão muito antiga e tiver o intervalo fora do objeto
+            if (tempImportData.automationConfigs) {
+                for (let m in tempImportData.automationConfigs) {
+                    const intervaloAntigo = tempImportData.automationConfigs[m];
+
+                    // Em vez de criar uma chave solta, injetamos no objeto de config
+                    const rawConfig = localStorage.getItem(CONFIG_PREFIX + m);
+                    let cfg = rawConfig ? JSON.parse(rawConfig) : {};
+
+                    // Só atualiza se o objeto novo ainda não tiver um intervalo definido
+                    if (cfg.intervalo === undefined) {
+                        cfg.intervalo = intervaloAntigo;
+                        localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
+                    }
+
+                    // Aproveita e limpa qualquer vestígio da chave solta no navegador
+                    localStorage.removeItem('config_intervalo_dias_' + m);
+                }
+            }
             // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
@@ -2323,25 +2408,6 @@
                 });
             }
 
-            // 2. Botão Configurações (Abre o Modal)
-            const btnConfig = document.querySelector('button[data-bs-target="#modalConfig"]');
-            if (btnConfig) {
-                btnConfig.addEventListener('click', () => {
-                    const hasMateria = (currentMateria && currentMateria.trim() !== "");
-
-                    if (hasMateria) {
-                        saveAllRows();
-                        // Se tem matéria, abre na aba de preferências
-                        document.getElementById('pref-tab').click();
-                    } else {
-                        // Se não tem matéria, força a ida para a aba de backup/restore
-                        // O timeout garante que o Bootstrap terminou de processar a abertura do modal
-                        setTimeout(() => {
-                            document.getElementById('backup-tab').click();
-                        }, 150);
-                    }
-                });
-            }
 
             // 3. Botão Sobre (Abre o Modal)
             const btnAbout = document.querySelector('button[data-bs-target="#modalAbout"]');
