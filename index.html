@@ -976,39 +976,46 @@
                         <th class="val-content-col"
                             style="padding: 0 4px !important; vertical-align: middle; text-align: left !important;">
                             <div class="input-group input-group-sm d-inline-flex align-middle d-print-none"
-                                style="max-width: fit-content; height: 32px; vertical-align: middle; margin: 0;">
+                                style="max-width: fit-content; height: 32px; vertical-align: middle; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+
+                                <span
+                                    class="input-group-text text-white fw-bold d-flex align-items-center justify-content-center label-conteudo-dinamico"
+                                    style="font-size: 0.75rem; 
+                 border: 1px solid rgba(255,255,255,0.2); 
+                 border-right: none; /* Remove a borda interna direita para fundir com o botão */
+                 border-top-left-radius: 6px; 
+                 border-bottom-left-radius: 6px; 
+                 border-top-right-radius: 0;
+                 border-bottom-right-radius: 0;
+                 letter-spacing: 1px;
+                 padding: 0 12px;
+                 background-color: #0b0c1e !important;
+                 height: 100%;
+                 text-transform: uppercase;
+                 color: rgba(255,255,255,0.8) !important;">
+                                    Conteúdo
+                                </span>
 
                                 <button
                                     class="btn d-flex align-items-center justify-content-center px-2 btn-plus-conteudo"
                                     onclick="addEmptyRow()" title="Incluir novo conteúdo (Ctrl + B)" style="border: 1px solid rgba(255,255,255,0.2); 
-                   border-top-left-radius: 6px; 
-                   border-bottom-left-radius: 6px; 
-                   border-right: none;
+                   border-top-right-radius: 6px; 
+                   border-bottom-right-radius: 6px; 
+                   border-top-left-radius: 0;
+                   border-bottom-left-radius: 0;
                    background-color: #0b0c1e;
                    color: white;
                    transition: all 0.2s ease;
-                   z-index: 2;">
-                                    <i class="bi bi-plus-lg" style="font-size: 1rem; line-height: 0;"></i>
+                   z-index: 2;
+                   height: 100%;">
+
+                                    <i class="bi bi-plus-lg" style="font-size: 0.9rem; line-height: 0;"></i>
+
                                     <span class="text-white-50 d-none d-md-inline-block fw-bold ms-1"
-                                        style="font-size: 0.5rem; letter-spacing: 0.5px; margin-top: 1px;">
+                                        style="font-size: 0.55rem; letter-spacing: 0.5px; opacity: 0.7;">
                                         CTRL+B
                                     </span>
                                 </button>
-
-                                <span
-                                    class="input-group-text bg-dark text-white fw-bold d-flex align-items-center justify-content-center label-conteudo-dinamico"
-                                    style="font-size: 0.85rem; 
-                   border: 1px solid rgba(255,255,255,0.2); 
-                   border-left: none;
-                   border-top-right-radius: 6px; 
-                   border-bottom-right-radius: 6px; 
-                   letter-spacing: 1px;
-                   padding-top: 0;
-                   padding-bottom: 0;
-                   background-color: #0b0c1e !important;
-                   margin-left: -1px;">
-                                    Conteúdo
-                                </span>
                             </div>
 
                             <div class="d-none d-print-block fw-bold
