@@ -855,14 +855,6 @@
                 font-size: 0.8rem;
             }
 
-            /* Oculta colunas menos importantes se a tela for muito pequena (ex: e4, e5, e6) */
-            .header-obs,
-            .col-data-obs,
-            .header-actions,
-            .col-actions {
-                display: none;
-            }
-
             /* Garante que o input de conteúdo não force a largura */
             .input-conteudo {
                 min-width: 120px !important;
@@ -882,20 +874,92 @@
             }
         }
 
+        /* Container que mantém os ícones no mesmo lugar */
+        .icon-anim-container {
+            position: relative;
+            width: 40px;
+            /* Tamanho fixo para garantir centralização */
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Base dos ícones */
+        .icon-anim-container i {
+            position: absolute;
+            font-size: 1.8rem;
+            color: #ffd700;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Animação do Celular: Ele começa em pé e 'tomba' para o lado */
+        @keyframes phone-rotate {
+            0% {
+                transform: rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            40% {
+                transform: rotate(-90deg);
+                opacity: 1;
+            }
+
+            50% {
+                transform: rotate(-90deg);
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Animação da Seta: Aparece quando o celular some */
+        @keyframes arrow-fade {
+
+            0%,
+            50% {
+                opacity: 0;
+                transform: translateX(-5px);
+            }
+
+            60% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translateX(5px);
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .icon-phone {
+            animation: phone-rotate 4s infinite;
+        }
+
+        .icon-arrow {
+            animation: arrow-fade 4s infinite;
+        }
+
+        /* Ajuste na posição da div principal para não sobrepor o texto */
         .scroll-indicator {
             position: absolute;
-            right: 10px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #ffd700;
-            /* Um dourado ou cor de destaque */
-            font-size: 1.5rem;
-            z-index: 10;
+            z-index: 1000;
+            /* Garante que fique acima de tudo */
             pointer-events: none;
-            /* Não atrapalha o clique na tabela */
-            animation: arrow-bounce 1s infinite;
-            display: none;
-            /* Escondido por padrão */
         }
 
         /* Mostrar apenas em telas pequenas quando houver scroll */
@@ -1028,7 +1092,10 @@ Aqui é onde os dados vão aparecer de verdade.
 -->
         <div class="position-relative">
             <div id="seta-scroll" class="scroll-indicator d-md-none">
-                <i class="bi bi-arrow-right-circle-fill"></i>
+                <div class="icon-anim-container d-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right-circle-fill icon-arrow"></i>
+                    <i class="bi bi-phone icon-phone"></i>
+                </div>
             </div>
 
             <div id="tabela-container" class="table-responsive"
@@ -1505,7 +1572,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
-                            Versão 2.6.8
+                            Versão 2.6.9
                         </span>
                         <div class="mt-3" id="contador-container"></div>
                     </div>
@@ -2575,7 +2642,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // Adicionamos 'automationConfigs' ao pacote final
             const backupPayload = {
                 app: "Cronograma - Organização de Matérias",
-                version: "2.6.8",
+                version: "2.6.9",
                 list,
                 allData,
                 configs
