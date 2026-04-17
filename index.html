@@ -845,6 +845,65 @@
             text-align: justify !important;
             display: block;
         }
+
+        @media (max-width: 600px) {
+
+            /* Diminui o tamanho das células para caber mais coisa */
+            .table th,
+            .table td {
+                padding: 0.5rem 0.25rem !important;
+                font-size: 0.8rem;
+            }
+
+            /* Oculta colunas menos importantes se a tela for muito pequena (ex: e4, e5, e6) */
+            .header-obs,
+            .col-data-obs,
+            .header-actions,
+            .col-actions {
+                display: none;
+            }
+
+            /* Garante que o input de conteúdo não force a largura */
+            .input-conteudo {
+                min-width: 120px !important;
+            }
+        }
+
+        /* Animação para a seta "quicar" levemente para o lado */
+        @keyframes arrow-bounce {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ffd700;
+            /* Um dourado ou cor de destaque */
+            font-size: 1.5rem;
+            z-index: 10;
+            pointer-events: none;
+            /* Não atrapalha o clique na tabela */
+            animation: arrow-bounce 1s infinite;
+            display: none;
+            /* Escondido por padrão */
+        }
+
+        /* Mostrar apenas em telas pequenas quando houver scroll */
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                display: block;
+            }
+        }
     </style>
 </head>
 
@@ -962,25 +1021,32 @@
         </div>
 
         <!-- 
-                        ======================================================================
-                        🏗️ A TABELA PRINCIPAL
-                        Aqui é onde os dados vão aparecer de verdade.
-                        ======================================================================
-                        -->
-        <div class="table-responsive">
-            <table class="table study-table">
-                <thead>
-                    <tr>
-                        <th style="width: 110px;">Data</th>
+======================================================================
+🏗️ A TABELA PRINCIPAL
+Aqui é onde os dados vão aparecer de verdade.
+======================================================================
+-->
+        <div class="position-relative">
+            <div id="seta-scroll" class="scroll-indicator d-md-none">
+                <i class="bi bi-arrow-right-circle-fill"></i>
+            </div>
 
-                        <th class="val-content-col"
-                            style="padding: 0 4px !important; vertical-align: middle; text-align: left !important;">
-                            <div class="input-group input-group-sm d-inline-flex align-middle d-print-none"
-                                style="max-width: fit-content; height: 32px; vertical-align: middle; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            <div id="tabela-container" class="table-responsive"
+                style="overflow-x: auto; -webkit-overflow-scrolling: touch;"
+                onscroll="this.parentElement.querySelector('.scroll-indicator').style.display='none';">
+                <table class="table study-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Data</th>
 
-                                <span
-                                    class="input-group-text text-white fw-bold d-flex align-items-center justify-content-center label-conteudo-dinamico"
-                                    style="font-size: 0.75rem; 
+                            <th class="val-content-col"
+                                style="padding: 0 4px !important; vertical-align: middle; text-align: left !important;">
+                                <div class="input-group input-group-sm d-inline-flex align-middle d-print-none"
+                                    style="max-width: fit-content; height: 32px; vertical-align: middle; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+
+                                    <span
+                                        class="input-group-text text-white fw-bold d-flex align-items-center justify-content-center label-conteudo-dinamico"
+                                        style="font-size: 0.75rem; 
                  border: 1px solid rgba(255,255,255,0.2); 
                  border-right: none; /* Remove a borda interna direita para fundir com o botão */
                  border-top-left-radius: 6px; 
@@ -993,12 +1059,12 @@
                  height: 100%;
                  text-transform: uppercase;
                  color: rgba(255,255,255,0.8) !important;">
-                                    Conteúdo
-                                </span>
+                                        Conteúdo
+                                    </span>
 
-                                <button
-                                    class="btn d-flex align-items-center justify-content-center px-2 btn-plus-conteudo"
-                                    onclick="addEmptyRow()" title="Incluir novo conteúdo (Ctrl + B)" style="border: 1px solid rgba(255,255,255,0.2); 
+                                    <button
+                                        class="btn d-flex align-items-center justify-content-center px-2 btn-plus-conteudo"
+                                        onclick="addEmptyRow()" title="Incluir novo conteúdo (Ctrl + B)" style="border: 1px solid rgba(255,255,255,0.2); 
                    border-top-right-radius: 6px; 
                    border-bottom-right-radius: 6px; 
                    border-top-left-radius: 0;
@@ -1009,51 +1075,52 @@
                    z-index: 2;
                    height: 100%;">
 
-                                    <i class="bi bi-plus-lg" style="font-size: 0.9rem; line-height: 0;"></i>
+                                        <i class="bi bi-plus-lg" style="font-size: 0.9rem; line-height: 0;"></i>
 
-                                    <span class="text-white-50 d-none d-md-inline-block fw-bold ms-1"
-                                        style="font-size: 0.55rem; letter-spacing: 0.5px; opacity: 0.7;">
-                                        CTRL+B
-                                    </span>
-                                </button>
-                            </div>
+                                        <span class="text-white-50 d-none d-md-inline-block fw-bold ms-1"
+                                            style="font-size: 0.55rem; letter-spacing: 0.5px; opacity: 0.7;">
+                                            CTRL+B
+                                        </span>
+                                    </button>
+                                </div>
 
-                            <div class="d-none d-print-block fw-bold
+                                <div class="d-none d-print-block fw-bold
                                 style=" font-size: 0.85rem; text-align: left;">
-                                Conteúdo
-                            </div>
-                        </th>
-                        <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
-                        <th style="width: 70px;" data-col="t">
-                            <input type="text" id="colName_t" class="header-edit-input" value="Teoria"
-                                oninput="syncModalLabels()" onchange="setUnsavedChanges(true)">
-                        </th>
-                        <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e1" class="header-edit-input" value="Ex. 1" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e2" class="header-edit-input" value="Ex. 2" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e3" class="header-edit-input" value="Ex. 3" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e4" class="header-edit-input" value="Ex. 4" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e5" class="header-edit-input" value="Rev. 1" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações" type="text"
-                                id="colName_e6" class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
-                                onchange="setUnsavedChanges(true)"></th>
-                        <th class="text-start-custom header-obs" data-texto-mobile="Obs."
-                            data-texto-desktop="Observações"></th>
-                        <th class="no-print" style="width: 80px;">Ações</th>
-                    </tr>
-                </thead>
-                <!-- O corpo da tabela (tbody) começa vazio e é preenchido pelo JavaScript! -->
-                <tbody id="tableBody"></tbody>
-            </table>
+                                    Conteúdo
+                                </div>
+                            </th>
+                            <!-- As colunas abaixo podem ter o nome alterado pelo usuário direto na tela! -->
+                            <th style="width: 70px;" data-col="t">
+                                <input type="text" id="colName_t" class="header-edit-input" value="Teoria"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)">
+                            </th>
+                            <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e1" class="header-edit-input" value="Ex. 1"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e2" class="header-edit-input" value="Ex. 2"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e3" class="header-edit-input" value="Ex. 3"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e4" class="header-edit-input" value="Ex. 4"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e5" class="header-edit-input" value="Rev. 1"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações"
+                                    type="text" id="colName_e6" class="header-edit-input" value="Rev. 2"
+                                    oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
+                            <th class="text-start-custom header-obs" data-texto-mobile="Obs."
+                                data-texto-desktop="Observações"></th>
+                            <th class="no-print header-actions" style="width: 80px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <!-- O corpo da tabela (tbody) começa vazio e é preenchido pelo JavaScript! -->
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -1639,6 +1706,29 @@
             setUnsavedChanges(true);
         });
 
+        window.addEventListener('load', checkScroll);
+        window.addEventListener('resize', checkScroll);
+
+        function checkScroll() {
+            const container = document.getElementById('tabela-container');
+            const seta = document.getElementById('seta-scroll');
+
+            if (!container || !seta) return;
+
+            // Se o usuário já rolou mais de 20px, ou se a tabela cabe inteira na tela, esconde a seta
+            const precisaDeScroll = container.scrollWidth > container.clientWidth;
+            const jaRolou = container.scrollLeft > 20;
+
+            if (!precisaDeScroll || jaRolou) {
+                seta.style.display = 'none';
+            } else {
+                // Só mostra se estiver no mobile (baseado no breakpoint do Bootstrap)
+                if (window.innerWidth < 768) {
+                    seta.style.display = 'block';
+                }
+            }
+        }
+
         // Ao abrir o modal de configurações, ele precisa preparar os dados para mostrar lá dentro. Essa função é responsável por isso. Ela captura os nomes atuais das colunas, salva os dados para garantir que o modal mostre a configuração real, e sincroniza os checkboxes de visibilidade.
         function prepararConfiguracoes() {
             const prefTab = document.getElementById('pref-tab');
@@ -2055,11 +2145,11 @@
         ${tickCell(e4, 'val-e4')}
         ${tickCell(e5, 'val-e5')}
         ${tickCell(e6, 'val-e6')}
-        <td class="text-start-custom">
+        <td class="text-start-custom col-data-obs">
             <div class="view-mode view-obs">${o || '-'}</div>
             <div class="edit-mode"><div class="val-obs-editor">${o}</div></div>
         </td>
-        <td class="no-print">
+        <td class="no-print col-actions">
             <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="enableEditMode('${rowId}')"></i>
             <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
         </td>`;
