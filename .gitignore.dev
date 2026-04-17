@@ -1,0 +1,25 @@
+# --- Segurança e Dados Sensíveis ---
+# Ignora chaves, banco de usuários e a lógica da IA
+contribuintes_db.json
+gestao_usuarios.py
+prompt_template.txt
+.env
+
+# --- Ambiente Virtual Python ---
+# Ignora a pasta .venv completa (nunca deve ir ao git)
+.venv/
+
+# --- Cache e Temporários do Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ficheiros de Sistema e IDE ---
+.vscode/
+.DS_Store
+*.swp
+*~
+
+# --- Outros ---
+tree.txt
+setup_venv.sh
