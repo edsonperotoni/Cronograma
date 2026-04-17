@@ -1,4 +1,4 @@
-# 📚 Cronograma de Matérias v2.6.8
+# 📚 Cronograma de Matérias v2.6.9
 
 Uma aplicação de página única (**SPA**) projetada para organização robusta, intuitiva e personalizável de rotinas de estudo. O projeto foi estruturado com foco educativo, contendo blocos de comentários detalhados sobre o funcionamento interno do HTML, CSS e JavaScript.
 
