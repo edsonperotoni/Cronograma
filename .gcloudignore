@@ -1,0 +1,31 @@
+# Ambientes Virtuais (Essencial ignorar!)
+.venv/
+venv/
+ENV/
+bin/
+
+# Configurações de Editor
+.vscode/
+.idea/
+.history/
+
+# Controle de Versão
+.git/
+.gitignore
+
+# Cache do Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos do Frontend (O Cloud Run não precisa deles)
+index.html
+image/
+ckeditor5/
+README.md
+
+# Documentação e Logs
+.gcloudignore
+LICENSE
+logs/
+*.log
