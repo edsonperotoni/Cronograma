@@ -984,6 +984,7 @@
 </head>
 
 <body>
+    <div id="liveAlertPlaceholder" class="position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 2000; min-width: 320px; max-width: 90%;"></div>
     <div class="print-only-header d-none">
         <div class="d-flex align-items-center justify-content-between border-bottom border-3 border-dark pb-3 mb-4">
             <div class="d-flex align-items-center">
@@ -1371,17 +1372,18 @@ Aqui é onde os dados vão aparecer de verdade.
                                 <div class="d-grid gap-2 mt-3">
                                     <button class="btn btn-success text-start btn-sm py-2 px-3 shadow-sm"
                                         onclick="exportBackup()">
-                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> <strong>Exportar Tudo</strong>
-                                        (.json)
+                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> <strong>Criar um arquivo de
+                                            BACKUP</strong> (.json)
                                     </button>
 
 
                                     <label for="importFile"
                                         class="btn btn-outline-dark text-start btn-sm py-2 px-3 shadow-sm">
                                         <i class="bi bi-cloud-arrow-up-fill me-2"></i>
-                                        <strong>Importar Arquivo</strong> (Restaurar)
+                                        <strong>Restaurar a partir de um arquivo de BACKUP</strong> (.json)
                                     </label>
-                                    <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
+                                    <input type="file" id="importFile" class="d-none" accept=".json"
+                                        onchange="openImportModal(this)">
 
                                     <button id="btn-importar-ia"
                                         class="btn btn-outline-primary text-start btn-sm py-2 px-3 shadow-sm mt-2"
@@ -1391,6 +1393,20 @@ Aqui é onde os dados vão aparecer de verdade.
                                     </button>
                                     <input type="file" id="iaFile" class="d-none" accept=".pdf,.txt,.docx,.html"
                                         onchange="processarArquivoIA(this)">
+                                </div>
+                                <div id="container-botao-panico" class="mt-4 pt-3 border-top d-none">
+                                    <label class="small fw-bold text-danger text-uppercase d-block mb-2">
+                                        <i class="bi bi-shield-shaded"></i> Zona de Recuperação
+                                    </label>
+                                    <button class="btn btn-outline-danger btn-sm w-100"
+                                        onclick="restaurarSnapshotEmergencial()">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restaurar antes da última
+                                        importação
+                                    </button>
+                                    <small class="text-muted" style="font-size: 0.65rem;">
+                                        Ponto de restauração automático criado em: <span
+                                            id="data-backup-emergencia"></span>
+                                    </small>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="tab-delete" role="tabpanel">
@@ -1614,7 +1630,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
-                            Versão 2.7.0
+                            Versão 2.7.2
                         </span>
                         <div class="mt-3" id="contador-container"></div>
                     </div>
@@ -1732,6 +1748,9 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // window.onload: Executa automaticamente assim que a página termina de abrir.
         window.onload = () => {
+            // Verifica se existe um backup de emergência e mostra o botão de restauração se necessário
+            verificarBotaoPanico()
+
             // Dentro da lógica de carregar configurações:
             const chaveSalva = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
             document.getElementById('inputChaveAcesso').value = chaveSalva;
@@ -1787,6 +1806,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
         // Quando o modal de configurações for aberto, ele recarrega os nomes das colunas e as configurações de visibilidade para garantir que tudo esteja atualizado.
         document.getElementById('modalConfig').addEventListener('show.bs.modal', function () {
+            verificarBotaoPanico();// Verifica o backup de emergência toda vez que abrir as preferências, para mostrar ou esconder o botão de restauração
             loadColumnNames(); // Recarrega tudo para garantir que o modal abra com os nomes certos
         });
         // ==========================================
@@ -1812,13 +1832,107 @@ Aqui é onde os dados vão aparecer de verdade.
             setUnsavedChanges(true);
         });
 
+        // Esta função verifica se existe um backup de emergência (que é criado automaticamente antes de cada importação) e, se existir, mostra o botão de "Restaurar antes da última importação" nas preferências. Se o backup estiver corrompido ou não existir, ele esconde o botão para evitar confusão.
+        function verificarBotaoPanico() {
+            const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
+            const container = document.getElementById('container-botao-panico');
+            const labelData = document.getElementById('data-backup-emergencia');
+
+            if (raw && container) {
+                try {
+                    const backup = JSON.parse(raw);
+                    if (labelData) labelData.innerText = backup.timestamp;
+                    container.classList.remove('d-none'); // Mostra o botão
+                } catch (e) {
+                    container.classList.add('d-none'); // Se o JSON estiver corrompido, esconde
+                }
+            } else if (container) {
+                container.classList.add('d-none'); // Esconde se não houver backup
+            }
+        }
+        function exibirAlerta(mensagem, tipo = 'success') {
+            const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
+            if (!alertPlaceholder) return;
+
+            // Cria o elemento do alerta
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = [
+                `<div class="alert alert-${tipo} alert-dismissible fade show shadow-lg border-0 mb-2" role="alert">`,
+                `   <div class="d-flex align-items-center">`,
+                `      <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : (tipo === 'danger' ? 'bi-x-circle-fill' : 'bi-exclamation-triangle-fill')} me-2"></i>`,
+                `      <div>${mensagem}</div>`,
+                `   </div>`,
+                '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('');
+
+            alertPlaceholder.append(wrapper);
+
+            // Auto-remove após 4 segundos com verificação de segurança
+            setTimeout(() => {
+                // Verifica se o wrapper ainda está no documento (o usuário pode ter fechado antes)
+                if (wrapper && alertPlaceholder.contains(wrapper)) {
+                    const alertElement = wrapper.querySelector('.alert');
+                    if (alertElement) {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+                        if (bsAlert) {
+                            bsAlert.close();
+                        }
+                    }
+
+                    // Garante a remoção do wrapper do DOM após a animação de fade (aprox 150ms)
+                    setTimeout(() => {
+                        if (wrapper.parentNode) wrapper.remove();
+                    }, 150);
+                }
+            }, 4000);
+        }
+
+        // Esta função é chamada quando o usuário clica no botão de "Restaurar antes da última importação". Ela pega o backup de emergência que foi criado automaticamente antes de cada importação, e restaura os dados para aquele estado. É uma forma de desfazer rapidamente uma importação que deu errado, sem precisar mexer com arquivos.
+        function restaurarSnapshotEmergencial() {
+            const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
+            if (!raw) {
+                exibirAlerta("Nenhum backup de emergência encontrado.", "warning");
+                return;
+            }
+
+            const backup = JSON.parse(raw);
+            if (!confirm(`Deseja restaurar o backup criado em ${backup.timestamp}?\nIsso substituirá seus dados atuais pelos dados salvos antes da última importação.`)) return;
+
+            // Limpa o estado atual para evitar conflitos
+            const currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            currentList.forEach(m => {
+                localStorage.removeItem(PREFIX + m);
+                localStorage.removeItem(CONFIG_PREFIX + m);
+            });
+
+            // Restaura as matérias
+            backup.list.forEach(m => {
+                localStorage.setItem(PREFIX + m, JSON.stringify(backup.data[m]));
+                if (backup.configs[m]) {
+                    localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(backup.configs[m]));
+                }
+            });
+
+            // Restaura a lista principal
+            localStorage.setItem(LIST_KEY, JSON.stringify(backup.list));
+            //remove o backup de emergência para evitar restaurações acidentais múltiplas
+            localStorage.removeItem("EMERGENCY_BACKUP_V1");
+            verificarBotaoPanico();
+
+            exibirAlerta("Dados restaurados com sucesso!", "info");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
         function saveChaveContribuinte(showAlert = false) {
             const input = document.getElementById('inputChaveAcesso');
             const valor = input.value.trim();
             localStorage.setItem("config_vBorda_chave_contribuinte", valor);
             verificarAcessoContribuinte();
             if (showAlert) {
-                alert("Chave de Contribuinte salva com sucesso!");
+                exibirAlerta("Chave de Contribuinte salva com sucesso!", "success");
             }
         }
         // Função para abrir o seletor de arquivos da IA
@@ -1831,7 +1945,7 @@ Aqui é onde os dados vão aparecer de verdade.
             const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
 
             if (!chaveContribuinte) {
-                alert("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.");
+                exibirAlerta("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.", "warning");
                 input.value = "";
                 return;
             }
@@ -1872,7 +1986,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                 // Se a IA retornar erro
                 if (jsonRecebido.error) {
-                    alert("Erro na IA: " + jsonRecebido.details);
+                    exibirAlerta("Erro na IA: " + jsonRecebido.details, "danger");
                 } else {
                     // Chama a função de importação que já existe no seu código
                     importarDadosIA(jsonRecebido);
@@ -1882,7 +1996,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             } catch (e) {
                 console.error(e);
-                alert("Falha ao conectar com o servidor Python. Certifique-se que o main.py está rodando.");
+                exibirAlerta("Falha ao conectar com o servidor Python. Certifique-se que o main.py está rodando.", "danger");
             } finally {
                 // Restaura o botão
                 btnIa.innerHTML = originalText;
@@ -1899,7 +2013,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 prepararEscolhaImport();
                 console.log("IA: Dados carregados no modal de seleção.");
             } catch (e) {
-                alert("Erro ao processar dados da IA: " + e.message);
+                exibirAlerta("Erro ao processar dados da IA: " + e.message, "danger");
             }
         }
 
@@ -2003,6 +2117,8 @@ Aqui é onde os dados vão aparecer de verdade.
                 });
             }
 
+            updateTabName();
+
             // --- PASSO 5: ABERTURA MANUAL DO MODAL ---
             // Agora que tudo está preenchido corretamente, mostramos o modal
             myModal.show();
@@ -2016,6 +2132,15 @@ Aqui é onde os dados vão aparecer de verdade.
             }, 150);
         }
 
+        // Esta função é responsável por atualizar o nome da matéria que aparece no título do modal de preferências. Ela é chamada toda vez que o modal é aberto, e também toda vez que o usuário digita algo no campo de título da matéria, para garantir que o nome mostrado no modal esteja sempre atualizado e reflita exatamente o que está no input de título (que é a fonte mais confiável para o nome da matéria).
+        function updateTabName() {
+            // Pega o nome atual direto do input de título (que é o mais confiável no momento)
+            const nomeAtual = document.getElementById('materiaTitulo').value.trim();
+
+            document.querySelectorAll('.nome-materia-modal').forEach(span => {
+                span.innerText = nomeAtual ? nomeAtual : "esta matéria";
+            });
+        }
         // Quando você marca ou desmarca a opção de "Repetir Intervalo para todas as matérias", isso também é uma mudança importante.
         function syncFromModal(key) {
             const modalVal = document.getElementById('modalColName_' + key).value;
@@ -2319,7 +2444,9 @@ Aqui é onde os dados vão aparecer de verdade.
                     classeData = "data-futura";
                 }
             }
-            tr.classList.add(classeData);
+            if (dateValue) {
+                tr.classList.add(classeData);
+            }
 
             const tickCell = (val, field) => `
     <td>
@@ -2391,6 +2518,12 @@ Aqui é onde os dados vão aparecer de verdade.
             // 1. MAPEIA os dados da tabela
             const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
                 const rowId = tr.id;
+                const viewObsEl = tr.querySelector('.view-obs');
+                const valDataEl = tr.querySelector('.val-data');
+                const valConteudoEl = tr.querySelector('.val-conteudo');
+
+                // Se a linha não tem esses elementos básicos, ela é uma linha de aviso e deve ser ignorada
+                if (!viewObsEl || !valDataEl || !valConteudoEl) return null;
                 let obsHtml = activeEditors[rowId] ? activeEditors[rowId].getData() : tr.querySelector('.view-obs').innerHTML;
 
                 return {
@@ -2408,6 +2541,7 @@ Aqui é onde os dados vão aparecer de verdade.
             })
                 // 2. FILTRA: Aqui está a mágica! 
                 // Se o conteúdo estiver vazio (mesmo com espaços), a linha é removida da lista.
+                .filter(item => item !== null)
                 .filter(item => {
                     // Remove espaços em branco do conteúdo para validar
                     const temConteudo = item.conteudo.trim() !== "" && item.conteudo.trim() !== "-";
@@ -2524,7 +2658,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // ➕ ADICIONAR LINHA EM BRANCO
         // ==========================================
         function addEmptyRow() {
-            if (!currentMateria) return alert("Selecione ou dê nome à matéria primeiro.");
+            if (!currentMateria) { exibirAlerta("Selecione ou dê nome à matéria primeiro.", "warning"); return; }
 
             // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
             const inputIntervalo = document.getElementById('inputIntervaloDias');
@@ -2535,7 +2669,12 @@ Aqui é onde os dados vão aparecer de verdade.
 
             if (rows.length > 0) {
                 // 2. Extrai todas as datas e filtra as vazias
-                const datas = rows.map(tr => tr.querySelector('.val-data').value).filter(d => d !== "");
+                const datas = rows
+                    .map(tr => {
+                        const inputData = tr.querySelector('.val-data');
+                        return inputData ? inputData.value : null; // Retorna o valor ou null se não for linha de dado
+                    })
+                    .filter(d => d !== null && d !== ""); // Remove os nulos e vazios
 
                 if (datas.length > 0) {
                     // 3. Encontra a MAIOR data (ordenação léxica funciona para YYYY-MM-DD)
@@ -2613,31 +2752,80 @@ Aqui é onde os dados vão aparecer de verdade.
         function updateMateriaName() {
             const newVal = document.getElementById('materiaTitulo').value.trim();
             const oldVal = currentMateria;
+
             if (!newVal || newVal === oldVal) return;
 
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
-            // 1. Move os dados
-            const data = localStorage.getItem(PREFIX + oldVal);
-            const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
-            const interval = localStorage.getItem('config_intervalo_dias_' + oldVal);
+            // 1. Verifica se o novo nome já existe (case-insensitive)
+            const nomeExistente = list.find(m => m.toLowerCase() === newVal.toLowerCase());
 
-            if (data) localStorage.setItem(PREFIX + newVal, data);
-            if (config) localStorage.setItem(CONFIG_PREFIX + newVal, config);
-            if (interval) localStorage.setItem('config_intervalo_dias_' + newVal, interval);
+            if (nomeExistente) {
+                const confirmar = confirm(`A matéria "${nomeExistente}" já existe. \n\nDeseja MESCLAR os conteúdos de "${oldVal}" em "${nomeExistente}"? \n\n(Isso unirá as duas listas e manterá as preferências de "${nomeExistente}")`);
 
-            // 2. Limpa o antigo
-            localStorage.removeItem(PREFIX + oldVal);
-            localStorage.removeItem(CONFIG_PREFIX + oldVal);
-            localStorage.removeItem('config_intervalo_dias_' + oldVal);
+                if (!confirmar) {
+                    document.getElementById('materiaTitulo').value = oldVal;
+                    return;
+                }
 
-            // 3. Atualiza a lista
-            list = list.map(m => m === oldVal ? newVal : m);
-            localStorage.setItem(LIST_KEY, JSON.stringify(list));
+                // --- LÓGICA DE MESCLAGEM ---
 
-            currentMateria = newVal;
-            localStorage.setItem('last_active', newVal);
+                // A. Recupera dados de ambas
+                let dadosAntigos = JSON.parse(localStorage.getItem(PREFIX + oldVal) || "[]");
+                let dadosDestino = JSON.parse(localStorage.getItem(PREFIX + nomeExistente) || "[]");
+
+                // B. Une as listas evitando duplicados exatos (mesma data e mesmo conteúdo)
+                dadosAntigos.forEach(itemAntigo => {
+                    const duplicado = dadosDestino.some(d =>
+                        d.data === itemAntigo.data &&
+                        d.conteudo.trim().toLowerCase() === itemAntigo.conteudo.trim().toLowerCase()
+                    );
+                    if (!duplicado) {
+                        dadosDestino.push(itemAntigo);
+                    }
+                });
+
+                // C. Ordena a lista mesclada por data
+                dadosDestino.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+                // D. Salva no destino e remove o antigo
+                localStorage.setItem(PREFIX + nomeExistente, JSON.stringify(dadosDestino));
+
+                localStorage.removeItem(PREFIX + oldVal);
+                localStorage.removeItem(CONFIG_PREFIX + oldVal);
+                localStorage.removeItem('config_intervalo_dias_' + oldVal);
+
+                // E. Remove o nome antigo da lista (o novo nome já está lá, então só filtramos o velho)
+                list = list.filter(m => m !== oldVal);
+                localStorage.setItem(LIST_KEY, JSON.stringify(list));
+
+                // F. Muda a visualização para a matéria de destino
+                currentMateria = nomeExistente;
+            } else {
+                // --- LÓGICA DE RENOMEAR SIMPLES (Caminho que já tínhamos) ---
+                const data = localStorage.getItem(PREFIX + oldVal);
+                const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
+                const interval = localStorage.getItem('config_intervalo_dias_' + oldVal);
+
+                if (data) localStorage.setItem(PREFIX + newVal, data);
+                if (config) localStorage.setItem(CONFIG_PREFIX + newVal, config);
+                if (interval) localStorage.setItem('config_intervalo_dias_' + newVal, interval);
+
+                localStorage.removeItem(PREFIX + oldVal);
+                localStorage.removeItem(CONFIG_PREFIX + oldVal);
+                localStorage.removeItem('config_intervalo_dias_' + oldVal);
+
+                list = list.map(m => m === oldVal ? newVal : m);
+                localStorage.setItem(LIST_KEY, JSON.stringify(list));
+
+                currentMateria = newVal;
+            }
+
+            // 2. Finalização Comum
+            localStorage.setItem('last_active', currentMateria);
             updateSelect();
+            loadRows(); // Recarrega a tabela para mostrar os dados unidos
+            exibirAlerta("Matéria atualizada com sucesso!", "success");
         }
 
         // ==========================================
@@ -2676,15 +2864,39 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // 💣 APAGAR A MATÉRIA INTEIRA
         // ==========================================
-        // Cuidado! O botão vermelho de Lixo lá no topo aciona isso.
-        // Passo 1: Abre o modal para a matéria toda
+        // Passo 1: Abre o modal e "anota" que queremos apagar a matéria toda (variável global)
         function deleteFullMateria() {
-            if (!currentMateria) return;
+            const selectMateria = document.getElementById('materiaSelect');
+            const nomeNoSelect = selectMateria.value;
 
-            isDeletingFullMateria = true; // Avisa que a ação é pesada
+            // 1. Validação de Segurança: Se não há nada selecionado no dropdown, cancela.
+            if (!nomeNoSelect || !currentMateria) {
+                exibirAlerta("Nenhuma matéria selecionada para exclusão.", "warning");
+                return;
+            }
+
+            // 2. Sincronização: Se o que está no select é diferente da variável global,
+            // forçamos a sincronização ou impedimos a exclusão para evitar erros.
+            if (nomeNoSelect !== currentMateria) {
+                console.warn("Inconsistência detectada: Select:", nomeNoSelect, "Global:", currentMateria);
+                // Em vez de bloquear, podemos perguntar se o usuário quer trocar para a matéria do select
+                const confirmarTroca = confirm(`A matéria selecionada (${nomeNoSelect}) é diferente da ativa (${currentMateria}).\n\nDeseja carregar e excluir "${nomeNoSelect}"?`);
+
+                if (confirmarTroca) {
+                    switchMateria(nomeNoSelect);
+                } else {
+                    return;
+                }
+            }
+
+            // 3. Preparação do Modal (Se passou nas travas acima)
+            isDeletingFullMateria = true;
             rowToDelete = null;
 
-            document.getElementById('msgConfirmacaoExclusao').innerHTML = `Deseja excluir a matéria <br><strong>${currentMateria}</strong> e <strong>TODOS os seus conteúdos</strong>?`;
+            // Injeta o nome confirmado no HTML do modal
+            document.getElementById('msgConfirmacaoExclusao').innerHTML =
+                `Deseja excluir a matéria <br><strong>${currentMateria}</strong> e <strong>TODOS os seus conteúdos</strong>?`;
+
             new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
         }
 
@@ -2773,7 +2985,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // Adicionamos 'automationConfigs' ao pacote final
             const backupPayload = {
                 app: "Cronograma - Organização de Matérias",
-                version: "2.7.0",
+                version: "2.7.2",
                 list,
                 allData,
                 configs
@@ -2799,7 +3011,7 @@ Aqui é onde os dados vão aparecer de verdade.
                     tempImportData = JSON.parse(e.target.result); // Tenta ler o JSON do arquivo
                     bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide(); // Fecha config
                     new bootstrap.Modal(document.getElementById('modalImport')).show(); // Abre perguntas (Mesclar ou Sobrescrever)
-                } catch (err) { alert("Erro no JSON."); }
+                } catch (err) { exibirAlerta("Erro de leitura do arquivo JSON.", "danger"); }
             };
             reader.readAsText(input.files[0]);
         }
@@ -2810,11 +3022,16 @@ Aqui é onde os dados vão aparecer de verdade.
         function confirmImport(mode) {
             if (!tempImportData) return;
 
+            // Antes de qualquer coisa, criamos um snapshot emergencial para o caso do usuário querer voltar atrás
+            criarSnapshotEmergencial();
+
             // 1. Recupera a lista atual de matérias
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
             // 2. Se for Substituir, limpamos o que existe hoje
             if (mode === 'replace') {
+                const certeza = confirm("⚠️ ATENÇÃO: Isso vai APAGAR todas as suas matérias atuais permanentemente. Deseja continuar?");
+                if (!certeza) return;
                 currentList.forEach(m => {
                     localStorage.removeItem(PREFIX + m);
                     localStorage.removeItem(CONFIG_PREFIX + m);
@@ -2885,8 +3102,10 @@ Aqui é onde os dados vão aparecer de verdade.
             // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
-            alert("Importação finalizada!");
-            location.reload();
+            exibirAlerta("Importação finalizada!", "success");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         }
 
         // --- LÓGICA DE IMPORTAÇÃO SELETIVA ---
@@ -2894,7 +3113,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // Abre o modal de escolha e lista os itens do JSON
         // Prepara o modal e preenche o select de matérias dinamicamente
         function prepararEscolhaImport() {
-            if (!tempImportData || !tempImportData.allData) return alert("Arquivo inválido.");
+            if (!tempImportData || !tempImportData.allData) { exibirAlerta("Arquivo inválido.", "danger"); return };
 
             const lista = document.getElementById('listaEscolherImport');
             const selectFiltro = document.getElementById('filtroMateriaImport');
@@ -2992,12 +3211,37 @@ Aqui é onde os dados vão aparecer de verdade.
             });
         }
 
+        function criarSnapshotEmergencial() {
+            const list = localStorage.getItem(LIST_KEY);
+            if (!list) return; // Nada para salvar
+
+            const backup = {
+                timestamp: new Date().toLocaleString(),
+                list: JSON.parse(list),
+                data: {},
+                configs: {}
+            };
+
+            backup.list.forEach(m => {
+                backup.data[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+                const cfg = localStorage.getItem(CONFIG_PREFIX + m);
+                backup.configs[m] = cfg ? JSON.parse(cfg) : null;
+            });
+
+            localStorage.setItem("EMERGENCY_BACKUP_V1", JSON.stringify(backup));
+            verificarBotaoPanico(); // Atualiza a interface na hora
+            console.log("🛡️ Snapshot de segurança criado!");
+        }
+
         // Executa a importação apenas dos itens selecionados
         function executarImportacaoSeletiva() {
             const selecionados = document.querySelectorAll('.check-item-import:checked');
-            if (selecionados.length === 0) return alert("Selecione ao menos um item.");
+            if (selecionados.length === 0) { exibirAlerta("Selecione ao menos um item.", "warning"); return; }
 
             if (!confirm(`Importar ${selecionados.length} itens selecionados?`)) return;
+
+            // Antes de qualquer coisa, criamos um snapshot emergencial para o caso do usuário querer voltar atrás
+            criarSnapshotEmergencial();
 
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
@@ -3027,9 +3271,15 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
             });
 
+
+            // Em vez de substituir, a gente garante que NUNCA descarta o que já existe
+            let listNoDisco = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            // Une o que temos na memória com o que está no disco, removendo duplicados
+            currentList = [...new Set([...listNoDisco, ...currentList])];
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
             location.reload();
+
         }
 
         function verificarAcessoContribuinte() {
@@ -3048,7 +3298,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // 🛡️ PREVENÇÃO DE PERDA DE DADOS (Auto-Save)
         // ==========================================
-       
+
         document.addEventListener('DOMContentLoaded', () => {
 
             // Aqui a ideia é simples: toda vez que o usuário tentar imprimir ou abrir o modal de "Sobre", a função saveAllRows() é chamada para garantir que nada fique perdido. Além disso, há um timer que verifica se existem mudanças não salvas a cada 30 segundos, e se já passaram 5 minutos desde a última mudança, ele salva automaticamente.
