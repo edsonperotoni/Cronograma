@@ -154,11 +154,8 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 if __name__ == "__main__":
     import uvicorn
     import os
-    # Se existir a variável PORT (Google Cloud), usa ela. 
-    # Se não (Local), usa 8000.
+    # Localmente usa 8000, no Cloud Run usa a variável PORT
     port = int(os.environ.get("PORT", 8000))
-    # Se estiver na nuvem, o host deve ser 0.0.0.0. Local pode ser 127.0.0.1
+    # Localmente usa 127.0.0.1, no Cloud Run usa 0.0.0.0
     host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
-    
-    print(f"🚀 Iniciando servidor em {host}:{port}")
     uvicorn.run(app, host=host, port=port)
