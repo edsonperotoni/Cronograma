@@ -1791,10 +1791,13 @@ Aqui é onde os dados vão aparecer de verdade.
             const jaRolou = container.scrollLeft > 20;
 
             if (!precisaDeScroll || jaRolou) {
+                seta.style.opacity = '0';
+                seta.style.pointerEvents = 'none';
                 seta.style.display = 'none';
             } else {
                 // Só mostra se estiver no mobile (baseado no breakpoint do Bootstrap)
                 if (window.innerWidth < 768) {
+                    seta.style.opacity = '1';
                     seta.style.display = 'block';
                 }
             }
