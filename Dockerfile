@@ -9,7 +9,5 @@ COPY main.py .
 COPY contribuintes_db.json .
 COPY prompt_template.txt .
 
-# Se você tiver pastas de bibliotecas locais ou outros assets de lógica, adicione-os aqui
-# COPY pasta_da_logica/ ./pasta_da_logica/
-
-CMD ["uvicorn", "main.py:app", "--host", "0.0.0.0", "--port", "8080"]
+# Usamos o formato de shell para que o python possa ler a variável $PORT
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
