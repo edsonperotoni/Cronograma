@@ -1,3 +1,11 @@
+# Importa as regras do .gitignore
+#!include:.gitignore
+
+# Mas NÃO ignore estes (o '!' antes significa "inclua")
+!contribuintes_db.json
+!prompt_template.txt
+!main.py
+
 # Ambientes Virtuais (Essencial ignorar!)
 .venv/
 venv/
