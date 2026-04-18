@@ -318,7 +318,7 @@
             transition: all 0.2s ease;
         }
 
-        #nomeMateriaTab {
+        .nome-materia-modal {
             display: inline-block;
             max-width: 150px;
             /* Ajuste conforme necessário */
@@ -326,6 +326,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             vertical-align: bottom;
+            text-transform: uppercase;
+            font-weight: bold;
         }
 
         /* Configurações para quando for imprimir a página */
@@ -1199,7 +1201,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
     <!-- Modal de Configurações (Backup/Exportar/Importar) -->
     <div class="modal fade" id="modalConfig" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white align-items-center py-3">
                     <h5 class="modal-title small fw-bold text-uppercase">Configurações</h5>
@@ -1211,24 +1213,20 @@ Aqui é onde os dados vão aparecer de verdade.
                         <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active small text-uppercase" id="pref-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-pref" type="button" role="tab">Preferências <br><span
-                                        id="nomeMateriaTab"></span></button>
+                                    data-bs-target="#tab-pref" type="button" role="tab">Preferências</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-backup" type="button" role="tab">Backup e
-                                    <br>Restauração</button>
+                                    data-bs-target="#tab-backup" type="button" role="tab">Backup</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase text-danger" id="delete-tab"
                                     data-bs-toggle="tab" data-bs-target="#tab-delete" type="button" role="tab">Exclusão
-                                    de
-                                    <br>Matéria</button>
+                                    </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="ia-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-ia" type="button" role="tab">Chave de
-                                    <br>Contribuinte</button>
+                                    data-bs-target="#tab-ia" type="button" role="tab">Sou contribuinte</button>
                             </li>
                         </ul>
 
@@ -1390,8 +1388,9 @@ Aqui é onde os dados vão aparecer de verdade.
                                     </div>
                                     <h6 class="fw-bold text-uppercase text-danger mb-3">ATENÇÃO</h6>
                                     <p class="small text-muted mb-4">
-                                        Você está prestes a excluir a matéria <br>
-                                        <strong class="text-dark" id="nomeMateriaExcluirDisplay"></strong>.<br>
+                                        Você está prestes a excluir a matéria <span
+                                        class="nome-materia-modal text-dark"></span><br><br>
+                                        
                                         Esta ação apagará todos os conteúdos e notas associadas. Você precisará
                                         restaurar a matéria de um backup anterior caso queira recuperá-la. Tenha certeza
                                         de que deseja prosseguir.
@@ -1418,7 +1417,7 @@ Aqui é onde os dados vão aparecer de verdade.
                                                 onchange="saveChaveContribuinte(true)">
                                         </div>
                                         <small class="text-muted" style="font-size: 0.65rem;">
-                                            Esta chave é fornecida pelo administrador para liberar o uso da IA.
+                                            Esta chave é fornecida pelo administrador para liberar o uso da IA na importação de Matérias.
                                         </small>
                                     </div>
                                 </div>
@@ -2214,11 +2213,9 @@ Aqui é onde os dados vão aparecer de verdade.
 
         // Atualiza o nome da matéria na aba do modal de preferências
         function updateTabName() {
-            const spanNome = document.getElementById('nomeMateriaTab');
-            if (spanNome) {
-                // Se houver matéria, mostra "para NOME", senão deixa vazio
-                spanNome.innerText = currentMateria ? `de ${currentMateria}` : "";
-            }
+            document.querySelectorAll('.nome-materia-modal').forEach(span => {
+                    span.innerText = currentMateria ? `${currentMateria}` : "";
+            });
         }
 
         // ==========================================
