@@ -1,32 +1,25 @@
 # --- Segurança e Dados Sensíveis ---
-# Ignora o banco de dados de contribuintes e as chaves
+# Ignora chaves, banco de usuários e a lógica da IA
 contribuintes_db.json
 gestao_usuarios.py
 prompt_template.txt
-setup_venv.sh
-tree.txt
 .env
 
 # --- Ambiente Virtual Python ---
-# Ignora toda a pasta do ambiente virtual (muito importante!)
+# Ignora a pasta .venv completa (nunca deve ir ao git)
 .venv/
-env/
-venv/
-ENV/
 
-# --- Cache do Python ---
-# Ficheiros compilados que o Python gera automaticamente
+# --- Cache e Temporários do Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 
 # --- Ficheiros de Sistema e IDE ---
-# Configurações do Code OSS / VS Code
 .vscode/
-# Ficheiros temporários do Linux/Mac
 .DS_Store
 *.swp
 *~
 
-# --- Ficheiros de Log e Temporários ---
-*.log
+# --- Outros ---
+tree.txt
+setup_venv.sh
