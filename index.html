@@ -1383,7 +1383,8 @@ Aqui é onde os dados vão aparecer de verdade.
                                     </label>
                                     <input type="file" id="importFile" class="d-none" onchange="openImportModal(this)">
 
-                                    <button class="btn btn-outline-primary text-start btn-sm py-2 px-3 shadow-sm mt-2"
+                                    <button id="btn-importar-ia"
+                                        class="btn btn-outline-primary text-start btn-sm py-2 px-3 shadow-sm mt-2"
                                         onclick="acionarIA()">
                                         <i class="bi bi-robot me-2"></i>
                                         <strong>Importar com IA</strong> (PDF/TXT/HTML/DOCX)
@@ -1815,6 +1816,7 @@ Aqui é onde os dados vão aparecer de verdade.
             const input = document.getElementById('inputChaveAcesso');
             const valor = input.value.trim();
             localStorage.setItem("config_vBorda_chave_contribuinte", valor);
+            verificarAcessoContribuinte();
             if (showAlert) {
                 alert("Chave de Contribuinte salva com sucesso!");
             }
@@ -3030,13 +3032,26 @@ Aqui é onde os dados vão aparecer de verdade.
             location.reload();
         }
 
+        function verificarAcessoContribuinte() {
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            const btnIA = document.getElementById("btn-importar-ia");
+
+            if (chave && chave.includes("_key_")) {
+                // Se a chave existe e tem o formato esperado, mostra o botão
+                btnIA.style.display = "block";
+            } else {
+                // Caso contrário, garante que ele fique escondido
+                btnIA.style.display = "none";
+            }
+        }
+
         // ==========================================
         // 🛡️ PREVENÇÃO DE PERDA DE DADOS (Auto-Save)
         // ==========================================
-        // Garante que, ao clicar em Imprimir, Configurações ou Sobre, 
-        // o sistema salve todas as edições em aberto automaticamente.
-
+       
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Aqui a ideia é simples: toda vez que o usuário tentar imprimir ou abrir o modal de "Sobre", a função saveAllRows() é chamada para garantir que nada fique perdido. Além disso, há um timer que verifica se existem mudanças não salvas a cada 30 segundos, e se já passaram 5 minutos desde a última mudança, ele salva automaticamente.
             // 1. Botão Imprimir
             const btnPrint = document.querySelector('button[onclick="window.print()"]');
             if (btnPrint) {
@@ -3061,6 +3076,9 @@ Aqui é onde os dados vão aparecer de verdade.
                     saveAllRows();
                 });
             }
+
+            // 4. Verificação de acesso ao recurso de IA (Importar IA)
+            verificarAcessoContribuinte();
         });
 
         // ==========================================
