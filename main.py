@@ -68,14 +68,16 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
     # Carrega os dados atualizados do disco a cada tentativa de login
     db_atualizado = carregar_db()
     
-    print(f"DEBUG: Recebido Header Authorization -> {authorization}")
+    print(f"DEBUG: Tentativa de acesso com chave: {authorization[:5]}***")
 
     # 1. Validação de Existência da Chave
-    if authorization not in CONTRIBUINTES_AUTORIZADOS:
-        print(f"🚫 Acesso negado: Chave '{authorization}' não encontrada.")
+    if authorization not in db_atualizado:
+        print(f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)")
         raise HTTPException(status_code=403, detail="Chave inválida.")
 
     user = db_atualizado[authorization]
+    nome_usuario = user.get("nome", "Desconhecido") # Pega o nome do JSON
+    print(f"👤 Usuário identificado: {nome_usuario}")
     
     # 2. Validação de Expiração
     data_expira = datetime.datetime.strptime(user["expira"], "%Y-%m-%d")
