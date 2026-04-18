@@ -1918,6 +1918,7 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem(LIST_KEY, JSON.stringify(backup.list));
             //remove o backup de emergência para evitar restaurações acidentais múltiplas
             localStorage.removeItem("EMERGENCY_BACKUP_V1");
+            verificarBotaoPanico();
 
             exibirAlerta("Dados restaurados com sucesso!", "info");
             setTimeout(() => {
