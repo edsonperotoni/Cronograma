@@ -984,6 +984,7 @@
 </head>
 
 <body>
+    <div id="liveAlertPlaceholder" class="position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 2000; min-width: 320px; max-width: 90%;"></div>
     <div class="print-only-header d-none">
         <div class="d-flex align-items-center justify-content-between border-bottom border-3 border-dark pb-3 mb-4">
             <div class="d-flex align-items-center">
@@ -1849,11 +1850,51 @@ Aqui é onde os dados vão aparecer de verdade.
                 container.classList.add('d-none'); // Esconde se não houver backup
             }
         }
+        function exibirAlerta(mensagem, tipo = 'success') {
+            const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
+            if (!alertPlaceholder) return;
+
+            // Cria o elemento do alerta
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = [
+                `<div class="alert alert-${tipo} alert-dismissible fade show shadow-lg border-0 mb-2" role="alert">`,
+                `   <div class="d-flex align-items-center">`,
+                `      <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : (tipo === 'danger' ? 'bi-x-circle-fill' : 'bi-exclamation-triangle-fill')} me-2"></i>`,
+                `      <div>${mensagem}</div>`,
+                `   </div>`,
+                '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('');
+
+            alertPlaceholder.append(wrapper);
+
+            // Auto-remove após 4 segundos com verificação de segurança
+            setTimeout(() => {
+                // Verifica se o wrapper ainda está no documento (o usuário pode ter fechado antes)
+                if (wrapper && alertPlaceholder.contains(wrapper)) {
+                    const alertElement = wrapper.querySelector('.alert');
+                    if (alertElement) {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+                        if (bsAlert) {
+                            bsAlert.close();
+                        }
+                    }
+
+                    // Garante a remoção do wrapper do DOM após a animação de fade (aprox 150ms)
+                    setTimeout(() => {
+                        if (wrapper.parentNode) wrapper.remove();
+                    }, 150);
+                }
+            }, 4000);
+        }
 
         // Esta função é chamada quando o usuário clica no botão de "Restaurar antes da última importação". Ela pega o backup de emergência que foi criado automaticamente antes de cada importação, e restaura os dados para aquele estado. É uma forma de desfazer rapidamente uma importação que deu errado, sem precisar mexer com arquivos.
         function restaurarSnapshotEmergencial() {
             const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
-            if (!raw) return alert("Nenhum backup de emergência encontrado.");
+            if (!raw) {
+                exibirAlerta("Nenhum backup de emergência encontrado.", "warning");
+                return;
+            }
 
             const backup = JSON.parse(raw);
             if (!confirm(`Deseja restaurar o backup criado em ${backup.timestamp}?\nIsso substituirá seus dados atuais pelos dados salvos antes da última importação.`)) return;
@@ -1878,8 +1919,10 @@ Aqui é onde os dados vão aparecer de verdade.
             //remove o backup de emergência para evitar restaurações acidentais múltiplas
             localStorage.removeItem("EMERGENCY_BACKUP_V1");
 
-            alert("Dados restaurados com sucesso!");
-            location.reload();
+            exibirAlerta("Dados restaurados com sucesso!", "info");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         }
 
         function saveChaveContribuinte(showAlert = false) {
@@ -1888,7 +1931,7 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem("config_vBorda_chave_contribuinte", valor);
             verificarAcessoContribuinte();
             if (showAlert) {
-                alert("Chave de Contribuinte salva com sucesso!");
+                exibirAlerta("Chave de Contribuinte salva com sucesso!", "success");
             }
         }
         // Função para abrir o seletor de arquivos da IA
@@ -1901,7 +1944,7 @@ Aqui é onde os dados vão aparecer de verdade.
             const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
 
             if (!chaveContribuinte) {
-                alert("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.");
+                exibirAlerta("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.", "warning");
                 input.value = "";
                 return;
             }
@@ -1942,7 +1985,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                 // Se a IA retornar erro
                 if (jsonRecebido.error) {
-                    alert("Erro na IA: " + jsonRecebido.details);
+                    exibirAlerta("Erro na IA: " + jsonRecebido.details, "danger");
                 } else {
                     // Chama a função de importação que já existe no seu código
                     importarDadosIA(jsonRecebido);
@@ -1952,7 +1995,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             } catch (e) {
                 console.error(e);
-                alert("Falha ao conectar com o servidor Python. Certifique-se que o main.py está rodando.");
+                exibirAlerta("Falha ao conectar com o servidor Python. Certifique-se que o main.py está rodando.", "danger");
             } finally {
                 // Restaura o botão
                 btnIa.innerHTML = originalText;
@@ -1969,7 +2012,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 prepararEscolhaImport();
                 console.log("IA: Dados carregados no modal de seleção.");
             } catch (e) {
-                alert("Erro ao processar dados da IA: " + e.message);
+                exibirAlerta("Erro ao processar dados da IA: " + e.message, "danger");
             }
         }
 
@@ -2614,7 +2657,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // ➕ ADICIONAR LINHA EM BRANCO
         // ==========================================
         function addEmptyRow() {
-            if (!currentMateria) return alert("Selecione ou dê nome à matéria primeiro.");
+            if (!currentMateria) { exibirAlerta("Selecione ou dê nome à matéria primeiro.", "warning"); return; }
 
             // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
             const inputIntervalo = document.getElementById('inputIntervaloDias');
@@ -2781,7 +2824,7 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem('last_active', currentMateria);
             updateSelect();
             loadRows(); // Recarrega a tabela para mostrar os dados unidos
-            alert("Matéria atualizada com sucesso!");
+            exibirAlerta("Matéria atualizada com sucesso!", "success");
         }
 
         // ==========================================
@@ -2827,7 +2870,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             // 1. Validação de Segurança: Se não há nada selecionado no dropdown, cancela.
             if (!nomeNoSelect || !currentMateria) {
-                alert("Nenhuma matéria selecionada para exclusão.");
+                exibirAlerta("Nenhuma matéria selecionada para exclusão.", "warning");
                 return;
             }
 
@@ -2967,7 +3010,7 @@ Aqui é onde os dados vão aparecer de verdade.
                     tempImportData = JSON.parse(e.target.result); // Tenta ler o JSON do arquivo
                     bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide(); // Fecha config
                     new bootstrap.Modal(document.getElementById('modalImport')).show(); // Abre perguntas (Mesclar ou Sobrescrever)
-                } catch (err) { alert("Erro no JSON."); }
+                } catch (err) { exibirAlerta("Erro de leitura do arquivo JSON.", "danger"); }
             };
             reader.readAsText(input.files[0]);
         }
@@ -3058,8 +3101,10 @@ Aqui é onde os dados vão aparecer de verdade.
             // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
-            alert("Importação finalizada!");
-            location.reload();
+            exibirAlerta("Importação finalizada!", "success");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         }
 
         // --- LÓGICA DE IMPORTAÇÃO SELETIVA ---
@@ -3067,7 +3112,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // Abre o modal de escolha e lista os itens do JSON
         // Prepara o modal e preenche o select de matérias dinamicamente
         function prepararEscolhaImport() {
-            if (!tempImportData || !tempImportData.allData) return alert("Arquivo inválido.");
+            if (!tempImportData || !tempImportData.allData) { exibirAlerta("Arquivo inválido.", "danger"); return };
 
             const lista = document.getElementById('listaEscolherImport');
             const selectFiltro = document.getElementById('filtroMateriaImport');
@@ -3190,7 +3235,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // Executa a importação apenas dos itens selecionados
         function executarImportacaoSeletiva() {
             const selecionados = document.querySelectorAll('.check-item-import:checked');
-            if (selecionados.length === 0) return alert("Selecione ao menos um item.");
+            if (selecionados.length === 0) { exibirAlerta("Selecione ao menos um item.", "warning"); return; }
 
             if (!confirm(`Importar ${selecionados.length} itens selecionados?`)) return;
 
@@ -3233,6 +3278,7 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
             location.reload();
+
         }
 
         function verificarAcessoContribuinte() {
