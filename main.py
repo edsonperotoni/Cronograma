@@ -75,7 +75,7 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         print(f"🚫 Acesso negado: Chave '{authorization}' não encontrada.")
         raise HTTPException(status_code=403, detail="Chave inválida.")
 
-    user = CONTRIBUINTES_AUTORIZADOS[authorization]
+    user = db_atualizado[authorization]
     
     # 2. Validação de Expiração
     data_expira = datetime.datetime.strptime(user["expira"], "%Y-%m-%d")
@@ -126,7 +126,7 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
         # 5. Sucesso: Incrementa uso e salva banco
         user["uso"] += 1
-        print(f"📈 Uso atual de {user['nome']}: {user['uso']}/{user['limite']}")
+        salvar_db(db_atualizado)
 
         res_text = response.text.strip()
         
@@ -139,7 +139,13 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
         # 2. Remove os backticks de markdown que a IA adora colocar
         json_str = json_str.replace('```json', '').replace('```', '').strip()
-        return json.loads(json_str)
+
+        # Converte para objeto Python para validar se o JSON está ok
+        dados_da_ia = json.loads(json_str)
+
+        print(f"📈 Uso atual de {user['nome']}: {user['uso']}/{user['limite']}")
+
+        return dados_da_ia
         
     except Exception as e:
         print(f"❌ Erro na IA: {e}")
