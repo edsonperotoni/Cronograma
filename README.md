@@ -1,4 +1,4 @@
-# 📚 Cronograma de Matérias v2.8.2 — AI Edition 🚀
+# 📚 Cronograma de Matérias v2.8.3 — AI Edition 🚀
 
 Uma aplicação **Full Stack** projetada para organização robusta e inteligente de rotinas de estudo. O projeto evoluiu de uma ferramenta estática para um ecossistema completo com processamento de documentos via IA e armazenamento resiliente.
 
