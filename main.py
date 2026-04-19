@@ -18,11 +18,27 @@ from google.genai import types
 
 app = FastAPI()
 
+# --- CONFIGURAÇÃO DE SEGURANÇA CORS DINÂMICA ---
+# Buscamos as origens de uma variável de ambiente. 
+# Se não existir, usamos o localhost como padrão de segurança.
+env_origins = os.environ.get("ALLOWED_ORIGINS")
+
+if env_origins:
+    # Espera uma string separada por vírgulas: "https://site1.com,https://site2.com"
+    ORIGENS_PERMITIDAS = [origin.strip() for origin in env_origins.split(",")]
+else:
+    # Fallback para desenvolvimento local no seu CachyOS
+    ORIGENS_PERMITIDAS = [
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
-    allow_methods=["*"],
+    allow_origins=ORIGENS_PERMITIDAS,
+    allow_methods=["POST", "GET"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 # --- BANCO DE DADOS LOCAL (JSON) ---
