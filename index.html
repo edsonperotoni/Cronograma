@@ -132,7 +132,7 @@
         }
 
         .bi-check-square-fill {
-            color: #198754 !important;
+            color: #007bff !important;
         }
 
         /* Quadrado Azul (marcado) */
@@ -981,6 +981,78 @@
                 transform: none;
                 /* Remove a centralização vertical anterior */
             }
+        }
+
+        /* --- ESTILO DOS CHECKBOXES DA TODO-LIST (VISUALIZAÇÃO) --- */
+        .view-mode .todo-list {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        .view-mode .todo-list li {
+            margin-bottom: 4px;
+        }
+
+        .view-mode .todo-list input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            /* Tamanho próximo ao bi-check-square */
+            height: 18px;
+            border: 2px solid #ccc;
+            /* Cor do bi-square */
+            border-radius: 4px;
+            background-color: transparent;
+            cursor: pointer;
+            display: inline-grid;
+            place-content: center;
+            margin-right: 8px;
+            vertical-align: middle;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        /* Quando marcado: Fica azul igual ao bi-check-square-fill */
+        .view-mode .todo-list input[type="checkbox"]:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        /* Criando o "V" (Checkmark) branco idêntico ao ícone do Bootstrap */
+        .view-mode .todo-list input[type="checkbox"]::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            background-color: white;
+            /* Este clip-path desenha o formato exato do check do Bootstrap */
+            /* Tick mais fino e refinado */
+            clip-path: polygon(14% 44%, 0 65%, 42% 100%, 100% 16%, 86% 0, 42% 76%);
+        }
+
+        .view-mode .todo-list input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        /* Texto riscado e cinza quando concluído */
+        .view-mode .todo-list input[type="checkbox"]:checked+.todo-list__label__description {
+            text-decoration: line-through;
+            color: #adb5bd;
+        }
+
+        /* --- SOBRESCREVENDO O VERDE DO CKEDITOR --- */
+        :is(.ck-content .todo-list .todo-list__label > input,
+            .ck-editor__editable.ck-content .todo-list .todo-list__label > span[contenteditable="false"] > input)[checked]::before {
+            background: #007bff !important;
+            border-color: #007bff !important;
+        }
+
+        /* Garante que o estado de foco/hover também não puxe o verde */
+        .ck-content .todo-list .todo-list__label>input:hover,
+        .ck-content .todo-list .todo-list__label>input:focus {
+            border-color: #007bff !important;
         }
     </style>
 </head>
