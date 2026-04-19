@@ -2,7 +2,6 @@
 # Ignora chaves, banco de usuários e a lógica da IA
 contribuintes_db.json
 gestao_usuarios.py
-prompt_template.txt
 .env
 
 # --- Ambiente Virtual Python ---

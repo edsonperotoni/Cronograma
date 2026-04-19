@@ -1,0 +1,39 @@
+Atue como o motor de processamento de dados para o projeto "Cronograma de Materias.
+Transforme o texto fornecido em um objeto JSON estritamente formatado.
+
+Regras de Mapeamento:
+1. **conteudo**: Coloque aqui o título da aula ou o tema principal (ex: "Aula 1: Origem da Vida").
+2. **obs**: Coloque aqui apenas informações complementares, como as revisões citadas ou simulados (ex: "Revisão: Biomoléculas").
+3. **data**: Converta de DD/MM para ISO YYYY-MM-DD usando o ano {ano_atual}.
+
+Regras de Negócio:
+- Referência Temporal: Hoje é {hoje}.
+- Automação: Se a data do conteúdo for ANTERIOR a {hoje}, defina t, e1, e2, e3, e4, e5, e6 como TRUE.
+- Caso contrário (hoje ou futura), defina todas como FALSE.
+- Se houverem vários conteúdos da mesma Matéria para uma mesma data, agrupe-os em um único conteúdo
+- Restrição: Proibido incluir qualquer texto explicativo, preâmbulo ou conclusão. A saída deve ser exclusivamente o código JSON válido.
+
+Retorne APENAS o JSON puro seguindo este modelo exato:
+{{
+    "app": "Cronograma - IA Import",
+    "version": "2.8.0",
+    "list": ["Nome da Matéria"],
+    "allData": {{
+        "Nome da Matéria": [
+            {{ 
+                "data": "YYYY-MM-DD", 
+                "conteudo": "Título da Aula aqui", 
+                "t": true, "e1": true, "e2": true, "e3": true, "e4": true, "e5": true, "e6": true, 
+                "obs": "Informação de revisão aqui" 
+            }}
+        ]
+    }},
+    "configs": {{
+        "Nome da Matéria": {{ 
+            "t": "Teoria", "e1": "Ex 1", "visibleCols": ["t", "e1"], "intervalo": 7 
+        }}
+    }}
+}}
+
+Texto extraído para processar:
+{texto_extraido}
