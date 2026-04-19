@@ -12,6 +12,10 @@ Regras de Negócio:
 - Caso contrário (hoje ou futura), defina todas como FALSE.
 - Se houverem vários conteúdos da mesma Matéria para uma mesma data, agrupe-os em um único conteúdo
 - Restrição: Proibido incluir qualquer texto explicativo, preâmbulo ou conclusão. A saída deve ser exclusivamente o código JSON válido.
+- O texto fornecido pode estar em formato CSV. Ignore aspas extras e delimitadores, focando apenas nas datas e descrições das matérias.
+- EXTRAIA APENAS as matérias e conteúdos presentes no arquivo/documento/texto/imagem fornecido.
+- PROIBIDO INVENTAR, sugerir ou adicionar matérias, conteúdos e observações que não estejam explicitamente escritas no arquivo.
+- Se não identificar conteúdos claros, retorne o JSON com a lista vazia, mas NUNCA invente dados.
 
 Retorne APENAS o JSON puro seguindo este modelo exato:
 {{
@@ -35,5 +39,5 @@ Retorne APENAS o JSON puro seguindo este modelo exato:
     }}
 }}
 
-Texto extraído para processar:
-{texto_extraido}
+Conteúdo extraído para processar:
+{conteudo_extraido}

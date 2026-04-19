@@ -5,6 +5,7 @@ import re
 import io
 import time
 import pandas as pd #suporte arquivo de Excel e CSV
+import PIL.Image # suporte arquivos de imagem
 from docx import Document # suporte arquivo de Word
 from fastapi import FastAPI, UploadFile, File, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,24 +49,28 @@ client = genai.Client(
 )
 
 # --- FUNÇÃO PARA CARREGAR O PROMPT EXTERNO ---
-def carregar_prompt(ano_atual, hoje, texto_extraido):
+def carregar_prompt(ano_atual, hoje, conteudo_extraido):
     with open("prompt_template.txt", "r", encoding="utf-8") as f:
         template = f.read()
-    return template.format(ano_atual=ano_atual, hoje=hoje, texto_extraido=texto_extraido)
+    return template.format(ano_atual=ano_atual, hoje=hoje, conteudo_extraido=conteudo_extraido)
 
 # --- TRADUTOR DE FORMATOS ATUALIZADO ---
-def extrair_texto(file_content, filename):
+def extrair_conteudo(file_content, filename):
     ext = filename.split('.')[-1].lower()
     
     try:
-        if ext == 'html':
+        # A IA moderna do Google é super inteligente, mas ainda não consegue ler o conteúdo de imagens. Para esses casos, retornamos None e deixamos a IA analisar o binário diretamente.
+        if ext in ['jpg', 'jpeg', 'png']:
+            return None
+        elif ext == 'html':
             soup = BeautifulSoup(file_content, 'html.parser')
             return soup.get_text(separator=' ')
             
         elif ext == 'pdf':
             pdf_file = io.BytesIO(file_content)
             reader = PdfReader(pdf_file)
-            return "".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            texto = "".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            return texto if texto.strip() else None # Se PDF for imagem, retorna None
             
         elif ext == 'docx':
             docx_file = io.BytesIO(file_content)
@@ -126,16 +131,10 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
     # 4. Processamento do arquivo
     content = await file.read()
-    texto_extraido = extrair_texto(content, file.filename)
-
+    conteudo_extraido = extrair_conteudo(content, file.filename)
+    
     hoje = datetime.date.today().isoformat()
     ano_atual = datetime.date.today().year
-
-    # Agora o prompt é carregado do arquivo externo
-    try:
-        prompt_final = carregar_prompt(ano_atual, hoje, texto_extraido)
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Template de prompt não encontrado no servidor.")
 
     try:
         target_model = 'gemini-2.5-flash' 
@@ -144,9 +143,29 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         response = None
         for tentativa in range(5):
             try:
+                # --- LÓGICA DE DECISÃO: TEXTO OU IMAGEM ---
+                if conteudo_extraido is None:
+                    # SE NÃO TEM TEXTO (Imagem ou PDF de imagem), envia o BINÁRIO direto
+                    prompt_config = carregar_prompt(ano_atual, hoje, "Siga as instruções para analisar a imagem anexa.")
+                    # Ajuste dinâmico de MIME Type
+                    mime_atual = file.content_type
+                    
+                    # Pequena "blindagem": se o arquivo for imagem mas o mime vier estranho
+                    if file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        if 'image' not in mime_atual:
+                            mime_atual = "image/jpeg" # Força um padrão de imagem
+                    # O SDK moderno do Google GenAI aceita o binário assim:
+                    conteudo_ia = [
+                        prompt_config,
+                        types.Part.from_bytes(data=content, mime_type=mime_atual)
+                    ]
+                else:
+                    # SE TEM TEXTO, envia o PROMPT formatado
+                    conteudo_ia = carregar_prompt(ano_atual, hoje, conteudo_extraido)
+                    
                 response = client.models.generate_content(
                     model=target_model,
-                    contents=prompt_final,
+                    contents=conteudo_ia,
                     config=types.GenerateContentConfig(temperature=0.1)
                 )
                 break 
