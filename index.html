@@ -45,11 +45,13 @@
     <style>
         .container-fluid {
             max-width: 1280px;
-            border-style: groove;
-            border-width: 2px;
-            border-color: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            /* Borda quase invisível */
             border-radius: 12px;
-            background-color: #f0f4f8;
+            background-color: #f0f4f8 !important;
+            /* Cor de papel de alta qualidade */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            /* Sombra suave para dar profundidade */
         }
 
         .logo {
@@ -1647,7 +1649,8 @@ Aqui é onde os dados vão aparecer de verdade.
                             <ul class="small text-secondary">
                                 <li><strong>Importação Multi-formato:</strong> Suporte nativo para extração de dados via
                                     IA de arquivos <strong>PDF, Word (.docx), Excel (.xlsx)</strong> e
-                                    <strong>CSV</strong>.</li>
+                                    <strong>CSV</strong>.
+                                </li>
                                 <li><strong>Engine Gemini 2.5 Flash:</strong> Utiliza modelos de linguagem de última
                                     geração para processamento ultrarrápido e estruturação automática de conteúdos.</li>
                                 <li><strong>Agrupamento Inteligente:</strong> A IA identifica e agrupa automaticamente
