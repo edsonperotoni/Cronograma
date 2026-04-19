@@ -1054,6 +1054,27 @@
         .ck-content .todo-list .todo-list__label>input:focus {
             border-color: #007bff !important;
         }
+
+        /* Força as colunas de tick a serem o mais estreitas possível */
+        .study-table th[data-col^="e"],
+        .study-table th[data-col="t"],
+        .study-table td:has(.check-toggle),
+        .study-table td:has(.form-check-input) {
+            width: 1% !important;
+            white-space: nowrap !important;
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+            min-width: 40px;
+            /* Garante que não suma totalmente */
+        }
+
+        /* Ajusta o input dentro do cabeçalho para não forçar largura */
+        .header-edit-input {
+            width: 100%;
+            max-width: 45px;
+            /* Limita o tamanho do texto (Teoria, Ex1...) */
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 
@@ -1250,22 +1271,22 @@ Aqui é onde os dados vão aparecer de verdade.
                                 <input type="text" id="colName_t" class="header-edit-input" value="Teoria"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)">
                             </th>
-                            <th style="width: 70px;" data-col="e1"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e1"><input title="Ex. 1"
                                     type="text" id="colName_e1" class="header-edit-input" value="Ex. 1"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
-                            <th style="width: 70px;" data-col="e2"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e2"><input title="Ex. 2"
                                     type="text" id="colName_e2" class="header-edit-input" value="Ex. 2"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
-                            <th style="width: 70px;" data-col="e3"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e3"><input title="Ex. 3"
                                     type="text" id="colName_e3" class="header-edit-input" value="Ex. 3"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
-                            <th style="width: 70px;" data-col="e4"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e4"><input title="Ex. 4"
                                     type="text" id="colName_e4" class="header-edit-input" value="Ex. 4"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
-                            <th style="width: 70px;" data-col="e5"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e5"><input title="Rev. 1"
                                     type="text" id="colName_e5" class="header-edit-input" value="Rev. 1"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
-                            <th style="width: 70px;" data-col="e6"><input title="Ocultável nas configurações"
+                            <th style="width: 70px;" data-col="e6"><input title="Rev. 2"
                                     type="text" id="colName_e6" class="header-edit-input" value="Rev. 2"
                                     oninput="syncModalLabels()" onchange="setUnsavedChanges(true)"></th>
                             <th class="text-start-custom header-obs" data-texto-mobile="Obs."
@@ -2261,6 +2282,7 @@ Aqui é onde os dados vão aparecer de verdade.
             keys.forEach(k => {
                 const val = (cfg && cfg[k]) ? cfg[k] : defaults[k];
                 if (document.getElementById('colName_' + k)) document.getElementById('colName_' + k).value = val;
+                if (document.getElementById('colName_' + k)) document.getElementById('colName_' + k).title = val;
                 if (document.getElementById('modalColName_' + k)) document.getElementById('modalColName_' + k).value = val;
             });
 
