@@ -15,7 +15,7 @@ Uma aplicação **Full Stack** projetada para organização robusta e inteligent
 ## 🚀 Funcionalidades Principais
 
 ### 🤖 Inteligência Artificial & OCR
-* **Importação Multi-formato:** Suporte nativo para extração de dados via IA de arquivos **PDF, Word (.docx), Excel (.xlsx, .xls)** e **CSV**.
+* **Importação Multi-formato:** Suporte nativo para extração de dados via IA de arquivos **PDF, Word (.docx), Excel (.xlsx, .xls), CSV ** e **Imagens (JPG/PNG)**.
 * **Engine Gemini 2.0 Flash:** Processamento ultrarrápido de documentos para geração automática de cronogramas.
 * **Edição Rica com CKEditor 5:** A coluna de observações utiliza o CKEditor para permitir formatação avançada (negrito, cores, listas e links).
 * **Cálculo Automático de Próxima Data:** Sugestão inteligente de datas baseada em intervalos configuráveis (ex: 7 dias), automatizando o planejamento.
