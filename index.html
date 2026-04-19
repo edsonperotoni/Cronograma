@@ -1070,6 +1070,9 @@
             /* Limita o tamanho do texto (Teoria, Ex1...) */
             text-overflow: ellipsis;
         }
+        .data-conteudo {
+            padding-right: 5px;;
+        }
     </style>
 </head>
 
@@ -2575,7 +2578,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             tr.innerHTML = `
         <td>
-            <span class="view-mode">${formatDateToBR(dateValue)}</span>
+            <span class="view-mode data-conteudo">${formatDateToBR(dateValue)}</span>
             <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
         </td>
         <td class="text-start-custom">
