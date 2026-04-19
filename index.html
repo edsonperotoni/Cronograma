@@ -984,7 +984,8 @@
 </head>
 
 <body>
-    <div id="liveAlertPlaceholder" class="position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 2000; min-width: 320px; max-width: 90%;"></div>
+    <div id="liveAlertPlaceholder" class="position-fixed bottom-0 start-50 translate-middle-x mb-4"
+        style="z-index: 2000; min-width: 320px; max-width: 90%;"></div>
     <div class="print-only-header d-none">
         <div class="d-flex align-items-center justify-content-between border-bottom border-3 border-dark pb-3 mb-4">
             <div class="d-flex align-items-center">
@@ -1090,7 +1091,7 @@
                         <i class="bi bi-check2-all me-2" style="font-size: 1.3rem;"></i>
                         <strong class="text-uppercase"
                             style="font-size: 0.95rem; white-space: nowrap; letter-spacing: 0.5px;">
-                            Salvar Tudo
+                            Salvar
                         </strong>
                     </div>
                 </button>
@@ -1357,7 +1358,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                 <button class="btn btn-primary btn-sm w-100 fw-bold shadow-sm py-2"
                                     onclick="applyVisibility()">
-                                    <i class="bi bi-check2-circle me-1"></i> SALVAR PREFERÊNCIAS
+                                    <i class="bi bi-check2-circle me-1"></i> SALVAR
                                 </button>
 
                             </div>
@@ -1391,7 +1392,8 @@ Aqui é onde os dados vão aparecer de verdade.
                                         <i class="bi bi-robot me-2"></i>
                                         <strong>Importar com IA</strong> (PDF/TXT/HTML/DOCX/XLS/CSV)
                                     </button>
-                                    <input type="file" id="iaFile" class="d-none" accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv"
+                                    <input type="file" id="iaFile" class="d-none"
+                                        accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv"
                                         onchange="processarArquivoIA(this)">
                                 </div>
                                 <div id="container-botao-panico" class="mt-4 pt-3 border-top d-none">
@@ -1630,7 +1632,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
-                            Versão 2.7.3
+                            Versão 2.7.4
                         </span>
                         <div class="mt-3" id="contador-container"></div>
                     </div>
@@ -2940,18 +2942,41 @@ Aqui é onde os dados vão aparecer de verdade.
             const hasMateria = (currentMateria && currentMateria.trim() !== "");
             const tabContainer = document.getElementById('configTabContainer');
             const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
+            const btnSalvarTudo = document.getElementById('btnSalvarTudo'); // <-- Captura o botão Salvar
             const prefTab = document.getElementById('pref-tab');
+
+            // Seleciona os inputs de cabeçalho e título
+            const inputTitulo = document.getElementById('materiaTitulo');
+            const headerInputs = document.querySelectorAll('.header-edit-input');
 
             if (tabContainer) tabContainer.classList.remove('d-none');
 
             if (hasMateria) {
+                // --- ESTADO ATIVO ---
                 if (btnAddContent) btnAddContent.disabled = false;
+                if (btnSalvarTudo) btnSalvarTudo.disabled = false;
                 if (prefTab) prefTab.style.display = "block";
+
+                if (inputTitulo) inputTitulo.disabled = false;
+                headerInputs.forEach(input => input.disabled = false);
+
             } else {
+                // --- ESTADO BLOQUEADO ---
                 if (btnAddContent) btnAddContent.disabled = true;
-                // Oculta a aba de preferências se não houver matéria ativa
+
+                // Bloqueia o botão Salvar Tudo
+                if (btnSalvarTudo) {
+                    btnSalvarTudo.disabled = true;
+                    // Opcional: Remove a animação de pulsar se ela estiver ativa
+                    btnSalvarTudo.classList.remove('btn-save-alert');
+                }
+
+                if (inputTitulo) inputTitulo.disabled = true;
+                headerInputs.forEach(input => input.disabled = true);
+
                 if (prefTab) prefTab.style.display = "none";
-                // Se o modal estiver aberto, força a ida para o backup
+
+                // Lógica do Modal (Backup)
                 const backupTab = document.getElementById('backup-tab');
                 if (backupTab && document.getElementById('modalConfig').classList.contains('show')) {
                     backupTab.click();
@@ -2985,7 +3010,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // Adicionamos 'automationConfigs' ao pacote final
             const backupPayload = {
                 app: "Cronograma - Organização de Matérias",
-                version: "2.7.3",
+                version: "2.7.4",
                 list,
                 allData,
                 configs
