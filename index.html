@@ -2313,15 +2313,27 @@ Aqui é onde os dados vão aparecer de verdade.
         // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         function switchMateria(name) {
             const tableBody = document.getElementById('tableBody');
-            currentMateria = name;
+
+            // --- 1. SALVAMENTO PROTEGIDO ---
+            // Só salva se realmente houver uma matéria ativa e mudanças pendentes
+            if (currentMateria && hasUnsavedChanges) {
+                saveAllRows();
+            } else {
+                // Se não houver mudanças, apenas fechamos os editores sem salvar
+                Object.keys(activeEditors).forEach(id => {
+                    if (activeEditors[id]) {
+                        activeEditors[id].destroy().then(() => delete activeEditors[id]);
+                    }
+                });
+                document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
+            }
+
+            // --- 2. TROCA DE CONTEXTO ---
+            currentMateria = name; // Só agora mudamos o "ponteiro" da matéria
+
             if (!name || name.trim() === "") {
-                saveAllRows(); // Tenta salvar a anterior antes de limpar
-                currentMateria = "";
                 localStorage.removeItem('last_active');
-
-                // Limpa visualmente a tabela
-                tableBody.innerHTML = setInitialTableContent();// Coloca a mensagem de "Selecione uma matéria" no meio da tabela
-
+                tableBody.innerHTML = setInitialTableContent();
                 document.getElementById('materiaTitulo').value = "";
                 updateTabName();
                 checkInterfaceState();
@@ -2329,14 +2341,11 @@ Aqui é onde os dados vão aparecer de verdade.
                 return;
             }
 
-            saveAllRows();
-
-            document.getElementById('materiaTitulo').value = name;
+            // --- 3. CARREGAMENTO LIMPO ---
             localStorage.setItem('last_active', name);
-
             loadColumnNames();
             loadIntervalConfig();
-            loadRows();
+            loadRows(); // Agora ele vai ler a Matéria B corretamente do disco
             updateSelect();
             updateTabName();
             checkInterfaceState();
