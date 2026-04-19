@@ -4,6 +4,8 @@ import json
 import re
 import io
 import time
+import pandas as pd #suporte arquivo de Excel e CSV
+from docx import Document # suporte arquivo de Word
 from fastapi import FastAPI, UploadFile, File, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
@@ -51,17 +53,49 @@ def carregar_prompt(ano_atual, hoje, texto_extraido):
         template = f.read()
     return template.format(ano_atual=ano_atual, hoje=hoje, texto_extraido=texto_extraido)
 
+# --- TRADUTOR DE FORMATOS ATUALIZADO ---
 def extrair_texto(file_content, filename):
     ext = filename.split('.')[-1].lower()
-    if ext == 'html':
-        soup = BeautifulSoup(file_content, 'html.parser')
-        return soup.get_text(separator=' ')
-    elif ext == 'pdf':
-        pdf_file = io.BytesIO(file_content)
-        reader = PdfReader(pdf_file)
-        return "".join([p.extract_text() for p in reader.pages if p.extract_text()])
-    else:
-        return file_content.decode("utf-8", errors="ignore")
+    
+    try:
+        if ext == 'html':
+            soup = BeautifulSoup(file_content, 'html.parser')
+            return soup.get_text(separator=' ')
+            
+        elif ext == 'pdf':
+            pdf_file = io.BytesIO(file_content)
+            reader = PdfReader(pdf_file)
+            return "".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            
+        elif ext == 'docx':
+            docx_file = io.BytesIO(file_content)
+            doc = Document(docx_file)
+            return "\n".join([para.text for para in doc.paragraphs])
+            
+        elif ext in ['xlsx', 'xls']:
+            excel_file = io.BytesIO(file_content)
+            # Lê a primeira aba do Excel
+            df = pd.read_excel(excel_file)
+            # Converte para Markdown: a IA entende tabelas assim com precisão cirúrgica
+            return df.to_markdown(index=False)
+            
+        elif ext == 'csv':
+            csv_file = io.BytesIO(file_content)
+            # Tenta detectar se o CSV usa vírgula ou ponto e vírgula
+            try:
+                df = pd.read_csv(csv_file, sep=None, engine='python')
+            except:
+                csv_file.seek(0)
+                df = pd.read_csv(csv_file, sep=';')
+            return df.to_markdown(index=False)
+            
+        else:
+            # Para .txt e outros formatos de texto puro
+            return file_content.decode("utf-8", errors="ignore")
+            
+    except Exception as e:
+        print(f"❌ Erro ao extrair {filename}: {e}")
+        return f"Erro ao processar o arquivo {filename}."
 
 @app.post("/processar")
 async def processar(file: UploadFile = File(...), authorization: str = Header(None)):
@@ -104,8 +138,8 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         raise HTTPException(status_code=500, detail="Template de prompt não encontrado no servidor.")
 
     try:
-        target_model = 'gemini-2.5-flash'
-        print(f"🚀 {user['nome']} disparando IA ({target_model})")
+        target_model = 'gemini-2.5-flash' 
+        print(f"🚀 {user['nome']} disparando IA para arquivo: {file.filename}")
 
         response = None
         for tentativa in range(5):
@@ -132,13 +166,9 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
         res_text = response.text.strip()
         
-        # 1. Tenta extrair apenas o que está entre chaves { } se a IA mandou lixo fora
+        # Limpeza de JSON (Markdown Guard)
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-        else:
-            json_str = res_text
-
+        json_str = match.group(0) if match else res_text
         # 2. Remove os backticks de markdown que a IA adora colocar
         json_str = json_str.replace('```json', '').replace('```', '').strip()
 
@@ -155,7 +185,6 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     # Localmente usa 8000, no Cloud Run usa a variável PORT
     port = int(os.environ.get("PORT", 8000))
     # Localmente usa 127.0.0.1, no Cloud Run usa 0.0.0.0
