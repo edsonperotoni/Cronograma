@@ -1,52 +1,57 @@
-# 📚 Cronograma de Matérias v2.7.4
+# 📚 Cronograma de Matérias v2.8.0 — AI Edition 🚀
 
-Uma aplicação de página única (**SPA**) projetada para organização robusta, intuitiva e personalizável de rotinas de estudo. O projeto foi estruturado com foco educativo, contendo blocos de comentários detalhados sobre o funcionamento interno do HTML, CSS e JavaScript.
+Uma aplicação **Full Stack** projetada para organização robusta e inteligente de rotinas de estudo. O projeto evoluiu de uma ferramenta estática para um ecossistema completo com processamento de documentos via IA e armazenamento resiliente.
 
 ---
 
-## 🎨 Interface e Design
-* **Paleta de Cores:** Design profissional, utilizando tons de cinza, branco e azul primário para destaque.
+## 🎨 Interface e Experiência do Usuário (UX)
 * **Layout Responsivo:** Desenvolvido com **Bootstrap 5**, garantindo adaptação total para dispositivos móveis e desktop.
 * **Modo Impressão:** Otimização via CSS `@media print` para formato A4 (paisagem), removendo botões de controle e ajustando o layout para papel ou PDF.
+* **Bloqueio de Estado Inteligente:** A interface desabilita controles de edição automaticamente quando nenhuma matéria está selecionada, prevenindo erros de gravação.
+* **Assistente Mobile:** Ícone animado que detecta a necessidade de rolagem lateral e sugere o modo paisagem em dispositivos móveis.
+* **Cabeçalhos Dinâmicos:** Renomeie as colunas (Teoria, Exercícios, etc.) diretamente na tabela ou através do painel de preferências.
+* **Visibilidade Seletiva:** Oculte colunas que você não utiliza para manter a interface limpa e focada no que importa.
 
 ## 🚀 Funcionalidades Principais
 
-### 🧠 Gestão Inteligente
-* **SPA (Single Page Application):** Toda a navegação e gerenciamento de matérias ocorrem em uma única página, sem recarregamentos.
+### 🤖 Inteligência Artificial & OCR
+* **Importação Multi-formato:** Suporte nativo para extração de dados via IA de arquivos **PDF, Word (.docx), Excel (.xlsx, .xls)** e **CSV**.
+* **Engine Gemini 2.0 Flash:** Processamento ultrarrápido de documentos para geração automática de cronogramas.
 * **Edição Rica com CKEditor 5:** A coluna de observações utiliza o CKEditor para permitir formatação avançada (negrito, cores, listas e links).
 * **Cálculo Automático de Próxima Data:** Sugestão inteligente de datas baseada em intervalos configuráveis (ex: 7 dias), automatizando o planejamento.
+* **Backend Python (FastAPI):** Tradutor binário que converte planilhas complexas em Markdown para leitura precisa da IA.
 
-### ⚙️ Personalização e Controle
-* **Cabeçalhos Dinâmicos:** Renomeie as colunas (Teoria, Exercícios, etc.) diretamente na tabela ou através do painel de preferências.
-* **Visibilidade Seletiva:** Oculte colunas que você não utiliza para manter a interface limpa e focada no que importa.
-* **Sistema de Modais:** Interações fluidas para criação de novas matérias, configurações de backup e informações do sistema.
-
-### 💾 Segurança e Dados
+### 🛡️ Resiliência e Segurança de Dados
 * **Persistência Local:** Utiliza a **LocalStorage API**. Seus dados permanecem no seu navegador, garantindo privacidade total (os dados não saem do seu PC).
 * **Backup em JSON:** Sistema de exportação e importação de banco de dados para evitar perda de informações e permitir portabilidade.
-* **Importação Inteligente:** Opções para *Mesclar* dados novos, *Substituir* tudo ou *Selecionar* itens específicos manualmente do arquivo de backup.
-* **Auto-Save & Prevenção:** Salvamento automático a cada 5 minutos e alertas visuais (botão piscante) para alterações pendentes.
+
+* **Snapshot de Emergência:** O sistema cria um ponto de restauração automático antes de qualquer importação de IA. Se algo der errado, o "Botão de Pânico" restaura tudo em um clique.
+* **Merge Inteligente:** Capacidade de renomear e fundir matérias, unindo conteúdos de nomes duplicados sem perder dados.
+* **Auto-Save & Proteção:** Salvamento automático a cada 5 minutos e alertas visuais para mudanças pendentes.
 
 ## 🛠️ Tecnologias Utilizadas
 
-* **Frontend:** HTML5, CSS3 (Custom Properties) e JavaScript (ES6+).
-* **Framework CSS:** Bootstrap 5.3.2 + Bootstrap Icons.
-* **Editor de Texto:** CKEditor 5 (Custom Module Build).
-* **Persistência:** Web Storage API (LocalStorage).
-* **Monitoramento:** Integração com contador de acessos via hits.sh.
+### Frontend
+* **Core:** HTML5, CSS3 e JavaScript (ES6+).
+* **Editor:** CKEditor 5 (Rich Text Edition).
+* **UI Framework:** Bootstrap 5.3.2 + Bootstrap Icons.
 
-## 📦 Como Executar
+### Backend (IA Service)
+* **Linguagem:** Python 3.11+.
+* **Framework:** FastAPI + Uvicorn.
+* **Processamento:** Pandas (Excel/CSV), python-docx (Word), PyPDF2 (PDF).
+* **Modelos:** Google GenAI SDK (Gemini 2.5 Flash).
 
-O projeto utiliza **Módulos JavaScript**, o que exige um ambiente de servidor local para o funcionamento pleno de todas as ferramentas.
+## 📦 Estrutura do Projeto
 
-1.  **Uso Local:** Não abra o arquivo `index.html` diretamente via duplo clique. Utilize uma extensão como o *Live Server* (VS Code) ou um servidor Python (`python -m http.server`).
-2.  **Estrutura de Pastas:**
-    ```text
-    ├── index.html
-    ├── ckeditor5/       # Bibliotecas e traduções do editor
-    └── image/           # Logotipos e ícones SVG originais
-    ```
-
+```text
+├── index.html          # Interface principal e lógica JS
+├── main.py             # Backend Python (API de Processamento IA)
+├── prompt_template.txt # O "Cérebro" da IA (Instruções do sistema)
+├── contribuintes_db.json # Gestão de acesso e cotas de uso
+├── ckeditor5/          # Editor de texto rico
+└── image/              # Ativos visuais (Logotipos e SVGs)
+```
 ## 📜 Licença e Direitos
 
 * **Copyright (c) 2026, Edson Perotoni.**
