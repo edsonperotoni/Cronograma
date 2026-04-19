@@ -1022,8 +1022,8 @@
         /* Criando o "V" (Checkmark) branco idêntico ao ícone do Bootstrap */
         .view-mode .todo-list input[type="checkbox"]::before {
             content: "";
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             transform: scale(0);
             transition: 120ms transform ease-in-out;
             background-color: white;
@@ -1036,11 +1036,6 @@
             transform: scale(1);
         }
 
-        /* Texto riscado e cinza quando concluído */
-        .view-mode .todo-list input[type="checkbox"]:checked+.todo-list__label__description {
-            text-decoration: line-through;
-            color: #adb5bd;
-        }
 
         /* --- SOBRESCREVENDO O VERDE DO CKEDITOR --- */
         :is(.ck-content .todo-list .todo-list__label > input,
