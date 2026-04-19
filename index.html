@@ -1701,7 +1701,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
-                            Versão 2.8.3
+                            Versão 2.8.4
                         </span>
                         <div class="mt-3" id="contador-container"></div>
                     </div>
@@ -2311,44 +2311,52 @@ Aqui é onde os dados vão aparecer de verdade.
         // 🔄 TROCAR DE MATÉRIA
         // ==========================================
         // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
-        function switchMateria(name) {
+        async function switchMateria(name) {
             const tableBody = document.getElementById('tableBody');
+            const inputTitulo = document.getElementById('materiaTitulo');
 
-            // --- 1. SALVAMENTO PROTEGIDO ---
-            // Só salva se realmente houver uma matéria ativa e mudanças pendentes
+            // 1. Antes de trocar, salvamos a matéria ANTIGA se houver mudanças
             if (currentMateria && hasUnsavedChanges) {
+                // Forçamos o fechamento de tudo e salvamento
                 saveAllRows();
             } else {
-                // Se não houver mudanças, apenas fechamos os editores sem salvar
-                Object.keys(activeEditors).forEach(id => {
+                // Se não ia salvar, precisamos garantir que os editores sumam
+                for (const id in activeEditors) {
                     if (activeEditors[id]) {
-                        activeEditors[id].destroy().then(() => delete activeEditors[id]);
+                        await activeEditors[id].destroy();
+                        delete activeEditors[id];
                     }
-                });
+                }
                 document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
             }
 
-            // --- 2. TROCA DE CONTEXTO ---
-            currentMateria = name; // Só agora mudamos o "ponteiro" da matéria
+            // 2. Agora sim, trocamos o "ponteiro" para a matéria NOVA
+            currentMateria = name;
 
+            // 3. Se for uma seleção vazia, limpa tudo e sai
             if (!name || name.trim() === "") {
                 localStorage.removeItem('last_active');
                 tableBody.innerHTML = setInitialTableContent();
-                document.getElementById('materiaTitulo').value = "";
+                if (inputTitulo) inputTitulo.value = "";
                 updateTabName();
                 checkInterfaceState();
                 updateSelect();
                 return;
             }
 
-            // --- 3. CARREGAMENTO LIMPO ---
+            // 4. Carrega os dados da matéria NOVA do LocalStorage
             localStorage.setItem('last_active', name);
-            loadColumnNames();
-            loadIntervalConfig();
-            loadRows(); // Agora ele vai ler a Matéria B corretamente do disco
-            updateSelect();
-            updateTabName();
-            checkInterfaceState();
+
+            // Atualiza o Título na tela ANTES de carregar as linhas
+            if (inputTitulo) inputTitulo.value = name;
+
+            loadColumnNames(); // Carrega nomes das colunas da matéria B
+            loadIntervalConfig(); // Carrega intervalo da matéria B
+            loadRows(); // Carrega as linhas da matéria B
+
+            updateSelect(); // Sincroniza o dropdown
+            updateTabName(); // Sincroniza nomes nos modais
+            checkInterfaceState(); // Libera ou bloqueia botões
         }
 
 
@@ -3097,7 +3105,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // Adicionamos 'automationConfigs' ao pacote final
             const backupPayload = {
                 app: "Cronograma - Organização de Matérias",
-                version: "2.8.3",
+                version: "2.8.4",
                 list,
                 allData,
                 configs
