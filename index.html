@@ -2318,7 +2318,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // 1. Antes de trocar, salvamos a matéria ANTIGA se houver mudanças
             if (currentMateria && hasUnsavedChanges) {
                 // Forçamos o fechamento de tudo e salvamento
-                saveAllRows();
+               await saveAllRows();
             } else {
                 // Se não ia salvar, precisamos garantir que os editores sumam
                 for (const id in activeEditors) {
@@ -2725,7 +2725,7 @@ Aqui é onde os dados vão aparecer de verdade.
         // 💾✅ SALVAR TUDO E FECHAR EDIÇÃO
         // ==========================================
         // Essa função é chamada quando você clica no botão "Salvar" (ou quando o modal de preferências é aberto, para garantir que nada fique perdido). Ela fecha todos os editores abertos, remove as classes de edição e salva os dados.
-        function saveAllRows() {
+        async function saveAllRows() {
             if (!currentMateria || !hasUnsavedChanges) return;
             // Fecha todos os editores ricos (CKEditor) ativos
             Object.keys(activeEditors).forEach(id => {
