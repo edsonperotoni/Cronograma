@@ -1145,12 +1145,56 @@
         .ck-content {
             word-break: break-word !important;
         }
+
+        @media print {
+            .print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background-color: white;
+            }
+
+            /* Adiciona um espaço no final de cada página para o rodapé não cobrir os dados */
+            body {
+                margin-bottom: 2cm;
+            }
+
+            /* Truque para numeração automática de páginas (suportado pela maioria dos browsers) */
+            .page-number::after {
+                content: counter(page);
+            }
+        }
+
+        @media print {
+
+            /* Inicializa o contador de páginas */
+            body {
+                counter-reset: page;
+                margin-bottom: 2cm;
+            }
+
+            .print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background-color: white;
+            }
+
+            /* Garante que o conteúdo do número da página seja gerado */
+            .page-number::after {
+                counter-increment: page;
+                content: counter(page);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div id="liveAlertPlaceholder" class="position-fixed bottom-0 start-50 translate-middle-x mb-4"
         style="z-index: 2000; min-width: 320px; max-width: 90%;"></div>
+
     <div class="print-only-header d-none">
         <div class="d-flex align-items-center justify-content-between border-bottom border-3 border-dark pb-3 mb-4">
             <div class="d-flex align-items-center">
@@ -1172,6 +1216,14 @@
             </div>
         </div>
     </div>
+
+    <div class="print-footer d-none">
+        <div class="d-flex justify-content-between align-items-center border-top border-2 pt-2">
+            <span class="small text-uppercase">CRONOGRAMA</span>
+            <span class="fw-bold text-primary footer-materia-name"></span>
+        </div>
+    </div>
+
     <div class="container-fluid container-fluid-background">
         <!-- 
             ======================================================================
@@ -3572,6 +3624,9 @@ Aqui é onde os dados vão aparecer de verdade.
 
                     // Se houver uma matéria ativa, usa o nome dela, senão coloca "Geral"
                     if (printMateria) printMateria.innerText = currentMateria || "Geral";
+
+                    const footerMateria = document.querySelector('.footer-materia-name');
+                    if (footerMateria) footerMateria.innerText = currentMateria || "Geral";
 
                     window.print();
                 });
