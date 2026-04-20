@@ -787,6 +787,18 @@
             }
         }
 
+
+        .val-content-col,
+        .header-obs {
+            width: 30% !important;
+            min-width: 250px !important;
+            /* Garante que a coluna não esmague o botão */
+        }
+
+        .header-actions {
+            width: 1% !important;
+        }
+
         /* No celular (telas menores que 768px) */
         @media (max-width: 767px) {
             .label-conteudo-dinamico {
@@ -797,7 +809,8 @@
                 letter-spacing: 0;
             }
 
-            .val-content-col,.header-obs {
+            .val-content-col,
+            .header-obs {
                 min-width: 200px !important;
                 /* Garante que a coluna não esmague o botão */
             }
@@ -1074,6 +1087,64 @@
         .data-conteudo {
             padding-right: 5px;
         }
+
+        /* --- AJUSTE DE LARGURA E ESCALA DO CKEDITOR CLASSIC --- */
+
+        /* Define o tamanho do contêiner do CKEditor */
+        .ck.ck-editor {
+            min-width: 200px;
+            max-width: 600px;
+            width: 100%;
+            /* Ocupa o máximo disponível, respeitando min/max */
+        }
+
+        /* Define a altura da área de edição (opcional) */
+        .ck-editor__editable {
+            min-height: 150px;
+            max-height: 200px;
+            padding-top: 8px !important;
+        }
+
+        /* 3. A Barra de Ferramentas (Toolbar) */
+        .ck-editor__top .ck-toolbar {
+            transform: scale(0.80) !important;
+            transform-origin: top left !important;
+
+            /* Compensa o scale: 100% / 0.8 = 125% */
+            width: 125% !important;
+
+            /* Força os ícones a quebrarem linha se a célula for muito estreita */
+            flex-wrap: wrap !important;
+            display: flex !important;
+
+            margin-bottom: -10px;
+            /* Puxa a área de texto para cima para fechar o buraco do scale */
+
+
+            margin-bottom: -5px !important;
+            border: none !important;
+        }
+
+        .ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content {
+            border: none !important;
+        }
+
+        /* 4. Itens internos da barra: remove barreiras de largura */
+        .ck-toolbar__items {
+            flex-wrap: wrap !important;
+            min-width: 0 !important;
+        }
+
+        /* 5. Prevenção de corte */
+        .ck-editor__top {
+            overflow: visible !important;
+            border-bottom: 1px solid #ccced1 !important;
+        }
+
+        /* 6. Conteúdo: Quebra de linha correta */
+        .ck-content {
+            word-break: break-word !important;
+        }
     </style>
 </head>
 
@@ -1171,7 +1242,7 @@
                 </div>
             </div>
 
-            <div class="col-12 col-lg-4 d-flex justify-content-lg-end">
+            <div class="col-12 col-lg-4 d-flex gap-4 justify-content-lg-end">
                 <button id="btnSalvarTudo"
                     class="btn btn-success w-100 w-lg-auto px-4 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
                     onclick="saveAllRows()" style="min-height: 48px; border-radius: 8px;">
@@ -1186,6 +1257,23 @@
                         <strong class="text-uppercase"
                             style="font-size: 0.95rem; white-space: nowrap; letter-spacing: 0.5px;">
                             Salvar
+                        </strong>
+                    </div>
+                </button>
+                <button id="btnEditarTudo"
+                    class="btn btn-info w-100 w-lg-auto px-4 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
+                    onclick="enableEditModeAllRows()" style="min-height: 48px; border-radius: 8px;">
+
+                    <span class="text-white-50 d-none d-md-inline-block position-absolute fw-bold"
+                        style="font-size: 0.65rem; top: 2px; right: 6px; letter-spacing: 0.5px;">
+                        CTRL+E
+                    </span>
+
+                    <div class="d-flex align-items-center" style="margin-top: 4px;">
+                        <i class="bi bi-check2-all me-2" style="font-size: 1.3rem;"></i>
+                        <strong class="text-uppercase"
+                            style="font-size: 0.95rem; white-space: nowrap; letter-spacing: 0.5px;">
+                            Editar
                         </strong>
                     </div>
                 </button>
@@ -1216,7 +1304,7 @@ Aqui é onde os dados vão aparecer de verdade.
                             <th style="width: 1%;">Data</th>
 
                             <th class="val-content-col"
-                                style="padding: 0 4px !important; vertical-align: middle; text-align: left !important;">
+                                style="padding: 0 4px !important; vertical-align: middle; text-align: center !important;">
                                 <div class="input-group input-group-sm d-inline-flex align-middle d-print-none"
                                     style="max-width: fit-content; height: 32px; vertical-align: middle; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
 
@@ -1288,9 +1376,8 @@ Aqui é onde os dados vão aparecer de verdade.
                             <th style="width: 70px;" data-col="e6"><input title="Rev. 2" type="text" id="colName_e6"
                                     class="header-edit-input" value="Rev. 2" oninput="syncModalLabels()"
                                     onchange="setUnsavedChanges(true)"></th>
-                            <th class="text-start-custom header-obs" data-texto-mobile="Obs."
-                                data-texto-desktop="Observações"></th>
-                            <th class="no-print header-actions" style="width: 80px;">Ações</th>
+                            <th class="header-obs" data-texto-mobile="Obs." data-texto-desktop="Observações"></th>
+                            <th class="no-print header-actions">Ações</th>
                         </tr>
                     </thead>
                     <!-- O corpo da tabela (tbody) começa vazio e é preenchido pelo JavaScript! -->
@@ -1930,6 +2017,11 @@ Aqui é onde os dados vão aparecer de verdade.
                 e.preventDefault();
                 addEmptyRow();
             }
+            // Atalho: CTRL + E (Editar Todos os Registros)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                enableEditModeAllRows();
+            }
         });
 
         // Quando você muda o número de dias para o intervalo automático, isso é uma mudança importante que deve ser salva.
@@ -2344,7 +2436,7 @@ Aqui é onde os dados vão aparecer de verdade.
             // 1. Antes de trocar, salvamos a matéria ANTIGA se houver mudanças
             if (currentMateria && hasUnsavedChanges) {
                 // Forçamos o fechamento de tudo e salvamento
-               await saveAllRows();
+                await saveAllRows();
             } else {
                 // Se não ia salvar, precisamos garantir que os editores sumam
                 for (const id in activeEditors) {
@@ -2611,7 +2703,6 @@ Aqui é onde os dados vão aparecer de verdade.
             <div class="edit-mode"><div class="val-obs-editor">${o}</div></div>
         </td>
         <td class="no-print col-actions">
-            <i class="bi bi-pencil-square text-primary view-mode btn-action" onclick="enableEditModeAllRows()"></i>
             <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
         </td>`;
 
@@ -2705,8 +2796,8 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // ✏️ LIGAR O MODO EDIÇÃO
         // ==========================================
-        
-    
+
+
         // Essa função é responsável por transformar uma linha específica da tabela em modo de edição. Ela adiciona a classe 'is-editing' para mostrar os campos de edição, e inicializa o CKEditor na célula de observação para permitir edição rica de texto.
         async function enableEditMode(rowId) {
             const tr = document.getElementById(rowId);
