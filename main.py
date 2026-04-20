@@ -11,6 +11,13 @@ from fastapi import FastAPI, UploadFile, File, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
+from pydantic import BaseModel
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 # SDK Moderno
 from google import genai
@@ -117,6 +124,111 @@ def extrair_conteudo(file_content, filename):
     except Exception as e:
         print(f"❌ Erro ao extrair {filename}: {e}")
         return f"Erro ao processar o arquivo {filename}."
+
+
+# --- MODELOS DE DADOS ---
+class SyncRequest(BaseModel):
+    cronograma_json: dict
+    google_token: str  # Campo obrigatório para receber o token do Frontend
+
+# --- ROTA DE EXPORTAÇÃO (GOOGLE DRIVE) ---
+@app.post("/drive/exportar")
+async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None)):
+    db = carregar_db()
+    
+    # 1. Validação de Contribuinte
+    if authorization not in db:
+        raise HTTPException(status_code=403, detail="Chave inválida.")
+
+    user = db[authorization]
+    
+    try:
+        # 2. Configura as credenciais usando o token enviado pelo Frontend
+        # Importante: O token vem de 'req.google_token' definido no Pydantic acima
+        creds = Credentials(token=req.google_token)
+        service = build('drive', 'v3', credentials=creds)
+        
+        # 3. Preparação do arquivo binário (JSON)
+        # Usamos 'req.cronograma_json' para acessar os dados enviados
+        json_bytes = json.dumps(req.cronograma_json, indent=4, ensure_ascii=False).encode('utf-8')
+        buffer = io.BytesIO(json_bytes)
+        
+        file_metadata = {
+            'name': f'Backup_Cronograma_{user["nome"]}.json',
+            'mimeType': 'application/json'
+        }
+        
+        media = MediaIoBaseUpload(buffer, mimetype='application/json', resumable=True)
+        
+        # 4. Verifica se o arquivo já existe para atualizar ou criar um novo
+        query = f"name = '{file_metadata['name']}' and trashed = false"
+        results = service.files().list(q=query, fields="files(id)").execute()
+        files = results.get('files', [])
+
+        if files:
+            file_id = files[0]['id']
+            service.files().update(
+                fileId=file_id,
+                media_body=media
+            ).execute()
+            status = "atualizado"
+        else:
+            service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id'
+            ).execute()
+            status = "criado"
+
+        return {"status": "success", "message": f"Backup {status} no Google Drive de {user['nome']}!"}
+
+    except Exception as e:
+        print(f"❌ Erro no Drive: {e}")
+        # Retorna erro 400 caso o token do Google esteja expirado ou inválido
+        raise HTTPException(status_code=400, detail=f"Erro na API do Google: {str(e)}")
+
+# --- ROTA PARA BUSCAR BACKUP DO DRIVE (IMPORTAR) ---
+@app.post("/drive/importar")
+async def importar_do_drive(req: dict, authorization: str = Header(None)):
+    db = carregar_db()
+    
+    if authorization not in db:
+        raise HTTPException(status_code=403, detail="Chave inválida.")
+
+    user = db[authorization]
+    google_token = req.get("google_token")
+
+    if not google_token:
+        raise HTTPException(status_code=400, detail="Token do Google ausente.")
+
+    try:
+        creds = Credentials(token=google_token)
+        service = build('drive', 'v3', credentials=creds)
+        
+        # 1. Busca o arquivo pelo nome exato que usamos no exportar
+        nome_arquivo = f'Backup_Cronograma_{user["nome"]}.json'
+        query = f"name = '{nome_arquivo}' and trashed = false"
+        results = service.files().list(q=query, fields="files(id)").execute()
+        files = results.get('files', [])
+
+        if not files:
+            return {"status": "error", "message": "Nenhum backup encontrado no seu Google Drive."}
+
+        # 2. Baixa o conteúdo do arquivo
+        file_id = files[0]['id']
+        content = service.files().get_media(fileId=file_id).execute()
+        
+        # 3. Decodifica o JSON
+        backup_json = json.loads(content.decode('utf-8'))
+
+        return {
+            "status": "success", 
+            "data": backup_json
+        }
+
+    except Exception as e:
+        print(f"❌ Erro na importação: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/processar")
 async def processar(file: UploadFile = File(...), authorization: str = Header(None)):

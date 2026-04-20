@@ -36,6 +36,7 @@
         import './ckeditor5/translations/pt-br.js';
     </script>
 
+
     <!-- 
     ======================================================================
     🎨 ÁREA DE ESTILOS (CSS)
@@ -1246,30 +1247,44 @@
             </div>
 
             <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end align-items-center mb-4">
-                <div class="btn-group shadow-sm border rounded">
+                <div class="btn-group shadow-sm border rounded bg-white">
+                    <button id="btn-google-auth" class="btn btn-light border-0 text-dark px-3"
+                        onclick="solicitarAcessoDrive()" title="Conectar Conta Google">
+                        <i class="bi bi-google"></i>
+                    </button>
+
+                    <button id="btn-google-export" class="btn btn-light border-0 text-dark px-3"
+                        onclick="exportarManualParaDrive()" title="Salvar na Nuvem (Exportar)" disabled>
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+                    </button>
+
+                    <button id="btn-google-import" class="btn btn-light border-0 text-dark px-3"
+                        onclick="restaurarDoDrive()" title="Recuperar da Nuvem (Importar)" disabled>
+                        <i class="bi bi-cloud-arrow-down-fill me-1"></i>
+                    </button>
+
+                    <div class="vr mx-1 d-none d-lg-block"></div>
+
                     <button class="btn btn-light border-0 text-secondary px-3" onclick="window.print()"
                         title="Imprimir">
                         <i class="bi bi-printer"></i>
                     </button>
-                    <div class="vr opacity-25 my-2"></div>
+                    <div class="vr mx-1 d-none d-lg-block"></div>
                     <button class="btn btn-light border-0 text-dark px-3" onclick="prepararConfiguracoes()"
                         title="Configurações">
                         <i class="bi bi-gear-fill"></i>
                     </button>
-                    <div class="vr opacity-25 my-2"></div>
                     <button class="btn btn-light border-0 text-secondary px-3" data-bs-toggle="modal"
                         data-bs-target="#modalAbout" title="Sobre">
                         <i class="bi bi-info-circle-fill"></i>
                     </button>
                 </div>
-
             </div>
         </div>
         <div class="row g-3 align-items-center no-print bg-white p-2 mx-0 rounded shadow-sm border">
 
             <div class="col-12 col-lg-8">
                 <div class="input-group align-items-stretch">
-
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaMateria"
                         title="Incluir nova matéria">
                         <i class="bi bi-plus-lg"></i>
@@ -1289,46 +1304,32 @@
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                         <select id="materiaSelect" class="materia-select-hidden" onchange="switchMateria(this.value)"
-                            title="Selecionar Matéria">
-                        </select>
+                            title="Selecionar Matéria"></select>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-lg-4 d-flex gap-4 justify-content-lg-end">
                 <button id="btnSalvarTudo"
-                    class="btn btn-success w-100 w-lg-auto px-4 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
+                    class="btn btn-success flex-grow-1 flex-lg-grow-0 px-3 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
                     onclick="saveAllRows()" style="min-height: 48px; border-radius: 8px;">
-
                     <span class="text-white-50 d-none d-md-inline-block position-absolute fw-bold"
-                        style="font-size: 0.65rem; top: 2px; right: 6px; letter-spacing: 0.5px;">
-                        CTRL+S
-                    </span>
-
-                    <div class="d-flex align-items-center" style="margin-top: 4px;">
-                        <i class="bi bi-check2-all me-2" style="font-size: 1.3rem;"></i>
-                        <strong class="text-uppercase"
-                            style="font-size: 0.95rem; white-space: nowrap; letter-spacing: 0.5px;">
-                            Salvar
-                        </strong>
-                    </div>
+                        style="font-size: 0.55rem; top: 2px; right: 6px;">CTRL+S</span>
+                    <i class="bi bi-check2-all me-1"></i><strong>Salvar</strong>
                 </button>
+
                 <button id="btnEditarTudo"
-                    class="btn btn-info w-100 w-lg-auto px-4 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
+                    class="btn btn-info flex-grow-1 flex-lg-grow-0 px-3 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
                     onclick="enableEditModeAllRows()" style="min-height: 48px; border-radius: 8px;">
-
                     <span class="text-white-50 d-none d-md-inline-block position-absolute fw-bold"
-                        style="font-size: 0.65rem; top: 2px; right: 6px; letter-spacing: 0.5px;">
-                        CTRL+E
-                    </span>
+                        style="font-size: 0.55rem; top: 2px; right: 6px;">CTRL+E</span>
+                    <i class="bi bi-pencil-square me-1"></i><strong>Editar</strong>
+                </button>
 
-                    <div class="d-flex align-items-center" style="margin-top: 4px;">
-                        <i class="bi bi-check2-all me-2" style="font-size: 1.3rem;"></i>
-                        <strong class="text-uppercase"
-                            style="font-size: 0.95rem; white-space: nowrap; letter-spacing: 0.5px;">
-                            Editar
-                        </strong>
-                    </div>
+                <button id="btnExcluirMateria"
+                    class="btn btn-outline-danger flex-grow-1 flex-lg-grow-0 px-3 py-2 shadow-sm d-flex align-items-center justify-content-center"
+                    onclick="deleteFullMateria()" style="min-height: 48px; border-radius: 8px;" title="Excluir Matéria">
+                    <i class="bi bi-trash3"></i>
                 </button>
             </div>
 
@@ -1465,11 +1466,6 @@ Aqui é onde os dados vão aparecer de verdade.
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab"
                                     data-bs-target="#tab-backup" type="button" role="tab">Backup</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link small text-uppercase text-danger" id="delete-tab"
-                                    data-bs-toggle="tab" data-bs-target="#tab-delete" type="button" role="tab">Exclusão
-                                </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="ia-tab" data-bs-toggle="tab"
@@ -1645,27 +1641,7 @@ Aqui é onde os dados vão aparecer de verdade.
                                     </small>
                                 </div>
                             </div>
-                            <div class="tab-pane fade" id="tab-delete" role="tabpanel">
-                                <div class="p-4 text-center">
-                                    <div class="mb-4">
-                                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
-                                    </div>
-                                    <h6 class="fw-bold text-uppercase text-danger mb-3">ATENÇÃO</h6>
-                                    <p class="small text-muted mb-4">
-                                        Você está prestes a excluir a matéria <span
-                                            class="nome-materia-modal text-dark"></span><br><br>
 
-                                        Esta ação apagará todos os conteúdos e notas associadas. Você precisará
-                                        restaurar a matéria de um backup anterior caso queira recuperá-la. Tenha certeza
-                                        de que deseja prosseguir.
-                                    </p>
-
-                                    <button class="btn btn-danger w-100 py-2 fw-bold shadow-sm"
-                                        onclick="deleteFullMateria()">
-                                        <i class="bi bi-trash3 me-2"></i>EXCLUIR ESTA MATÉRIA
-                                    </button>
-                                </div>
-                            </div>
                             <div class="tab-pane fade" id="tab-ia" role="tabpanel">
                                 <div class="p-4 text-center">
                                     <div class="mb-4 p-3 border rounded bg-white border-primary-subtle shadow-sm">
@@ -1942,7 +1918,7 @@ Aqui é onde os dados vão aparecer de verdade.
     </div>
 
     <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-dialog  modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-danger text-white border-0">
                     <h5 class="modal-title small fw-bold text-uppercase"><i
@@ -1955,8 +1931,8 @@ Aqui é onde os dados vão aparecer de verdade.
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-sm btn-secondary w-100"
                         data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btnConfirmarAcaoExclusao"
-                        class="btn btn-sm btn-danger w-100">Excluir</button>
+                    <button type="button" id="btnConfirmarAcaoExclusao" class="btn btn-sm btn-danger w-100"><i
+                            class="bi bi-trash3 me-2"></i>EXCLUIR ESTA MATÉRIA</button>
                 </div>
             </div>
         </div>
@@ -1993,6 +1969,27 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // window.onload: Executa automaticamente assim que a página termina de abrir.
         window.onload = () => {
+            const savedToken = sessionStorage.getItem('google_access_token');
+            if (savedToken) {
+                accessToken = savedToken;
+                // Reabilita os botões automaticamente
+                let btnAuth = document.getElementById('btn-google-auth');
+                let btExport = document.getElementById('btn-google-export');
+                let btImport = document.getElementById('btn-google-import');
+
+                if (btnAuth) {
+                    btnAuth.classList.replace('text-dark', 'text-primary');
+                    btnAuth.title = "Google Conectado";
+                    btnAuth.style.backgroundColor = "#d4edda";
+                    if (btnAuth) {
+                        btExport.disabled = false;
+                    }
+                    if (btnAuth) {
+                        btImport.disabled = false;
+                    }
+                }
+
+            }
             // Verifica se existe um backup de emergência e mostra o botão de restauração se necessário
             verificarBotaoPanico()
 
@@ -3184,7 +3181,19 @@ Aqui é onde os dados vão aparecer de verdade.
 
             // Injeta o nome confirmado no HTML do modal
             document.getElementById('msgConfirmacaoExclusao').innerHTML =
-                `Deseja excluir a matéria <br><strong>${currentMateria}</strong> e <strong>TODOS os seus conteúdos</strong>?`;
+                `<div class="p-4 text-center">
+                                    <div class="mb-4">
+                                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-uppercase text-danger mb-3">ATENÇÃO</h6>
+                                    <p class="small text-muted mb-4">
+                                        Você está prestes a excluir a matéria <strong>${currentMateria}</strong><br><br>
+
+                                        Esta ação apagará TODOS os conteúdos e notas associadas. Você precisará
+                                        restaurar a matéria de um backup anterior caso queira recuperá-la. Tenha certeza
+                                        de que deseja prosseguir.
+                                    </p>
+                                </div>`;
 
             new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
         }
@@ -3229,7 +3238,9 @@ Aqui é onde os dados vão aparecer de verdade.
             const hasMateria = (currentMateria && currentMateria.trim() !== "");
             const tabContainer = document.getElementById('configTabContainer');
             const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
-            const btnSalvarTudo = document.getElementById('btnSalvarTudo'); // <-- Captura o botão Salvar
+            const btnSalvarTudo = document.getElementById('btnSalvarTudo');
+            const btnEditarTudo = document.getElementById('btnEditarTudo');
+            const btnExcluirMateria = document.getElementById('btnExcluirMateria');
             const prefTab = document.getElementById('pref-tab');
 
             // Seleciona os inputs de cabeçalho e título
@@ -3242,6 +3253,8 @@ Aqui é onde os dados vão aparecer de verdade.
                 // --- ESTADO ATIVO ---
                 if (btnAddContent) btnAddContent.disabled = false;
                 if (btnSalvarTudo) btnSalvarTudo.disabled = false;
+                if (btnEditarTudo) btnEditarTudo.disabled = false;
+                if (btnExcluirMateria) btnExcluirMateria.disabled = false;
                 if (prefTab) prefTab.style.display = "block";
 
                 if (inputTitulo) inputTitulo.disabled = false;
@@ -3251,7 +3264,15 @@ Aqui é onde os dados vão aparecer de verdade.
                 // --- ESTADO BLOQUEADO ---
                 if (btnAddContent) btnAddContent.disabled = true;
 
-                // Bloqueia o botão Salvar Tudo
+
+                if (btnExcluirMateria) {
+                    btnExcluirMateria.disabled = true;
+                }
+
+                if (btnEditarTudo) {
+                    btnEditarTudo.disabled = true;
+                }
+
                 if (btnSalvarTudo) {
                     btnSalvarTudo.disabled = true;
                     // Opcional: Remove a animação de pulsar se ela estiver ativa
@@ -3678,7 +3699,226 @@ Aqui é onde os dados vão aparecer de verdade.
             }
         }, 30000); // Checagem a cada 30 segundos para economizar processamento
     </script>
+    <script>
+        let tokenClient;
+        let accessToken = null;
 
+
+        function initTokenClient() {
+
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: '749297806019-h4pgn5kdb4rdij99m3vd8ksi53l4ad3h.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (response) => {
+                    if (response.access_token) {
+                        accessToken = response.access_token;
+                        sessionStorage.setItem('google_access_token', accessToken);
+
+                        // 1. Muda a cor do ícone do Google para colorido ou azul para indicar "Logado"
+                        const btnAuth = document.getElementById('btn-google-auth');
+                        btnAuth.classList.replace('text-dark', 'text-primary');
+                        btnAuth.title = "Google Conectado";
+
+                        // 2. Habilita os botões de Nuvem
+                        document.getElementById('btn-google-export').disabled = false;
+                        document.getElementById('btn-google-import').disabled = false;
+
+                        document.getElementById('btn-google-auth').style.backgroundColor = "#d4edda";
+                        console.log("✅ Login Google realizado com sucesso!");
+                        exibirAlerta("Login efetuado! Agora você pode Exportar ou Importar para o seu Google Drive.", "success");
+
+                    }
+                },
+            });
+
+        }
+
+        function solicitarAcessoDrive() {
+            if (!tokenClient) {
+                // Se por algum motivo o carregamento atrasou, tenta inicializar agora
+                initTokenClient();
+            }
+
+            if (tokenClient) {
+                tokenClient.requestAccessToken();
+            } else {
+                exibirAlerta("O serviço do Google ainda não carregou. Tente novamente em instantes.", "warning");
+            }
+        }
+        async function getDadosJsonLocais() {
+            // 1. Sincroniza o que está na tela para o LocalStorage antes de empacotar
+            if (typeof saveAllRows === "function") {
+                saveAllRows();
+            }
+
+            let backupData = {
+                meta: {
+                    data_criacao: new Date().toISOString(),
+                    usuario: localStorage.getItem("config_vBorda_nome_usuario") || "Edson",
+                    last_active: localStorage.getItem('last_active'),
+                    app_version: "2.8.5-pro"
+                },
+                list: [],      // O índice (LIST_KEY)
+                data: {},      // Conteúdo das matérias (PREFIX)
+                configs: {},   // Configurações (CONFIG_PREFIX)
+                intervalos: {} // Intervalos de repetição
+            };
+
+            // 2. Captura a lista mestre de matérias
+            const listaRaw = localStorage.getItem(LIST_KEY);
+            if (listaRaw) {
+                try {
+                    backupData.list = JSON.parse(listaRaw);
+                } catch (e) {
+                    console.error("Erro ao ler lista de matérias:", e);
+                }
+            }
+
+            // 3. Varre apenas as matérias que existem na lista
+            backupData.list.forEach(materia => {
+                // Captura os itens/estudos (PREFIX + m)
+                const dadosMateria = localStorage.getItem(PREFIX + materia);
+                if (dadosMateria) {
+                    backupData.data[materia] = JSON.parse(dadosMateria);
+                }
+
+                // Captura as configurações (CONFIG_PREFIX + m)
+                const configMateria = localStorage.getItem(CONFIG_PREFIX + materia);
+                if (configMateria) {
+                    backupData.configs[materia] = JSON.parse(configMateria);
+                }
+
+                // Captura intervalos específicos (padrão 'config_intervalo_dias_')
+                const intervalo = localStorage.getItem('config_intervalo_dias_' + materia);
+                if (intervalo) {
+                    backupData.intervalos[materia] = intervalo;
+                }
+            });
+
+            // 4. Captura a chave de contribuinte (essencial para o servidor validar)
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            if (chave) backupData.meta.chave = chave;
+
+            console.log("📦 Estrutura de backup consolidada");
+            return backupData;
+        }
+
+        async function exportarManualParaDrive() {
+            const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
+
+            if (!chaveContribuinte) {
+                exibirAlerta("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.", "warning");
+                return;
+            }
+            const dadosLocais = await getDadosJsonLocais();
+
+            const payloadParaPython = {
+                cronograma_json: dadosLocais, // Deve bater com o nome na classe SyncRequest
+                google_token: accessToken  // Deve bater com o nome na classe SyncRequest
+            };
+
+            let url_service_exportar_google_drive;
+            if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+                // 2. Produção (Google Cloud) 
+                url_service_exportar_google_drive = "https://cronograma-ia-749297806019.southamerica-east1.run.app/drive/exportar";
+            } else {
+                // 3. Desenvolvimento (Seu CachyOS local)
+                url_service_exportar_google_drive = "http://127.0.0.1:8000/drive/exportar";
+            }
+
+            console.log("Enviando para o servidor:", payloadParaPython);
+
+            const response = await fetch(url_service_exportar_google_drive, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "authorization": chaveContribuinte
+                },
+                body: JSON.stringify(payloadParaPython)
+            });
+
+            const res = await response.json();
+            if (res.status === "success") {
+                exibirAlerta("Exportação concluída para o seu Google Drive", "success");
+
+            } else {
+                console.log("Resposta do servidor:", res);
+                exibirAlerta("Exportação para o Google Drive falhou! Veja  o erro no console (Tecle F12 e vá na aba Console)", "danger");
+            }
+        }
+
+        async function restaurarDoDrive() {
+            if (!accessToken) {
+                exibirAlerta("Por favor, faça login no Google primeiro (Sincronizar).", "danger");
+                return;
+            }
+
+            if (!confirm("Isso irá substituir todos os dados locais pelos dados salvos na nuvem. Continuar?")) {
+                return;
+            }
+
+            const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
+
+            if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+                // 2. Produção (Google Cloud) 
+                url_service_importar_google_drive = "https://cronograma-ia-749297806019.southamerica-east1.run.app/drive/importar";
+            } else {
+                // 3. Desenvolvimento (Seu CachyOS local)
+                url_service_importar_google_drive = "http://127.0.0.1:8000/drive/importar";
+            }
+
+            try {
+                const response = await fetch(url_service_importar_google_drive, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "authorization": chaveContribuinte },
+                    body: JSON.stringify({ google_token: accessToken })
+                });
+
+                const res = await response.json();
+
+                if (res.status === "success") {
+                    const backup = res.data;
+
+                    // 1. Restaura a lista mestre
+                    if (backup.list) {
+                        localStorage.setItem(LIST_KEY, JSON.stringify(backup.list));
+                    }
+
+                    // 2. Restaura os dados das matérias (PREFIX + nome)
+                    for (const materia in backup.data) {
+                        localStorage.setItem(PREFIX + materia, JSON.stringify(backup.data[materia]));
+                    }
+
+                    // 3. Restaura as configurações das matérias (CONFIG_PREFIX + nome)
+                    for (const materia in backup.configs) {
+                        localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(backup.configs[materia]));
+                    }
+
+                    // 4. Restaura os intervalos
+                    if (backup.intervalos) {
+                        for (const materia in backup.intervalos) {
+                            localStorage.setItem('config_intervalo_dias_' + materia, backup.intervalos[materia]);
+                        }
+                    }
+
+                    exibirAlerta("Restauração completa! Recarregando a página...", "success");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    console.error("Erro na restauração:", res.message);
+                    exibirAlerta("Importação do Google Drive falhou! Veja  o erro no console (Tecle F12 e vá na aba Console)", "danger");
+                }
+            } catch (err) {
+                console.error("Erro na restauração:", err);
+                exibirAlerta("Falha ao conectar com o servidor! Veja  o erro no console (Tecle F12 e vá na aba Console)", "danger");
+            }
+        }
+
+    </script>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 
     <div id="contador-container" style="display: none;"></div>
 </body>
