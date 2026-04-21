@@ -62,8 +62,6 @@ def salvar_db(dados):
     with open(DB_FILE, "w") as f:
         json.dump(dados, f, indent=4)
 
-# Carrega os contribuintes na memória ao iniciar
-CONTRIBUINTES_AUTORIZADOS = carregar_db()
 
 # Inicializa o Cliente Google GenAI
 client = genai.Client(
@@ -138,7 +136,8 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
     
     # 1. Validação de Contribuinte
     if authorization not in db:
-        raise HTTPException(status_code=403, detail="Chave inválida.")
+        print(f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)")
+        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
 
     user = db[authorization]
     
@@ -154,7 +153,7 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
         buffer = io.BytesIO(json_bytes)
         
         file_metadata = {
-            'name': f'Backup_Cronograma_{user["nome"]}.json',
+            'name': f'Backup_Cronograma_{user["email"]}.json',
             'mimeType': 'application/json'
         }
         
@@ -193,7 +192,8 @@ async def importar_do_drive(req: dict, authorization: str = Header(None)):
     db = carregar_db()
     
     if authorization not in db:
-        raise HTTPException(status_code=403, detail="Chave inválida.")
+        print(f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)")
+        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
 
     user = db[authorization]
     google_token = req.get("google_token")
@@ -206,7 +206,7 @@ async def importar_do_drive(req: dict, authorization: str = Header(None)):
         service = build('drive', 'v3', credentials=creds)
         
         # 1. Busca o arquivo pelo nome exato que usamos no exportar
-        nome_arquivo = f'Backup_Cronograma_{user["nome"]}.json'
+        nome_arquivo = f'Backup_Cronograma_{user["email"]}.json'
         query = f"name = '{nome_arquivo}' and trashed = false"
         results = service.files().list(q=query, fields="files(id)").execute()
         files = results.get('files', [])
@@ -235,12 +235,10 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
     # Carrega os dados atualizados do disco a cada tentativa de login
     db_atualizado = carregar_db()
     
-    print(f"DEBUG: Tentativa de acesso com chave: {authorization[:5]}***")
-
     # 1. Validação de Existência da Chave
     if authorization not in db_atualizado:
         print(f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)")
-        raise HTTPException(status_code=403, detail="Chave inválida.")
+        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
 
     user = db_atualizado[authorization]
     nome_usuario = user.get("nome", "Desconhecido") # Pega o nome do JSON

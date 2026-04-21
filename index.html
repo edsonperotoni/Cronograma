@@ -1950,6 +1950,7 @@ Aqui é onde os dados vão aparecer de verdade.
     <script>
         // --- 📂 VARIÁVEIS GLOBAIS ---
         // São como caixas que guardam informações que o código precisa lembrar o tempo todo.
+        let app_version = "2.8.7";
         let activeEditors = {}; // Guarda quais editores de texto (CKEditor) estão abertos
         let currentMateria = ""; // Nome da matéria que você está vendo agora
         let tempImportData = null; // Guarda temporariamente dados carregados de um arquivo de backup
@@ -2115,24 +2116,26 @@ Aqui é onde os dados vão aparecer de verdade.
 
             alertPlaceholder.append(wrapper);
 
-            // Auto-remove após 4 segundos com verificação de segurança
-            setTimeout(() => {
-                // Verifica se o wrapper ainda está no documento (o usuário pode ter fechado antes)
-                if (wrapper && alertPlaceholder.contains(wrapper)) {
-                    const alertElement = wrapper.querySelector('.alert');
-                    if (alertElement) {
-                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
-                        if (bsAlert) {
-                            bsAlert.close();
+            if (tipo !== 'danger') {
+                // Auto-remove após 4 segundos com verificação de segurança
+                setTimeout(() => {
+                    // Verifica se o wrapper ainda está no documento (o usuário pode ter fechado antes)
+                    if (wrapper && alertPlaceholder.contains(wrapper)) {
+                        const alertElement = wrapper.querySelector('.alert');
+                        if (alertElement) {
+                            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+                            if (bsAlert) {
+                                bsAlert.close();
+                            }
                         }
-                    }
 
-                    // Garante a remoção do wrapper do DOM após a animação de fade (aprox 150ms)
-                    setTimeout(() => {
-                        if (wrapper.parentNode) wrapper.remove();
-                    }, 150);
-                }
-            }, 4000);
+                        // Garante a remoção do wrapper do DOM após a animação de fade (aprox 150ms)
+                        setTimeout(() => {
+                            if (wrapper.parentNode) wrapper.remove();
+                        }, 150);
+                    }
+                }, 4000);
+            }
         }
 
         // Esta função é chamada quando o usuário clica no botão de "Restaurar antes da última importação". Ela pega o backup de emergência que foi criado automaticamente antes de cada importação, e restaura os dados para aquele estado. É uma forma de desfazer rapidamente uma importação que deu errado, sem precisar mexer com arquivos.
@@ -3754,9 +3757,9 @@ Aqui é onde os dados vão aparecer de verdade.
             let backupData = {
                 meta: {
                     data_criacao: new Date().toISOString(),
-                    usuario: localStorage.getItem("config_vBorda_nome_usuario") || "Edson",
                     last_active: localStorage.getItem('last_active'),
-                    app_version: "2.8.5-pro"
+                    app: "CRONOGRAMA - Organização de Matérias",
+                    app_version: app_version
                 },
                 list: [],      // O índice (LIST_KEY)
                 data: {},      // Conteúdo das matérias (PREFIX)
@@ -3795,10 +3798,6 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
             });
 
-            // 4. Captura a chave de contribuinte (essencial para o servidor validar)
-            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-            if (chave) backupData.meta.chave = chave;
-
             console.log("📦 Estrutura de backup consolidada");
             return backupData;
         }
@@ -3827,6 +3826,7 @@ Aqui é onde os dados vão aparecer de verdade.
             }
 
             console.log("Enviando para o servidor:", payloadParaPython);
+
 
             const response = await fetch(url_service_exportar_google_drive, {
                 method: "POST",
@@ -3906,8 +3906,8 @@ Aqui é onde os dados vão aparecer de verdade.
                         location.reload();
                     }, 1000);
                 } else {
-                    console.error("Erro na restauração:", res.message);
-                    exibirAlerta("Importação do Google Drive falhou! Veja  o erro no console (Tecle F12 e vá na aba Console)", "danger");
+                    console.error("Erro na restauração:", res.detail);
+                    exibirAlerta("Importação do Google Drive falhou!" + res.detail, "danger");
                 }
             } catch (err) {
                 console.error("Erro na restauração:", err);
