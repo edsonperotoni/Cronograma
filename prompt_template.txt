@@ -19,8 +19,8 @@ Regras de Negócio:
 
 Retorne APENAS o JSON puro seguindo este modelo exato:
 {{
-    "app": "Cronograma - IA Import",
-    "version": "2.8.0",
+    "app": "Cronograma",
+    "version": "2.8.7",
     "list": ["Nome da Matéria"],
     "allData": {{
         "Nome da Matéria": [

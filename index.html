@@ -1248,28 +1248,16 @@
 
             <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end align-items-center mb-4">
                 <div class="btn-group shadow-sm border rounded bg-white">
-                    <button id="btn-google-auth" class="btn btn-light border-0 text-dark px-3"
-                        onclick="solicitarAcessoDrive()" title="Conectar Conta Google">
+                    <button id="btn-google-auth" class="btn btn-light border-0 text-secondary px-3"
+                        onclick="solicitarAcessoDrive()" title="Conectar Google Drive">
                         <i class="bi bi-google"></i>
                     </button>
-
-                    <button id="btn-google-export" class="btn btn-light border-0 text-dark px-3"
-                        onclick="exportarManualParaDrive()" title="Salvar na Nuvem (Exportar)" disabled>
-                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>
-                    </button>
-
-                    <button id="btn-google-import" class="btn btn-light border-0 text-dark px-3"
-                        onclick="restaurarDoDrive()" title="Recuperar da Nuvem (Importar)" disabled>
-                        <i class="bi bi-cloud-arrow-down-fill me-1"></i>
-                    </button>
-
-                    <div class="vr mx-1 d-none d-lg-block"></div>
 
                     <button class="btn btn-light border-0 text-secondary px-3" onclick="window.print()"
                         title="Imprimir">
                         <i class="bi bi-printer"></i>
                     </button>
-                    <div class="vr mx-1 d-none d-lg-block"></div>
+
                     <button class="btn btn-light border-0 text-dark px-3" onclick="prepararConfiguracoes()"
                         title="Configurações">
                         <i class="bi bi-gear-fill"></i>
@@ -1465,11 +1453,11 @@ Aqui é onde os dados vão aparecer de verdade.
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-backup" type="button" role="tab">Backup</button>
+                                    data-bs-target="#tab-backup" type="button" role="tab">Backup/Restore</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link small text-uppercase" id="ia-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-ia" type="button" role="tab">Sou contribuinte</button>
+                                    data-bs-target="#tab-ia" type="button" role="tab">Contribuinte</button>
                             </li>
                         </ul>
 
@@ -1595,50 +1583,93 @@ Aqui é onde os dados vão aparecer de verdade.
 
                             <div class="tab-pane fade" id="tab-backup" role="tabpanel">
                                 <div
-                                    class="alert alert-warning border-0 shadow-sm py-2 px-3 small d-flex align-items-center">
-                                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-                                    <div>Mantenha seus dados seguros exportando um backup regularmente.</div>
+                                    class="alert alert-warning border-0 shadow-sm py-3 px-3 small d-flex align-items-center mb-4">
+                                    <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Segurança dos dados</strong><br>
+                                        Mantenha seus dados seguros exportando um backup regularmente.
+                                    </div>
                                 </div>
 
-                                <div class="d-grid gap-2 mt-3">
-                                    <button class="btn btn-success text-start btn-sm py-2 px-3 shadow-sm"
-                                        onclick="exportBackup()">
-                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> <strong>Criar um arquivo de
-                                            BACKUP</strong> (.json)
-                                    </button>
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase italic">Exportar
+                                            backup...</h6>
+                                        <div class="d-grid gap-2">
+                                            <button
+                                                class="btn btn-light border-0 text-secondary  text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
+                                                onclick="exportBackup()"
+                                                title="Salva um arquivo de backup neste dispositivo">
+                                                <i class="bi bi-cloud-arrow-down-fill me-2 text-dark"></i>
+                                                <strong>Pasta de Arquivos</strong>
+                                            </button>
 
+                                            <button id="btn-google-export"
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
+                                                onclick="exportarManualParaDrive()" style="display: none;"
+                                                title="Salva um arquivo de backup no Google Drive""
+                                                disabled>
+                                                <i class=" bi bi-google me-2 text-dark"></i>
+                                                <strong>Google Drive</strong>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                    <label for="importFile"
-                                        class="btn btn-outline-dark text-start btn-sm py-2 px-3 shadow-sm">
-                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>
-                                        <strong>Restaurar a partir de um arquivo de BACKUP</strong> (.json)
-                                    </label>
-                                    <input type="file" id="importFile" class="d-none" accept=".json"
-                                        onchange="openImportModal(this)">
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Importar backup
+                                        </h6>
+                                        <div class="d-grid gap-2">
+                                            <label for="importFile"
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold">
+                                                <i class="bi bi-cloud-arrow-up-fill me-2 text-dark"></i>
+                                                <strong>Pasta de Arquivos</strong>
+                                            </label>
+                                            <input type="file" id="importFile" class="d-none" accept=".json"
+                                                onchange="openImportModal(this)">
 
+                                            <button id="btn-google-import"
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
+                                                onclick="restaurarDoDrive()" style="display: none;"
+                                                title="Carrega o arquivo e backup que foi gravado no Google Drive"
+                                                disabled>
+                                                <i class="bi bi-google me-2 text-dark"></i>
+                                                <strong>Google Drive</strong>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
                                     <button id="btn-importar-ia"
-                                        class="btn btn-outline-primary text-start btn-sm py-2 px-3 shadow-sm mt-2"
+                                        class="btn btn-outline-primary text-start w-100 py-3 shadow-sm"
                                         onclick="acionarIA()">
-                                        <i class="bi bi-robot me-2"></i>
-                                        <strong>Importar com IA</strong> (PDF/TXT/HTML/DOCX/XLS/CSV/JPG/PNG)
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-robot fs-3 me-3"></i>
+                                            <div>
+                                                <strong class="d-block">Importar Matérias com Inteligência
+                                                    Artificial</strong>
+                                                <small class="text-muted">(PDF/TXT/HTML/DOCX/XLS/CSV/JPG/PNG)</small>
+                                            </div>
+                                        </div>
                                     </button>
                                     <input type="file" id="iaFile" class="d-none"
                                         accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
                                         onchange="processarArquivoIA(this)">
                                 </div>
+
                                 <div id="container-botao-panico" class="mt-4 pt-3 border-top d-none">
                                     <label class="small fw-bold text-danger text-uppercase d-block mb-2">
                                         <i class="bi bi-shield-shaded"></i> Zona de Recuperação
                                     </label>
-                                    <button class="btn btn-outline-danger btn-sm w-100"
+                                    <button class="btn btn-outline-danger btn-sm w-100 shadow-sm"
                                         onclick="restaurarSnapshotEmergencial()">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Restaurar antes da última
+                                        <i class="bi bi-arrow-counterclockwise"></i> Retornar para antes da última
                                         importação
                                     </button>
-                                    <small class="text-muted" style="font-size: 0.65rem;">
+                                    <div class="text-center mt-2 text-muted" style="font-size: 0.65rem;">
                                         Ponto de restauração automático criado em: <span
                                             id="data-backup-emergencia"></span>
-                                    </small>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1658,7 +1689,7 @@ Aqui é onde os dados vão aparecer de verdade.
                                         </div>
                                         <small class="text-muted" style="font-size: 0.65rem;">
                                             Esta chave é fornecida pelo administrador para liberar o uso da IA na
-                                            importação de Matérias.
+                                            importação de Matérias (esta funcionalidade está em testes).
                                         </small>
                                     </div>
                                 </div>
@@ -1937,6 +1968,15 @@ Aqui é onde os dados vão aparecer de verdade.
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modalRecarregando" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title">Recarregando ...</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Biblioteca JS do Bootstrap para os modais funcionarem -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -1955,6 +1995,10 @@ Aqui é onde os dados vão aparecer de verdade.
         let currentMateria = ""; // Nome da matéria que você está vendo agora
         let tempImportData = null; // Guarda temporariamente dados carregados de um arquivo de backup
         let hasUnsavedChanges = false; // Indica se há mudanças não salvas (para alertar o usuário)
+
+        let tokenClient;
+        let accessToken = null;
+
 
         // Controle de Exclusão (Para o Modal)
         let rowToDelete = null;
@@ -1977,19 +2021,11 @@ Aqui é onde os dados vão aparecer de verdade.
                 let btnAuth = document.getElementById('btn-google-auth');
                 let btExport = document.getElementById('btn-google-export');
                 let btImport = document.getElementById('btn-google-import');
-
-                if (btnAuth) {
-                    btnAuth.classList.replace('text-dark', 'text-primary');
-                    btnAuth.title = "Google Conectado";
-                    btnAuth.style.backgroundColor = "#d4edda";
-                    if (btnAuth) {
-                        btExport.disabled = false;
-                    }
-                    if (btnAuth) {
-                        btImport.disabled = false;
-                    }
-                }
-
+                btnAuth.classList.replace('text-dark', 'text-primary');
+                btnAuth.title = "Google Drive Conectado";
+                btnAuth.style.backgroundColor = "#d4edda";
+                btExport.disabled = false;
+                btImport.disabled = false;
             }
             // Verifica se existe um backup de emergência e mostra o botão de restauração se necessário
             verificarBotaoPanico()
@@ -2080,6 +2116,23 @@ Aqui é onde os dados vão aparecer de verdade.
             setUnsavedChanges(true);
         });
 
+        function dispararAlertaReload(timeout, segundos) {
+            const modalElement = document.getElementById('modalRecarregando');
+            const modal = new bootstrap.Modal(modalElement);
+            closeModals();
+            modal.show();
+
+
+            const intervalo = setInterval(() => {
+                segundos--;
+                if (segundos <= 0) {
+                    clearInterval(intervalo);
+                    location.reload();
+                }
+            }, timeout);
+        }
+
+
         // Esta função verifica se existe um backup de emergência (que é criado automaticamente antes de cada importação) e, se existir, mostra o botão de "Restaurar antes da última importação" nas preferências. Se o backup estiver corrompido ou não existir, ele esconde o botão para evitar confusão.
         function verificarBotaoPanico() {
             const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
@@ -2134,7 +2187,7 @@ Aqui é onde os dados vão aparecer de verdade.
                             if (wrapper.parentNode) wrapper.remove();
                         }, 150);
                     }
-                }, 4000);
+                }, 7000);
             }
         }
 
@@ -2170,10 +2223,9 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.removeItem("EMERGENCY_BACKUP_V1");
             verificarBotaoPanico();
 
+
             exibirAlerta("Dados restaurados com sucesso!", "info");
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            dispararAlertaReload(2000, 1);
         }
 
         function saveChaveContribuinte(showAlert = false) {
@@ -2255,11 +2307,10 @@ Aqui é onde os dados vão aparecer de verdade.
             }
         }
 
-        // Função auxiliar para injetar o que eu te enviar via chat
+        
         function importarDadosIA(jsonRecebido) {
             try {
                 tempImportData = jsonRecebido;
-                // Abre o modal que você já tem pronto
                 prepararEscolhaImport();
                 console.log("IA: Dados carregados no modal de seleção.");
             } catch (e) {
@@ -3336,6 +3387,17 @@ Aqui é onde os dados vão aparecer de verdade.
             a.click();
         }
 
+        function closeModals() {
+            // Seleciona todos os elementos de modal que estão visíveis
+            const openModals = document.querySelectorAll('.modal.show');
+
+            openModals.forEach(modalElement => {
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        }
         // ==========================================
         // 📂 ABRIR MODAL PARA IMPORTAR BACKUP
         // ==========================================
@@ -3439,9 +3501,7 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
             exibirAlerta("Importação finalizada!", "success");
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            dispararAlertaReload(2000, 1);
         }
 
         // --- LÓGICA DE IMPORTAÇÃO SELETIVA ---
@@ -3569,6 +3629,18 @@ Aqui é onde os dados vão aparecer de verdade.
             console.log("🛡️ Snapshot de segurança criado!");
         }
 
+        function filtrarHTML(str) {
+            // Se for null ou undefined, retorna string vazia para não quebrar a UI
+            if (str === null || typeof str === 'undefined') return '';
+
+            // Se for número, converte para string para poder processar
+            const stringParaProcessar = String(str);
+
+            const temp = document.createElement('div');
+            temp.innerHTML = stringParaProcessar;
+            return temp.textContent || temp.innerText || "";
+        }
+
         // Executa a importação apenas dos itens selecionados
         function executarImportacaoSeletiva() {
             const selecionados = document.querySelectorAll('.check-item-import:checked');
@@ -3584,8 +3656,19 @@ Aqui é onde os dados vão aparecer de verdade.
             selecionados.forEach(cb => {
                 const materia = cb.getAttribute('data-materia');
                 const index = cb.getAttribute('data-index');
-                const itemParaImportar = tempImportData.allData[materia][index];
 
+
+                // O uso do ?. impede que o código quebre se algum nível do objeto estiver faltando
+                const itemParaImportar = tempImportData.allData?.[materia]?.[index];
+
+                if (!itemParaImportar) {
+                    console.error(`Falha ao localizar dados para: ${materia} no índice ${index}`);
+                    return; // Pula este item se ele não for encontrado
+                }
+                if (!itemParaImportar || typeof itemParaImportar.conteudo === 'undefined') {
+                    console.warn("Item ignorado: estrutura de dados inválida.");
+                    return;
+                }
                 // 1. Garante que a matéria exista na lista principal
                 if (!currentList.includes(materia)) {
                     currentList.push(materia);
@@ -3598,13 +3681,28 @@ Aqui é onde os dados vão aparecer de verdade.
                 // 2. Recupera dados atuais da matéria no LocalStorage
                 let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
 
-                // 3. Evita duplicados (checa data e conteúdo idênticos)
-                const existe = dadosLocais.some(d => d.data === itemParaImportar.data && d.conteudo === itemParaImportar.conteudo);
 
-                if (!existe) {
-                    dadosLocais.push(itemParaImportar);
-                    localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
+                // 3. Estratégia Upsert: Sobrescreve se o 'conteudo' E 'data' já existirem
+                // Isso garante que você não sobrescreva o conteúdo de um dia diferente
+                const indiceExistente = dadosLocais.findIndex(d =>
+                    d.conteudo === itemParaImportar.conteudo &&
+                    d.data === itemParaImportar.data
+                );
+
+                const itemParaImportarSanitizado = { ...itemParaImportar };
+                itemParaImportarSanitizado.data = filtrarHTML(itemParaImportarSanitizado.data);
+                itemParaImportarSanitizado.conteudo = filtrarHTML(itemParaImportarSanitizado.conteudo);
+
+                if (indiceExistente !== -1) {
+                    // Se encontrou a combinação exata de Conteúdo + Data, sobrescreve
+                    dadosLocais[indiceExistente] = itemParaImportarSanitizado;
+                } else {
+                    // Se essa combinação é nova, adiciona
+                    dadosLocais.push(itemParaImportarSanitizado);
                 }
+
+                // Salva a lista atualizada (seja por edição ou adição)
+                localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
             });
 
 
@@ -3614,20 +3712,37 @@ Aqui é onde os dados vão aparecer de verdade.
             currentList = [...new Set([...listNoDisco, ...currentList])];
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
 
-            location.reload();
+            dispararAlertaReload(1000, 1);
 
         }
 
         function verificarAcessoContribuinte() {
             const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
             const btnIA = document.getElementById("btn-importar-ia");
+            const btnAuth = document.getElementById('btn-google-auth');
+            const btExport = document.getElementById('btn-google-export');
+            const btImport = document.getElementById('btn-google-import');
 
             if (chave && chave.includes("_key_")) {
                 // Se a chave existe e tem o formato esperado, mostra o botão
                 btnIA.style.display = "block";
-            } else {
-                // Caso contrário, garante que ele fique escondido
-                btnIA.style.display = "none";
+                btnAuth.style.display = "block";
+                btImport.style.display = "block";
+                btExport.style.display = "block";
+
+                if (accessToken) {
+                    btnAuth.classList.replace('text-dark', 'text-primary');
+                    btnAuth.title = "Google Conectado";
+                    btnAuth.style.backgroundColor = "#d4edda";
+                    btExport.disabled = false;
+                    btImport.disabled = false;
+                } else {
+                    btnAuth.title = "Conectar com Google Drive";
+                    btnAuth.classList.replace('text-primary', 'text-dark');
+                    btnAuth.style.backgroundColor = "initial";
+                    btExport.disabled = true;
+                    btImport.disabled = true;
+                }
             }
         }
 
@@ -3701,10 +3816,6 @@ Aqui é onde os dados vão aparecer de verdade.
                 unsavedStartTime = null;
             }
         }, 30000); // Checagem a cada 30 segundos para economizar processamento
-    </script>
-    <script>
-        let tokenClient;
-        let accessToken = null;
 
 
         function initTokenClient() {
@@ -3728,7 +3839,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                         document.getElementById('btn-google-auth').style.backgroundColor = "#d4edda";
                         console.log("✅ Login Google realizado com sucesso!");
-                        exibirAlerta("Login efetuado! Agora você pode Exportar ou Importar para o seu Google Drive.", "success");
+                        exibirAlerta("Conectado ao Google Drive.", "success");
 
                     }
                 },
@@ -3755,14 +3866,10 @@ Aqui é onde os dados vão aparecer de verdade.
             }
 
             let backupData = {
-                meta: {
-                    data_criacao: new Date().toISOString(),
-                    last_active: localStorage.getItem('last_active'),
-                    app: "CRONOGRAMA - Organização de Matérias",
-                    app_version: app_version
-                },
+                "app": "Cronograma",
+                "version": "2.8.7",
                 list: [],      // O índice (LIST_KEY)
-                data: {},      // Conteúdo das matérias (PREFIX)
+                allData: {},   // Conteúdo das matérias (PREFIX)
                 configs: {},   // Configurações (CONFIG_PREFIX)
                 intervalos: {} // Intervalos de repetição
             };
@@ -3782,7 +3889,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 // Captura os itens/estudos (PREFIX + m)
                 const dadosMateria = localStorage.getItem(PREFIX + materia);
                 if (dadosMateria) {
-                    backupData.data[materia] = JSON.parse(dadosMateria);
+                    backupData.allData[materia] = JSON.parse(dadosMateria);
                 }
 
                 // Captura as configurações (CONFIG_PREFIX + m)
@@ -3848,6 +3955,7 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         async function restaurarDoDrive() {
+
             if (!accessToken) {
                 exibirAlerta("Por favor, faça login no Google primeiro (Sincronizar).", "danger");
                 return;
@@ -3856,6 +3964,9 @@ Aqui é onde os dados vão aparecer de verdade.
             if (!confirm("Isso irá substituir todos os dados locais pelos dados salvos na nuvem. Continuar?")) {
                 return;
             }
+
+            //snapshot
+            criarSnapshotEmergencial();
 
             const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
 
@@ -3879,14 +3990,19 @@ Aqui é onde os dados vão aparecer de verdade.
                 if (res.status === "success") {
                     const backup = res.data;
 
+                    tempImportData = backup;
+                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide(); // Fecha config
+                    new bootstrap.Modal(document.getElementById('modalImport')).show(); // Abre perguntas (Mesclar ou Sobrescrever)
+
+                    /*
                     // 1. Restaura a lista mestre
                     if (backup.list) {
                         localStorage.setItem(LIST_KEY, JSON.stringify(backup.list));
                     }
 
                     // 2. Restaura os dados das matérias (PREFIX + nome)
-                    for (const materia in backup.data) {
-                        localStorage.setItem(PREFIX + materia, JSON.stringify(backup.data[materia]));
+                    for (const materia in backup.allData) {
+                        localStorage.setItem(PREFIX + materia, JSON.stringify(backup.allData[materia]));
                     }
 
                     // 3. Restaura as configurações das matérias (CONFIG_PREFIX + nome)
@@ -3901,17 +4017,16 @@ Aqui é onde os dados vão aparecer de verdade.
                         }
                     }
 
-                    exibirAlerta("Restauração completa! Recarregando a página...", "success");
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    exibirAlerta("Restauração completa!", "success");
+                    dispararAlertaReload(2000, 2);
+                    */
                 } else {
                     console.error("Erro na restauração:", res.detail);
-                    exibirAlerta("Importação do Google Drive falhou!" + res.detail, "danger");
+                    exibirAlerta("Importação do Google Drive falhou! Tente novo login", "danger");
                 }
             } catch (err) {
                 console.error("Erro na restauração:", err);
-                exibirAlerta("Falha ao conectar com o servidor! Veja  o erro no console (Tecle F12 e vá na aba Console)", "danger");
+                 exibirAlerta("Importação do Google Drive falhou! Tente novo login", "danger");
             }
         }
 
