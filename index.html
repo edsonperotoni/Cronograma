@@ -1593,23 +1593,21 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                 <div class="row g-4">
                                     <div class="col-12 col-md-6">
-                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase italic">Exportar
-                                            backup...</h6>
+                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Exportar backup
+                                        </h6>
                                         <div class="d-grid gap-2">
                                             <button
-                                                class="btn btn-light border-0 text-secondary  text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
-                                                onclick="exportBackup()"
-                                                title="Salva um arquivo de backup neste dispositivo">
-                                                <i class="bi bi-cloud-arrow-down-fill me-2 text-dark"></i>
-                                                <strong>Pasta de Arquivos</strong>
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
+                                                onclick="exportBackup()" title="Exportar backup neste dispositivo">
+                                                <i class="bi bi-download me-2 text-dark"></i>
+                                                <strong>Neste Dispositivo</strong>
                                             </button>
 
                                             <button id="btn-google-export"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
                                                 onclick="exportarManualParaDrive()" style="display: none;"
-                                                title="Salva um arquivo de backup no Google Drive""
-                                                disabled>
-                                                <i class=" bi bi-google me-2 text-dark"></i>
+                                                title="Exportar backup para o Google Drive" disabled>
+                                                <i class="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
                                             </button>
                                         </div>
@@ -1620,9 +1618,11 @@ Aqui é onde os dados vão aparecer de verdade.
                                         </h6>
                                         <div class="d-grid gap-2">
                                             <label for="importFile"
-                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold">
-                                                <i class="bi bi-cloud-arrow-up-fill me-2 text-dark"></i>
-                                                <strong>Pasta de Arquivos</strong>
+                                                title="Importar um arquivo de backup deste dispositivo"
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold mb-0"
+                                                style="cursor: pointer;">
+                                                <i class="bi bi-upload me-2 text-dark"></i>
+                                                <strong>Deste Dispositivo</strong>
                                             </label>
                                             <input type="file" id="importFile" class="d-none" accept=".json"
                                                 onchange="openImportModal(this)">
@@ -1630,9 +1630,8 @@ Aqui é onde os dados vão aparecer de verdade.
                                             <button id="btn-google-import"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
                                                 onclick="restaurarDoDrive()" style="display: none;"
-                                                title="Carrega o arquivo e backup que foi gravado no Google Drive"
-                                                disabled>
-                                                <i class="bi bi-google me-2 text-dark"></i>
+                                                title="Importar o arquivo de backup do Google Drive" disabled>
+                                                <i class="bi bi-cloud-download-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
                                             </button>
                                         </div>
@@ -1653,8 +1652,7 @@ Aqui é onde os dados vão aparecer de verdade.
                                         </div>
                                     </button>
                                     <input type="file" id="iaFile" class="d-none"
-                                        accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
-                                        onchange="processarArquivoIA(this)">
+                                        accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png">
                                 </div>
 
                                 <div id="container-botao-panico" class="mt-4 pt-3 border-top d-none">
@@ -1712,7 +1710,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 <div class="modal-body">
                     <div class="list-group">
                         <button class="list-group-item list-group-item-action" onclick="confirmImport('merge')">
-                            <i class="bi bi-intersect me-2"></i><b>Mesclar:</b> Adiciona apenas linhas novas.
+                            <i class="bi bi-intersect me-2"></i><b>Mesclar:</b> Adiciona novas e atualiza existentes.
                         </button>
                         <button class="list-group-item list-group-item-action" onclick="confirmImport('replace')">
                             <i class="bi bi-trash3 me-2"></i><b>Substituir:</b> Apaga tudo e carrega o arquivo.
@@ -2060,6 +2058,13 @@ Aqui é onde os dados vão aparecer de verdade.
         };
 
 
+        document.getElementById('iaFile').onchange = function () {
+            const file = this.files[0];
+            const maxSize = 5 * 1024 * 1024; // 5MB em bytes
+
+
+            processarArquivoIA(this);
+        };
 
         // Configura o clique do botão "Excluir" dentro do Modal
         document.getElementById('btnConfirmarAcaoExclusao').addEventListener('click', () => {
@@ -2282,19 +2287,36 @@ Aqui é onde os dados vão aparecer de verdade.
                     body: formData
                 });
 
-                if (!response.ok) throw new Error(`Erro no servidor: ${response.status}`);
+                // 1. Primeiro verificamos se a resposta NÃO é ok (status fora da faixa 200-299)
+                if (!response.ok) {
+                    const erroJson = await response.json(); // FastAPI sempre retorna JSON no detail
 
+                    if (response.status === 413) {
+                        //Arquivo muito pesado
+                        exibirAlerta(`📏 ${erroJson.detail}`, "danger");
+                    } else if (response.status === 403) {
+                        //Acesso negado
+                        exibirAlerta(`🚫 ${erroJson.detail}`, "warning");
+                    } else {
+                        exibirAlerta(`❌ Erro ${response.status}: ${erroJson.detail || 'Erro desconhecido'}`, "danger");
+                    }
+                    return; // Interrompe a execução para não tentar importar dados vazios
+                }
+
+                // 2. Se chegou aqui, a resposta é 200 OK
                 const jsonRecebido = await response.json();
 
-                // Se a IA retornar erro
+
+
                 if (jsonRecebido.error) {
-                    exibirAlerta("Erro na IA: " + jsonRecebido.details, "danger");
-                } else {
-                    // Chama a função de importação que já existe no seu código
-                    importarDadosIA(jsonRecebido);
-                    // Fecha o modal de configurações para mostrar o de seleção
-                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
+                    exibirAlerta("Erro na IA: " + jsonRecebido.error, "danger");
+                    return;
                 }
+
+                importarDadosIA(jsonRecebido);
+                // Fecha o modal de configurações para mostrar o de seleção
+                closeModals();
+
 
             } catch (e) {
                 console.error(e);
@@ -2307,7 +2329,7 @@ Aqui é onde os dados vão aparecer de verdade.
             }
         }
 
-        
+
         function importarDadosIA(jsonRecebido) {
             try {
                 tempImportData = jsonRecebido;
@@ -3946,6 +3968,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             const res = await response.json();
             if (res.status === "success") {
+                closeModals();
                 exibirAlerta("Exportação concluída para o seu Google Drive", "success");
 
             } else {
@@ -3961,9 +3984,6 @@ Aqui é onde os dados vão aparecer de verdade.
                 return;
             }
 
-            if (!confirm("Isso irá substituir todos os dados locais pelos dados salvos na nuvem. Continuar?")) {
-                return;
-            }
 
             //snapshot
             criarSnapshotEmergencial();
@@ -4026,7 +4046,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
             } catch (err) {
                 console.error("Erro na restauração:", err);
-                 exibirAlerta("Importação do Google Drive falhou! Tente novo login", "danger");
+                exibirAlerta("Importação do Google Drive falhou! Tente novo login", "danger");
             }
         }
 
