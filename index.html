@@ -1448,16 +1448,36 @@ Aqui é onde os dados vão aparecer de verdade.
                     <div id="configTabContainer">
                         <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active small text-uppercase" id="pref-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-pref" type="button" role="tab">Preferências</button>
+                                <button class="nav-link active btn-preference" id="pref-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tab-pref" type="button" role="tab" aria-controls="tab-pref"
+                                    aria-selected="true">
+                                    <span class="d-block small text-muted text-uppercase" style="font-size: 0.65rem;">
+                                        Preferências
+                                    </span>
+                                    <span class="fw-bold" id="pref-tab-materia">Literatura</span>
+                                </button>
                             </li>
+
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link small text-uppercase" id="backup-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-backup" type="button" role="tab">Backup/Restore</button>
+                                <button class="nav-link btn-preference" id="backup-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tab-backup" type="button" role="tab" aria-controls="tab-backup"
+                                    aria-selected="false">
+                                    <span class="d-block small text-muted text-uppercase" style="font-size: 0.65rem;">
+                                        Armazenamento
+                                    </span>
+                                    <span class="fw-bold">Backup/Restore</span>
+                                </button>
                             </li>
+
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link small text-uppercase" id="ia-tab" data-bs-toggle="tab"
-                                    data-bs-target="#tab-ia" type="button" role="tab">Contribuinte</button>
+                                <button class="nav-link btn-preference" id="ia-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tab-ia" type="button" role="tab" aria-controls="tab-ia"
+                                    aria-selected="false">
+                                    <span class="d-block small text-muted text-uppercase" style="font-size: 0.65rem;">
+                                        Chave
+                                    </span>
+                                    <span class="fw-bold">Contribuinte</span>
+                                </button>
                             </li>
                         </ul>
 
@@ -1593,7 +1613,8 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                 <div class="row g-4">
                                     <div class="col-12 col-md-6">
-                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Exportar backup
+                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Exportar
+                                            backup
                                         </h6>
                                         <div class="d-grid gap-2">
                                             <button
@@ -1605,7 +1626,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                             <button id="btn-google-export"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
-                                                onclick="exportarManualParaDrive()" style="display: none;"
+                                                onclick="exportarManualParaDrive()"
                                                 title="Exportar backup para o Google Drive" disabled>
                                                 <i class="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
@@ -1614,7 +1635,8 @@ Aqui é onde os dados vão aparecer de verdade.
                                     </div>
 
                                     <div class="col-12 col-md-6">
-                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Importar backup
+                                        <h6 class="fw-bold mb-3 text-muted px-1 small text-uppercase">Importar
+                                            backup
                                         </h6>
                                         <div class="d-grid gap-2">
                                             <label for="importFile"
@@ -1629,7 +1651,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                             <button id="btn-google-import"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
-                                                onclick="restaurarDoDrive()" style="display: none;"
+                                                onclick="restaurarDoDrive()"
                                                 title="Importar o arquivo de backup do Google Drive" disabled>
                                                 <i class="bi bi-cloud-download-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
@@ -1979,30 +2001,20 @@ Aqui é onde os dados vão aparecer de verdade.
     <!-- Biblioteca JS do Bootstrap para os modais funcionarem -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- 
-    ======================================================================
-    🧠 O CÉREBRO DA APLICAÇÃO (JAVASCRIPT)
-    Aqui está a lógica que faz tudo funcionar. Salvar dados, criar linhas, apagar...
-    ======================================================================
-    -->
     <script>
         // --- 📂 VARIÁVEIS GLOBAIS ---
-        // São como caixas que guardam informações que o código precisa lembrar o tempo todo.
         let app_version = "2.8.7";
-        let activeEditors = {}; // Guarda quais editores de texto (CKEditor) estão abertos
-        let currentMateria = ""; // Nome da matéria que você está vendo agora
-        let tempImportData = null; // Guarda temporariamente dados carregados de um arquivo de backup
-        let hasUnsavedChanges = false; // Indica se há mudanças não salvas (para alertar o usuário)
+        let activeEditors = {};
+        let currentMateria = "";
+        let tempImportData = null;
+        let hasUnsavedChanges = false;
 
         let tokenClient;
         let accessToken = null;
 
-
-        // Controle de Exclusão (Para o Modal)
         let rowToDelete = null;
         let isDeletingFullMateria = false;
 
-        // As "chaves" (nomes) usadas para salvar as coisas no "localStorage" (a memória do navegador)
         const PREFIX = "study_vBorda_";
         const LIST_KEY = "materias_list_vBorda";
         const CONFIG_PREFIX = "config_vBorda_";
@@ -2010,47 +2022,34 @@ Aqui é onde os dados vão aparecer de verdade.
         // ==========================================
         // 🚀 INÍCIO (Ao carregar a página)
         // ==========================================
-        // window.onload: Executa automaticamente assim que a página termina de abrir.
         window.onload = () => {
-            const savedToken = sessionStorage.getItem('google_access_token');
-            if (savedToken) {
-                accessToken = savedToken;
-                // Reabilita os botões automaticamente
-                let btnAuth = document.getElementById('btn-google-auth');
-                let btExport = document.getElementById('btn-google-export');
-                let btImport = document.getElementById('btn-google-import');
-                btnAuth.classList.replace('text-dark', 'text-primary');
-                btnAuth.title = "Google Drive Conectado";
-                btnAuth.style.backgroundColor = "#d4edda";
-                btExport.disabled = false;
-                btImport.disabled = false;
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            if (chave && chave.includes("_key_")) {
+                const savedToken = sessionStorage.getItem('google_access_token');
+                if (savedToken) {
+                    accessToken = savedToken;
+                }
             }
-            // Verifica se existe um backup de emergência e mostra o botão de restauração se necessário
-            verificarBotaoPanico()
+            verificarBotaoPanico();
 
-            // Dentro da lógica de carregar configurações:
             const chaveSalva = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
             document.getElementById('inputChaveAcesso').value = chaveSalva;
 
-            updateSelect(); // Preenche a caixinha de selecionar matérias
-            const last = localStorage.getItem('last_active'); // Verifica qual foi a última matéria que você acessou
+            updateSelect();
+            const last = localStorage.getItem('last_active');
             if (last) {
-                switchMateria(last); // Se existe, já abre ela direto!
+                switchMateria(last);
             }
             else {
-                // Se não existe, mostra o aviso para criar uma nova matéria
                 const tableBody = document.getElementById('tableBody');
-                tableBody.innerHTML = setInitialTableContent(); // Coloca a mensagem de "Selecione uma matéria" no meio da tabela
-                currentMateria = ""; // Garante que comece neutro
+                tableBody.innerHTML = setInitialTableContent();
+                currentMateria = "";
             }
-            checkInterfaceState(); // Verifica se deve mostrar o aviso de "Nenhuma matéria criada" ou as preferências
+            checkInterfaceState();
 
-            // Contador de Acessos (Hits.sh)
             if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
                 const urlContador = "https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos";
                 const htmlContador = `<img src="${urlContador}" alt="Contador de Acessos" />`;
-
-                // Insere nos locais desejados (ex: no modal e no rodapé)
                 const containers = document.querySelectorAll('#contador-container');
                 containers.forEach(div => div.innerHTML = htmlContador);
             }
@@ -2058,65 +2057,79 @@ Aqui é onde os dados vão aparecer de verdade.
         };
 
 
+        // --- 🔑 GERADOR DE IDENTIDADE ÚNICA (HASH SDBM) ---
+        function gerarUID(item) {
+            if (!item || !item.data || !item.conteudo) return null;
+
+            // Normalização: Data + Conteúdo (sem acentos, minúsculo, sem símbolos)
+            const dataPart = item.data.trim();
+            const conteudoPart = item.conteudo
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "")
+                .trim();
+
+            const stringParaHash = `${dataPart}_${conteudoPart}`;
+
+            // Algoritmo SDBM
+            let hash = 0;
+            for (let i = 0; i < stringParaHash.length; i++) {
+                const char = stringParaHash.charCodeAt(i);
+                hash = char + (hash << 6) + (hash << 16) - hash;
+            }
+
+            // Retorna Base 36 (alfanumérico curto)
+            return `uid_${(hash >>> 0).toString(36)}`;
+        }
+
         document.getElementById('iaFile').onchange = function () {
             const file = this.files[0];
             const maxSize = 5 * 1024 * 1024; // 5MB em bytes
-
-
+            if (file.size > maxSize) {
+                exibirAlerta("Arquivo muito grande (máximo 5Mb).", "warning");
+                this.value = "";
+                return;
+            }
             processarArquivoIA(this);
         };
 
-        // Configura o clique do botão "Excluir" dentro do Modal
         document.getElementById('btnConfirmarAcaoExclusao').addEventListener('click', () => {
             if (isDeletingFullMateria) {
                 executeFullMateriaDeletion();
             } else if (rowToDelete) {
                 executeRowDeletion(rowToDelete);
             }
-            // Fecha o modal após excluir
             bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusao')).hide();
         });
 
-        //Aviso de "Você tem mudanças não salvas" caso tente fechar a aba ou o navegador
         window.addEventListener('beforeunload', (e) => {
             if (hasUnsavedChanges) {
-                // Cancela o evento (padrão dos navegadores modernos para mostrar o aviso)
                 e.preventDefault();
-                // A mensagem personalizada é ignorada pela maioria dos navegadores modernos por segurança,
-                // mas a propriedade retValue é necessária para disparar o alerta nativo.
                 e.returnValue = 'Você possui alterações não salvas. Deseja realmente sair?';
             }
         });
 
-        // Quando o modal de configurações for aberto, ele recarrega os nomes das colunas e as configurações de visibilidade para garantir que tudo esteja atualizado.
         document.getElementById('modalConfig').addEventListener('show.bs.modal', function () {
-            verificarBotaoPanico();// Verifica o backup de emergência toda vez que abrir as preferências, para mostrar ou esconder o botão de restauração
-            loadColumnNames(); // Recarrega tudo para garantir que o modal abra com os nomes certos
+            verificarBotaoPanico();
+            loadColumnNames();
         });
-        // ==========================================
-        // ⌨️ ATALHO DO TECLADO
-        // ==========================================
-        // Fica "escutando" as teclas. Se apertar Ctrl + S, ele salva os dados e bloqueia a janela padrão de "Salvar Página" do navegador.
+
         document.addEventListener('keydown', (e) => {
-            // Atalho: CTRL + S (Salvar)
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 saveAllRows();
             }
-            // Atalho: CTRL + B (Novo Conteúdo)
-            // Seguro no Firefox e Chrome, próximo do S e do Espaço.
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
                 e.preventDefault();
                 addEmptyRow();
             }
-            // Atalho: CTRL + E (Editar Todos os Registros)
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
                 e.preventDefault();
                 enableEditModeAllRows();
             }
         });
 
-        // Quando você muda o número de dias para o intervalo automático, isso é uma mudança importante que deve ser salva.
         document.getElementById('inputIntervaloDias').addEventListener('change', (e) => {
             setUnsavedChanges(true);
         });
@@ -2126,8 +2139,6 @@ Aqui é onde os dados vão aparecer de verdade.
             const modal = new bootstrap.Modal(modalElement);
             closeModals();
             modal.show();
-
-
             const intervalo = setInterval(() => {
                 segundos--;
                 if (segundos <= 0) {
@@ -2137,30 +2148,26 @@ Aqui é onde os dados vão aparecer de verdade.
             }, timeout);
         }
 
-
-        // Esta função verifica se existe um backup de emergência (que é criado automaticamente antes de cada importação) e, se existir, mostra o botão de "Restaurar antes da última importação" nas preferências. Se o backup estiver corrompido ou não existir, ele esconde o botão para evitar confusão.
         function verificarBotaoPanico() {
             const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
             const container = document.getElementById('container-botao-panico');
             const labelData = document.getElementById('data-backup-emergencia');
-
             if (raw && container) {
                 try {
                     const backup = JSON.parse(raw);
                     if (labelData) labelData.innerText = backup.timestamp;
-                    container.classList.remove('d-none'); // Mostra o botão
+                    container.classList.remove('d-none');
                 } catch (e) {
-                    container.classList.add('d-none'); // Se o JSON estiver corrompido, esconde
+                    container.classList.add('d-none');
                 }
             } else if (container) {
-                container.classList.add('d-none'); // Esconde se não houver backup
+                container.classList.add('d-none');
             }
         }
+
         function exibirAlerta(mensagem, tipo = 'success') {
             const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
             if (!alertPlaceholder) return;
-
-            // Cria o elemento do alerta
             const wrapper = document.createElement('div');
             wrapper.innerHTML = [
                 `<div class="alert alert-${tipo} alert-dismissible fade show shadow-lg border-0 mb-2" role="alert">`,
@@ -2171,64 +2178,41 @@ Aqui é onde os dados vão aparecer de verdade.
                 '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
                 '</div>'
             ].join('');
-
             alertPlaceholder.append(wrapper);
-
             if (tipo !== 'danger') {
-                // Auto-remove após 4 segundos com verificação de segurança
                 setTimeout(() => {
-                    // Verifica se o wrapper ainda está no documento (o usuário pode ter fechado antes)
                     if (wrapper && alertPlaceholder.contains(wrapper)) {
                         const alertElement = wrapper.querySelector('.alert');
                         if (alertElement) {
                             const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
-                            if (bsAlert) {
-                                bsAlert.close();
-                            }
+                            if (bsAlert) bsAlert.close();
                         }
-
-                        // Garante a remoção do wrapper do DOM após a animação de fade (aprox 150ms)
-                        setTimeout(() => {
-                            if (wrapper.parentNode) wrapper.remove();
-                        }, 150);
+                        setTimeout(() => { if (wrapper.parentNode) wrapper.remove(); }, 150);
                     }
                 }, 7000);
             }
         }
 
-        // Esta função é chamada quando o usuário clica no botão de "Restaurar antes da última importação". Ela pega o backup de emergência que foi criado automaticamente antes de cada importação, e restaura os dados para aquele estado. É uma forma de desfazer rapidamente uma importação que deu errado, sem precisar mexer com arquivos.
         function restaurarSnapshotEmergencial() {
             const raw = localStorage.getItem("EMERGENCY_BACKUP_V1");
             if (!raw) {
                 exibirAlerta("Nenhum backup de emergência encontrado.", "warning");
                 return;
             }
-
             const backup = JSON.parse(raw);
-            if (!confirm(`Deseja restaurar o backup criado em ${backup.timestamp}?\nIsso substituirá seus dados atuais pelos dados salvos antes da última importação.`)) return;
-
-            // Limpa o estado atual para evitar conflitos
+            if (!confirm(`Deseja restaurar o backup criado em ${backup.timestamp}?\nIsso substituirá seus dados atuais.`)) return;
             const currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
             currentList.forEach(m => {
                 localStorage.removeItem(PREFIX + m);
                 localStorage.removeItem(CONFIG_PREFIX + m);
             });
-
-            // Restaura as matérias
             backup.list.forEach(m => {
                 localStorage.setItem(PREFIX + m, JSON.stringify(backup.data[m]));
-                if (backup.configs[m]) {
-                    localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(backup.configs[m]));
-                }
+                if (backup.configs[m]) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(backup.configs[m]));
             });
-
-            // Restaura a lista principal
             localStorage.setItem(LIST_KEY, JSON.stringify(backup.list));
-            //remove o backup de emergência para evitar restaurações acidentais múltiplas
             localStorage.removeItem("EMERGENCY_BACKUP_V1");
             verificarBotaoPanico();
-
-
             exibirAlerta("Dados restaurados com sucesso!", "info");
             dispararAlertaReload(2000, 1);
         }
@@ -2237,47 +2221,31 @@ Aqui é onde os dados vão aparecer de verdade.
             const input = document.getElementById('inputChaveAcesso');
             const valor = input.value.trim();
             localStorage.setItem("config_vBorda_chave_contribuinte", valor);
-            verificarAcessoContribuinte();
-            if (showAlert) {
-                exibirAlerta("Chave de Contribuinte salva com sucesso!", "success");
-            }
-        }
-        // Função para abrir o seletor de arquivos da IA
-        function acionarIA() {
-            document.getElementById('iaFile').click();
+            checkInterfaceState();
+            if (showAlert) exibirAlerta("Chave de Contribuinte salva com sucesso!", "success");
         }
 
-        // Função que processa o arquivo (Aqui você pode usar uma lib ou me enviar o texto)
+        function acionarIA() { document.getElementById('iaFile').click(); }
+
         async function processarArquivoIA(input) {
             const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
-
             if (!chaveContribuinte) {
-                exibirAlerta("⚠️ Chave de Acesso não encontrada!\n\nPor favor, vá em Configurações > Preferências e configure sua Chave de Contribuinte.", "warning");
+                exibirAlerta("⚠️ Chave de Acesso não encontrada!", "warning");
                 input.value = "";
                 return;
             }
             if (!input.files.length) return;
-
             const file = input.files[0];
             const btnIa = document.querySelector('button[onclick="acionarIA()"]');
-
-            // Feedback visual de carregamento
             const originalText = btnIa.innerHTML;
             btnIa.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processando...`;
             btnIa.disabled = true;
-
             const formData = new FormData();
             formData.append('file', file);
-
             try {
-                let url_service_ia;
-                if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-                    // 2. Produção (Google Cloud) - Lembre de adicionar o /processar no final
-                    url_service_ia = "https://cronograma-ia-749297806019.southamerica-east1.run.app/processar";
-                } else {
-                    // 3. Desenvolvimento (Seu CachyOS local)
-                    url_service_ia = "http://127.0.0.1:8000/processar";
-                }
+                let url_service_ia = (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+                    ? "https://cronograma-ia-749297806019.southamerica-east1.run.app/processar"
+                    : "http://127.0.0.1:8000/processar";
                 const response = await fetch(url_service_ia, {
                     method: "POST",
                     headers: {
@@ -2305,36 +2273,26 @@ Aqui é onde os dados vão aparecer de verdade.
 
                 // 2. Se chegou aqui, a resposta é 200 OK
                 const jsonRecebido = await response.json();
-
-
-
                 if (jsonRecebido.error) {
                     exibirAlerta("Erro na IA: " + jsonRecebido.error, "danger");
                     return;
                 }
-
                 importarDadosIA(jsonRecebido);
-                // Fecha o modal de configurações para mostrar o de seleção
                 closeModals();
-
-
             } catch (e) {
                 console.error(e);
-                exibirAlerta("Falha ao conectar com o servidor Python. Certifique-se que o main.py está rodando.", "danger");
+                exibirAlerta("Falha ao conectar com o servidor IA.", "danger");
             } finally {
-                // Restaura o botão
                 btnIa.innerHTML = originalText;
                 btnIa.disabled = false;
-                input.value = ""; // Limpa o seletor de arquivo
+                input.value = "";
             }
         }
-
 
         function importarDadosIA(jsonRecebido) {
             try {
                 tempImportData = jsonRecebido;
                 prepararEscolhaImport();
-                console.log("IA: Dados carregados no modal de seleção.");
             } catch (e) {
                 exibirAlerta("Erro ao processar dados da IA: " + e.message, "danger");
             }
@@ -2346,59 +2304,32 @@ Aqui é onde os dados vão aparecer de verdade.
         function checkScroll() {
             const container = document.getElementById('tabela-container');
             const seta = document.getElementById('seta-scroll');
-
             if (!container || !seta) return;
-
-            // Se o usuário já rolou mais de 20px, ou se a tabela cabe inteira na tela, esconde a seta
             const precisaDeScroll = container.scrollWidth > container.clientWidth;
             const jaRolou = container.scrollLeft > 20;
-
             if (!precisaDeScroll || jaRolou) {
-                seta.style.opacity = '0';
-                seta.style.pointerEvents = 'none';
                 seta.style.display = 'none';
-            } else {
-                // Só mostra se estiver no mobile (baseado no breakpoint do Bootstrap)
-                if (window.innerWidth < 768) {
-                    seta.style.opacity = '1';
-                    seta.style.display = 'block';
-                }
+            } else if (window.innerWidth < 768) {
+                seta.style.display = 'block';
             }
         }
 
-        // Ao abrir o modal de configurações, ele precisa preparar os dados para mostrar lá dentro. Essa função é responsável por isso. Ela captura os nomes atuais das colunas, salva os dados para garantir que o modal mostre a configuração real, e sincroniza os checkboxes de visibilidade.
         function prepararConfiguracoes() {
             const prefTab = document.getElementById('pref-tab');
             const backupTab = document.getElementById('backup-tab');
             const deleteTab = document.getElementById('delete-tab');
             const myModal = new bootstrap.Modal(document.getElementById('modalConfig'));
             const importFile = document.getElementById('importFile');
-
-            importFile.value = ""; // Reseta o input de arquivo para evitar confusão se o usuário quiser importar algo novo depois de abrir as configurações    
+            importFile.value = "";
             if (!currentMateria) {
-                // Se não houver matéria selecionada, a aba de preferências não faz sentido, então escondemos ela e já mostramos o modal direto na aba de backup (que é a única opção útil nesse cenário)
                 if (prefTab) prefTab.style.display = "none";
-                // Esconde a aba de exclusão também, pois não faz sentido excluir algo que não existe
                 if (deleteTab) deleteTab.style.display = "none";
-                // 2. Mostra o modal
                 myModal.show();
-
-                // 3. Força a ativação da aba de backup (com um pequeno delay para o Bootstrap processar)
-                setTimeout(() => {
-                    if (backupTab) {
-                        const trigger = new bootstrap.Tab(backupTab);
-                        trigger.show();
-                    }
-                }, 150);
+                setTimeout(() => { if (backupTab) new bootstrap.Tab(backupTab).show(); }, 150);
                 return;
             }
-            // Se houver matéria, garante que a aba de preferências volte a aparecer
             if (prefTab) prefTab.style.display = "block";
-            // E a aba de exclusão também, pois agora faz sentido ter ela disponível
             if (deleteTab) deleteTab.style.display = "block";
-
-            // --- PASSO 1: CAPTURA "CONGELADA" ---
-            // Pegamos os valores dos inputs da tabela enquanto eles ainda estão intactos
             const nomesDaTabela = {
                 t: document.getElementById('colName_t').value,
                 e1: document.getElementById('colName_e1').value,
@@ -2408,19 +2339,10 @@ Aqui é onde os dados vão aparecer de verdade.
                 e5: document.getElementById('colName_e5').value,
                 e6: document.getElementById('colName_e6').value
             };
-
-            // --- PASSO 2: SALVAMENTO E RESET ---
-            // Isso vai reconstruir a tabela com dados antigos no fundo, 
-            // mas não importa, pois já temos os nomes novos na variável acima.
             saveAllRows();
-
-            // --- PASSO 3: INJEÇÃO MANUAL NO MODAL ---
-            // Forçamos os nomes capturados para dentro dos campos do modal
             Object.keys(nomesDaTabela).forEach(k => {
                 const modalInput = document.getElementById('modalColName_' + k);
-                if (modalInput) {
-                    modalInput.value = nomesDaTabela[k];
-                }
+                if (modalInput) modalInput.value = nomesDaTabela[k];
             });
 
             // --- PASSO 4: SINCRONIZAÇÃO DE VISIBILIDADE ---
@@ -2441,48 +2363,19 @@ Aqui é onde os dados vão aparecer de verdade.
             }
 
             updateTabName();
-
-            // --- PASSO 5: ABERTURA MANUAL DO MODAL ---
-            // Agora que tudo está preenchido corretamente, mostramos o modal
             myModal.show();
-
-            // Força abrir na aba de preferências se houver matéria
             setTimeout(() => {
                 if (prefTab) {
-                    const trigger = new bootstrap.Tab(prefTab);
-                    trigger.show();
+                    document.getElementById("pref-tab-materia").innerText = currentMateria;
+                    new bootstrap.Tab(prefTab).show();
                 }
             }, 150);
         }
 
-        // Esta função é responsável por atualizar o nome da matéria que aparece no título do modal de preferências. Ela é chamada toda vez que o modal é aberto, e também toda vez que o usuário digita algo no campo de título da matéria, para garantir que o nome mostrado no modal esteja sempre atualizado e reflita exatamente o que está no input de título (que é a fonte mais confiável para o nome da matéria).
         function updateTabName() {
-            // Pega o nome atual direto do input de título (que é o mais confiável no momento)
             const nomeAtual = document.getElementById('materiaTitulo').value.trim();
-
             document.querySelectorAll('.nome-materia-modal').forEach(span => {
                 span.innerText = nomeAtual ? nomeAtual : "esta matéria";
-            });
-        }
-        // Quando você marca ou desmarca a opção de "Repetir Intervalo para todas as matérias", isso também é uma mudança importante.
-        function syncFromModal(key) {
-            const modalVal = document.getElementById('modalColName_' + key).value;
-            const headerInput = document.getElementById('colName_' + key);
-            if (headerInput) {
-                headerInput.value = modalVal;
-            }
-            setUnsavedChanges(true);
-        }
-
-        // Sincroniza os inputs do modal com os inputs do header da tabela
-        function syncModalLabels() {
-            const keys = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
-            keys.forEach(k => {
-                const hInput = document.getElementById('colName_' + k);
-                const mInput = document.getElementById('modalColName_' + k);
-                if (hInput && mInput) {
-                    mInput.value = hInput.value;
-                }
             });
         }
 
@@ -2492,79 +2385,52 @@ Aqui é onde os dados vão aparecer de verdade.
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
             let cfg = {};
             try { if (rawConfig) cfg = JSON.parse(rawConfig); } catch (e) { }
-
             const defaults = { t: "Teoria", e1: "Ex. 1", e2: "Ex. 2", e3: "Ex. 3", e4: "Ex. 4", e5: "Rev. 1", e6: "Rev. 2" };
             const keys = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
-
             keys.forEach(k => {
                 const val = (cfg && cfg[k]) ? cfg[k] : defaults[k];
                 if (document.getElementById('colName_' + k)) document.getElementById('colName_' + k).value = val;
                 if (document.getElementById('colName_' + k)) document.getElementById('colName_' + k).title = val;
                 if (document.getElementById('modalColName_' + k)) document.getElementById('modalColName_' + k).value = val;
             });
-
             const visibleCols = getVisibleColumns();
-
             document.querySelectorAll('.check-hide-col').forEach(cb => {
                 cb.checked = visibleCols.includes(cb.value);
             });
-
             applyVisibilityStyles(visibleCols);
         }
 
-        //  Sincroniza do Modal para a Tabela enquanto digita - (caso o usuário prefira editar os nomes das colunas dentro do modal de preferências)
         function syncFromModal(key) {
             const modalVal = document.getElementById('modalColName_' + key).value;
             const headerInput = document.getElementById('colName_' + key);
-            if (headerInput) headerInput.value = modalVal;
-            setUnsavedChanges(true); // Ativa o alerta de salvar
+            if (headerInput) { headerInput.value = modalVal; headerInput.title = modalVal; }
+            setUnsavedChanges(true);
         }
 
-        // Sincroniza da Tabela para o Modal enquanto digita - (caso o usuário prefira editar os nomes das colunas diretamente na tabela)
         function syncModalLabels() {
-            const keys = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
-            keys.forEach(k => {
+            ['e1', 'e2', 'e3', 'e4', 'e5', 'e6'].forEach(k => {
                 const hVal = document.getElementById('colName_' + k).value;
                 const mInput = document.getElementById('modalColName_' + k);
                 if (mInput) mInput.value = hVal;
             });
         }
 
-        // Coloca a mensagem de "Selecione uma matéria" no meio da tabela quando não há matéria ativa
-        function setInitialTableContent(message = "Selecione uma matéria acima para visualizar ou definir preferências") {
-            return `
-            <tr>
-                <td colspan="11" class="text-center text-muted py-5">
-                    <i class="bi bi-arrow-up-circle d-block h1"></i>
-                    ${message}
-                </td>
-            </tr>`;
+        function setInitialTableContent(message = "Selecione uma matéria") {
+            return `<tr><td colspan="11" class="text-center text-muted py-5"><i class="bi bi-arrow-up-circle d-block h1"></i>${message}</td></tr>`;
         }
 
-        // ==========================================
-        // 📅 FORMATAR DATA
-        // ==========================================
-        // O computador entende data como 2023-12-30. Nós lemos 30/12/2023. Essa função faz a conversão.
         function formatDateToBR(dateStr) {
             if (!dateStr || !dateStr.includes('-')) return dateStr || '-';
             const [year, month, day] = dateStr.split('-');
             return `${day}/${month}/${year}`;
         }
 
-        // ==========================================
-        // 🔄 TROCAR DE MATÉRIA
-        // ==========================================
-        // Chamada quando você seleciona uma matéria nova na listinha no topo da tela.
         async function switchMateria(name) {
             const tableBody = document.getElementById('tableBody');
             const inputTitulo = document.getElementById('materiaTitulo');
-
-            // 1. Antes de trocar, salvamos a matéria ANTIGA se houver mudanças
             if (currentMateria && hasUnsavedChanges) {
-                // Forçamos o fechamento de tudo e salvamento
                 await saveAllRows();
             } else {
-                // Se não ia salvar, precisamos garantir que os editores sumam
                 for (const id in activeEditors) {
                     if (activeEditors[id]) {
                         await activeEditors[id].destroy();
@@ -2573,11 +2439,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
                 document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
             }
-
-            // 2. Agora sim, trocamos o "ponteiro" para a matéria NOVA
             currentMateria = name;
-
-            // 3. Se for uma seleção vazia, limpa tudo e sai
             if (!name || name.trim() === "") {
                 localStorage.removeItem('last_active');
                 tableBody.innerHTML = setInitialTableContent();
@@ -2587,96 +2449,51 @@ Aqui é onde os dados vão aparecer de verdade.
                 updateSelect();
                 return;
             }
-
-            // 4. Carrega os dados da matéria NOVA do LocalStorage
             localStorage.setItem('last_active', name);
-
-            // Atualiza o Título na tela ANTES de carregar as linhas
             if (inputTitulo) inputTitulo.value = name;
-
-            loadColumnNames(); // Carrega nomes das colunas da matéria B
-            loadIntervalConfig(); // Carrega intervalo da matéria B
-            loadRows(); // Carrega as linhas da matéria B
-
-            updateSelect(); // Sincroniza o dropdown
-            updateTabName(); // Sincroniza nomes nos modais
-            checkInterfaceState(); // Libera ou bloqueia botões
+            loadColumnNames();
+            loadIntervalConfig();
+            loadRows();
+            updateSelect();
+            updateTabName();
+            checkInterfaceState();
         }
 
-
-
-        // Aplica estilos de visibilidade às colunas
         function applyVisibilityStyles(visibleCols) {
-            const colMapping = {
-                't': 3, 'e1': 4, 'e2': 5, 'e3': 6, 'e4': 7, 'e5': 8, 'e6': 9
-            };
-
+            const colMapping = { 't': 3, 'e1': 4, 'e2': 5, 'e3': 6, 'e4': 7, 'e5': 8, 'e6': 9 };
             Object.keys(colMapping).forEach(key => {
                 const colIndex = colMapping[key];
-                // Se NÃO estiver na lista de visíveis, esconde.
                 const shouldHide = !visibleCols.includes(key);
-
                 const th = document.querySelector(`.study-table thead th:nth-child(${colIndex})`);
-                if (th) {
-                    th.style.display = shouldHide ? 'none' : '';
-                    th.classList.toggle('col-hidden', shouldHide);
-                }
-
+                if (th) th.style.display = shouldHide ? 'none' : '';
                 const cells = document.querySelectorAll(`#tableBody tr td:nth-child(${colIndex})`);
-                cells.forEach(td => {
-                    td.style.display = shouldHide ? 'none' : '';
-                    td.classList.toggle('col-hidden', shouldHide);
-                });
+                cells.forEach(td => { td.style.display = shouldHide ? 'none' : ''; });
             });
         }
 
-        // Quando o usuário clica em "Aplicar Preferências" no modal, essa função é chamada para salvar as escolhas e aplicar as mudanças na interface.
         function applyVisibility() {
             const visible = Array.from(document.querySelectorAll('.check-hide-col:checked')).map(cb => cb.value);
             const novoIntervalo = parseInt(document.getElementById('inputIntervaloDias').value) || 7;
             const deveRepetir = document.getElementById('checkRepetirIntervalo').checked;
-
-            // 1. Salva a matéria atual (saveColumnNames já deve lidar com o intervalo interno)
             saveColumnNames(visible);
             applyVisibilityStyles(visible);
-
-            // 2. Se o check estiver marcado, replica o intervalo nos objetos de config das outras matérias
             if (currentMateria && deveRepetir) {
                 const materiasList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-
                 materiasList.forEach(m => {
                     const rawConfig = localStorage.getItem(CONFIG_PREFIX + m);
                     let cfg = rawConfig ? JSON.parse(rawConfig) : {};
-
                     cfg.intervalo = novoIntervalo;
-                    // Salva apenas o objeto de configuração consolidado
                     localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
-
-                    // OPCIONAL: Limpa o legado se ele existir para manter o banco limpo
-                    localStorage.removeItem('config_intervalo_dias_' + m);
                 });
             }
-
             setUnsavedChanges(true);
             saveAllRows();
-
-            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('modalConfig'));
-            if (modalInstance) modalInstance.hide();
+            bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
         }
 
-        // ==========================================
-        // 💾 SALVAR NOMES DAS COLUNAS
-        // ==========================================
-        // Essa função lê os nomes das colunas (t, e1, e2, e3, e4, e5, e6) dos inputs do header da tabela e do modal de preferências, e salva tudo no localStorage para a matéria atual. Se a função for chamada sem argumentos, ela tenta pegar a visibilidade atual do localStorage para não perder essa informação.
         function saveColumnNames(visibleCols = null) {
             if (!currentMateria) return;
-
-            if (visibleCols === null) {
-                visibleCols = getVisibleColumns();
-            }
-
-            const intervaloValor = parseInt(document.getElementById('inputIntervaloDias').value) || 7;
-
+            if (visibleCols === null) visibleCols = getVisibleColumns();
             const config = {
                 t: document.getElementById('colName_t').value,
                 e1: document.getElementById('modalColName_e1').value,
@@ -2686,48 +2503,19 @@ Aqui é onde os dados vão aparecer de verdade.
                 e5: document.getElementById('modalColName_e5').value,
                 e6: document.getElementById('modalColName_e6').value,
                 visibleCols: visibleCols,
-                intervalo: intervaloValor
+                intervalo: parseInt(document.getElementById('inputIntervaloDias').value) || 7
             };
-
             localStorage.setItem(CONFIG_PREFIX + currentMateria, JSON.stringify(config));
-            //limpa chave deprecated
-            localStorage.removeItem('config_intervalo_dias_' + currentMateria);
         }
 
-        // Atualiza o nome da matéria na aba do modal de preferências
-        function updateTabName() {
-            document.querySelectorAll('.nome-materia-modal').forEach(span => {
-                span.innerText = currentMateria ? `${currentMateria}` : "";
-            });
-        }
-
-        // ==========================================
-        // 📥 CARREGAR AS LINHAS DA TABELA
-        // ==========================================
-        // Pega os dados salvos da matéria atual e reconstrói a tabela na tela, do zero.
         function loadRows() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = "";
-
             const data = JSON.parse(localStorage.getItem(PREFIX + currentMateria) || "[]");
-
             if (data.length > 0) {
                 data.forEach(i => {
-                    // --- VALIDAÇÃO DE DATA ---
-                    // Se a data estiver vazia, define como "hoje"
-                    let dataParaCarregar = i.data;
-
-                    if (!dataParaCarregar || dataParaCarregar.trim() === "") {
-                        dataParaCarregar = new Date().toISOString().split('T')[0];
-                    }
-
-                    // Envia para a criação da linha
-                    createRow(
-                        dataParaCarregar,
-                        i.conteudo,
-                        i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6,
-                        i.obs
-                    );
+                    let dataParaCarregar = i.data || new Date().toISOString().split('T')[0];
+                    createRow(dataParaCarregar, i.conteudo, i.t, i.e1, i.e2, i.e3, i.e4, i.e5, i.e6, i.obs);
                 });
             } else {
                 tbody.innerHTML = setInitialTableContent("Matéria sem conteúdo");
@@ -2750,135 +2538,46 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         function setVisibility() {
-            const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-            if (rawConfig) {
-                let visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']; // Padrão: todas visíveis
-                const cfg = JSON.parse(rawConfig);
-                if (cfg && cfg.hiddenCols) {
-                    visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => !cfg.hiddenCols.includes(col));
-                    applyVisibilityStyles(visibles);
-                } else if (cfg && cfg.visibleCols) {
-                    visibles = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].filter(col => cfg.visibleCols.includes(col));
-                    applyVisibilityStyles(visibles);
-                } else {
-                    applyVisibilityStyles(visibles); // Se não tiver configuração, mostra tudo
-                }
-
-            }
+            applyVisibilityStyles(getVisibleColumns());
         }
 
-        // ==========================================
-        // 🏗️ CONSTRUIR UMA LINHA NA TABELA (A mágica do HTML visual)
-        // ==========================================
-        // Essa função é responsável por criar o código HTML de uma linha da tabela, preenchendo com os dados passados como argumento. Ela também configura os ícones de check e os campos de edição.
         function createRow(d, c, t, e1, e2, e3, e4, e5, e6, o, isEdit = false) {
             const tbody = document.getElementById('tableBody');
             const tr = document.createElement('tr');
-
-
             const rowId = 'row_' + Date.now() + Math.random().toString(36).substr(2, 5);
             tr.id = rowId;
             if (isEdit) tr.classList.add('is-editing');
-
             let dateValue = d && d.includes('/') ? d.split('/').reverse().join('-') : d;
-
-            let classeData = "";
             if (dateValue) {
-                const hoje = new Date();
-                hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas o dia
-
-                const dataLinha = new Date(dateValue + 'T12:00:00'); // Força meio-dia para evitar erro de fuso
-                dataLinha.setHours(0, 0, 0, 0);
-
-                if (dataLinha < hoje) {
-                    classeData = "data-passada";
-                } else if (dataLinha.getTime() === hoje.getTime()) {
-                    classeData = "data-hoje";
-                } else {
-                    classeData = "data-futura";
-                }
+                const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+                const dataLinha = new Date(dateValue + 'T12:00:00'); dataLinha.setHours(0, 0, 0, 0);
+                if (dataLinha < hoje) tr.classList.add("data-passada");
+                else if (dataLinha.getTime() === hoje.getTime()) tr.classList.add("data-hoje");
+                else tr.classList.add("data-futura");
             }
-            if (dateValue) {
-                tr.classList.add(classeData);
-            }
-
-            const tickCell = (val, field) => `
-    <td>
-        <i class="bi ${val ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'${field}')"></i>
-        <input type="checkbox" class="form-check-input edit-mode ${field}" ${val ? 'checked' : ''} style="display: none;">
-    </td>`;
-
-            tr.innerHTML = `
-        <td>
-            <span class="view-mode data-conteudo">${formatDateToBR(dateValue)}</span>
-            <input type="date" class="edit-input edit-mode val-data" value="${dateValue}">
-        </td>
-        <td class="text-start-custom">
-            <span class="view-mode fw-bold">${c || '-'}</span>
-            <input type="text" class="edit-input edit-mode val-conteudo" value="${c}">
-        </td>
-        ${tickCell(t, 'val-t')}
-        ${tickCell(e1, 'val-e1')}
-        ${tickCell(e2, 'val-e2')}
-        ${tickCell(e3, 'val-e3')}
-        ${tickCell(e4, 'val-e4')}
-        ${tickCell(e5, 'val-e5')}
-        ${tickCell(e6, 'val-e6')}
-        <td class="text-start-custom col-data-obs">
-            <div class="view-mode view-obs">${o || '-'}</div>
-            <div class="edit-mode"><div class="val-obs-editor">${o}</div></div>
-        </td>
-        <td class="no-print col-actions">
-            <i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i>
-        </td>`;
-
+            const tickCell = (val, field) => `<td><i class="bi ${val ? 'bi-check-square-fill' : 'bi-square'} check-toggle view-mode" onclick="toggleCheck(this,'${field}')"></i><input type="checkbox" class="form-check-input edit-mode ${field}" ${val ? 'checked' : ''} style="display: none;"></td>`;
+            tr.innerHTML = `<td><span class="view-mode data-conteudo">${formatDateToBR(dateValue)}</span><input type="date" class="edit-input edit-mode val-data" value="${dateValue}"></td><td class="text-start-custom"><span class="view-mode fw-bold">${c || '-'}</span><input type="text" class="edit-input edit-mode val-conteudo" value="${c}"></td>${tickCell(t, 'val-t')}${tickCell(e1, 'val-e1')}${tickCell(e2, 'val-e2')}${tickCell(e3, 'val-e3')}${tickCell(e4, 'val-e4')}${tickCell(e5, 'val-e5')}${tickCell(e6, 'val-e6')}<td class="text-start-custom col-data-obs"><div class="view-mode view-obs">${o || '-'}</div><div class="edit-mode"><div class="val-obs-editor">${o}</div></div></td><td class="no-print col-actions"><i class="bi bi-trash text-danger btn-action" onclick="deleteRow(this)"></i></td>`;
             tbody.appendChild(tr);
-
-            // Re-checa a visibilidade após as linhas serem criadas fisicamente no HTML
             setVisibility();
-
             if (isEdit) enableEditMode(rowId);
             return tr;
         }
 
-        // ==========================================
-        // ☑️ MARCAR E DESMARCAR CAIXINHAS
-        // ==========================================
-        // O que acontece quando você clica em um quadradinho cinza para ele ficar azul (ou vice-versa)
         function toggleCheck(icon, field) {
-            const tr = icon.closest('tr'); // Acha a linha em que você clicou
-            const cb = tr.querySelector('.' + field); // Acha o checkbox verdadeiro (escondido) dessa célula
-            cb.checked = !cb.checked; // Inverte o valor (se era true, vira false)
-            saveData(); // Salva a alteração invisivelmente
-            loadRows(); // Recarrega para pintar de azul ou cinza
-            setUnsavedChanges(true); // Deixa o botão de salvar piscando
+            const tr = icon.closest('tr');
+            const cb = tr.querySelector('.' + field);
+            cb.checked = !cb.checked;
+            saveData();
+            loadRows();
+            setUnsavedChanges(true);
         }
 
-        // ==========================================
-        // 💾 SALVAR DADOS (O coração do backup)
-        // ==========================================
-        /* Essa função é chamada para salvar os dados da tabela no localStorage. 
-        Ela lê cada linha da tabela, pega os valores dos campos, e constrói uma lista de objetos. Antes de salvar, 
-        ela FILTRA essa lista para remover linhas que não têm conteúdo significativo (nem conteúdo na coluna "conteúdo" 
-        nem texto real nas observações). Depois, ela ordena as linhas por data e salva tudo como JSON no localStorage.*/
         function saveData() {
             if (!currentMateria) return;
-
-            // Garante que o intervalo atual da tela seja salvo junto com os dados
-            const intervaloAtual = document.getElementById('inputIntervaloDias').value;
-            localStorage.setItem('config_intervalo_dias_' + currentMateria, intervaloAtual);
-
-            // 1. MAPEIA os dados da tabela
             const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
                 const rowId = tr.id;
-                const viewObsEl = tr.querySelector('.view-obs');
-                const valDataEl = tr.querySelector('.val-data');
-                const valConteudoEl = tr.querySelector('.val-conteudo');
-
-                // Se a linha não tem esses elementos básicos, ela é uma linha de aviso e deve ser ignorada
-                if (!viewObsEl || !valDataEl || !valConteudoEl) return null;
-                let obsHtml = activeEditors[rowId] ? activeEditors[rowId].getData() : tr.querySelector('.view-obs').innerHTML;
-
+                const vObs = tr.querySelector('.view-obs');
+                if (!vObs) return null;
                 return {
                     data: tr.querySelector('.val-data').value,
                     conteudo: tr.querySelector('.val-conteudo').value,
@@ -2889,344 +2588,166 @@ Aqui é onde os dados vão aparecer de verdade.
                     e4: tr.querySelector('.val-e4').checked,
                     e5: tr.querySelector('.val-e5').checked,
                     e6: tr.querySelector('.val-e6').checked,
-                    obs: obsHtml
+                    obs: activeEditors[rowId] ? activeEditors[rowId].getData() : vObs.innerHTML
                 };
-            })
-                // 2. FILTRA: Aqui está a mágica! 
-                // Se o conteúdo estiver vazio (mesmo com espaços), a linha é removida da lista.
-                .filter(item => item !== null)
-                .filter(item => {
-                    // Remove espaços em branco do conteúdo para validar
-                    const temConteudo = item.conteudo.trim() !== "" && item.conteudo.trim() !== "-";
-
-                    // Verifica se a observação tem texto real
-                    // Removemos tags HTML básicas e espaços para ver se sobrou algo escrito
-                    const textoObsLimpo = item.obs.replace(/<[^>]*>/g, '').trim();
-                    // Substitua a lógica de temObs por esta, que é mais agressiva contra espaços vazios de HTML:
-                    const temObs = item.obs.replace(/<[^>]*>|&nbsp;|\s+/g, '').trim() !== "";
-                    // REGRA: Salva se tiver um OU outro
-                    return temConteudo || temObs;
-                });
-
-            // 3. ORDENA (Agora apenas as linhas válidas)
-            items.sort((a, b) => {
-                if (!a.data) return 1;
-                if (!b.data) return -1;
-                return new Date(a.data) - new Date(b.data);
-            });
-
-            // 4. SALVA no banco local
+            }).filter(item => item !== null && (item.conteudo.trim() !== "" || item.obs.replace(/<[^>]*>|&nbsp;|\s+/g, '').trim() !== ""));
+            items.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
         }
 
-        // ==========================================
-        // ✏️ LIGAR O MODO EDIÇÃO
-        // ==========================================
-
-
-        // Essa função é responsável por transformar uma linha específica da tabela em modo de edição. Ela adiciona a classe 'is-editing' para mostrar os campos de edição, e inicializa o CKEditor na célula de observação para permitir edição rica de texto.
         async function enableEditMode(rowId) {
             const tr = document.getElementById(rowId);
-            tr.classList.add('is-editing'); // O CSS entra em ação escondendo os textos e mostrando caixas de digitar
-
+            tr.classList.add('is-editing');
             try {
-
-                // Carrega a tradução primeiro. 
-                // Importante: use o caminho relativo exato de onde está o index.html
                 const translationModule = await import('./ckeditor5/translations/pt-br.js');
-
-                // Registramos manualmente a tradução no dicionário do CKEditor
-                // O arquivo exporta um objeto que contém a chave 'pt-br'
                 if (translationModule && translationModule.default) {
-                    const translationData = translationModule.default['pt-br'];
-                    // Injeta no repositório global de traduções
                     window.CKEDITOR_TRANSLATIONS = window.CKEDITOR_TRANSLATIONS || {};
-                    window.CKEDITOR_TRANSLATIONS['pt-br'] = translationData;
+                    window.CKEDITOR_TRANSLATIONS['pt-br'] = translationModule.default['pt-br'];
                 }
-
-                // Importa o módulo dinamicamente
-                const {
-                    ClassicEditor, Essentials, Paragraph, Underline,
-                    Bold, Italic, FontFamily, FontSize, FontColor, FontBackgroundColor,
-                    Link, AutoLink, List, Undo, TodoList
-                } = await import('ckeditor5');
-
-                // Transforma a caixa de observação no editor chique (CKEditor)
+                const { ClassicEditor, Essentials, Paragraph, Underline, Bold, Italic, FontFamily, FontSize, FontColor, FontBackgroundColor, Link, AutoLink, List, Undo, TodoList } = await import('ckeditor5');
                 ClassicEditor.create(tr.querySelector('.val-obs-editor'), {
                     licenseKey: 'GPL',
-
-                    // APENAS OBJETOS (sem aspas):
-                    plugins: [
-                        Essentials, Paragraph, Bold, Italic, Underline,
-                        FontFamily, FontSize, FontColor, FontBackgroundColor, Link, AutoLink, List, TodoList, Undo
-                    ],
-
-                    // APENAS STRINGS (nomes dos botões):
-                    toolbar: [
-                        'undo', 'redo', '|',
-                        'bold', 'italic', 'underline', '|',
-                        'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
-                        'link', 'todoList', 'bulletedList', 'numberedList'
-                    ],
+                    plugins: [Essentials, Paragraph, Bold, Italic, Underline, FontFamily, FontSize, FontColor, FontBackgroundColor, Link, AutoLink, List, TodoList, Undo],
+                    toolbar: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|', 'link', 'todoList', 'bulletedList', 'numberedList'],
                     language: 'pt-br'
                 }).then(editor => {
-                    activeEditors[rowId] = editor; // Guarda referência desse editor na memória
-                    setUnsavedChanges(true); // O botão salvar começa a piscar
+                    activeEditors[rowId] = editor;
+                    setUnsavedChanges(true);
                 });
-            } catch (error) {
-                console.error("Erro ao carregar os plugins do CKEditor:", error);
-            }
+            } catch (e) { console.error("Editor error:", e); }
         }
 
-        // Essa função é um atalho para ligar o modo edição em todas as linhas de uma vez. Ela é chamada quando você clica no ícone de lápis no header da tabela, para facilitar a edição em massa.
         async function enableEditModeAllRows() {
             const rows = document.querySelectorAll('#tableBody tr');
-            for (const tr of rows) {
-                await enableEditMode(tr.id);
-            }
+            for (const tr of rows) await enableEditMode(tr.id);
         }
 
-        // ==========================================
-        // 💾✅ SALVAR TUDO E FECHAR EDIÇÃO
-        // ==========================================
-        // Essa função é chamada quando você clica no botão "Salvar" (ou quando o modal de preferências é aberto, para garantir que nada fique perdido). Ela fecha todos os editores abertos, remove as classes de edição e salva os dados.
         async function saveAllRows() {
             if (!currentMateria || !hasUnsavedChanges) return;
-            // Fecha todos os editores ricos (CKEditor) ativos
             Object.keys(activeEditors).forEach(id => {
-                if (activeEditors[id]) {
-                    activeEditors[id].destroy().then(() => delete activeEditors[id]);
-                }
+                if (activeEditors[id]) activeEditors[id].destroy().then(() => delete activeEditors[id]);
             });
-
-            // Remove a classe de edição visual de todas as linhas
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
-
-            // Executa a lógica de coleta de dados e gravação no LocalStorage
             saveData();
-
-            // Salva os nomes das colunas e visibilidade
-            // (Passando null ele busca o que já está configurado ou usa o padrão)
             saveColumnNames();
-
-            // Recarrega as linhas para atualizar a interface com os dados salvos (importante para pintar os checks corretamente e atualizar as datas formatadas)
             loadRows();
-
-            // Atualiza o estado do botão (para de piscar)
             setUnsavedChanges(false);
         }
 
-        // ==========================================
-        // ➕ ADICIONAR LINHA EM BRANCO
-        // ==========================================
         function addEmptyRow() {
-            if (!currentMateria) { exibirAlerta("Selecione ou dê nome à matéria primeiro.", "warning"); return; }
-
-            // 1. Pega o intervalo diretamente do input do modal (garante o valor atualizado na tela)
-            const inputIntervalo = document.getElementById('inputIntervaloDias');
-            const intervalo = parseInt(inputIntervalo.value) || 1;
-
-            let proximaData = new Date().toISOString().split('T')[0]; // Padrão: Hoje
+            if (!currentMateria) return;
+            const intervalo = parseInt(document.getElementById('inputIntervaloDias').value) || 1;
+            let proximaData = new Date().toISOString().split('T')[0];
             const rows = Array.from(document.querySelectorAll('#tableBody tr'));
-
-            if (rows.length > 0) {
-                // 2. Extrai todas as datas e filtra as vazias
-                const datas = rows
-                    .map(tr => {
-                        const inputData = tr.querySelector('.val-data');
-                        return inputData ? inputData.value : null; // Retorna o valor ou null se não for linha de dado
-                    })
-                    .filter(d => d !== null && d !== ""); // Remove os nulos e vazios
-
-                if (datas.length > 0) {
-                    // 3. Encontra a MAIOR data (ordenação léxica funciona para YYYY-MM-DD)
-                    const maiorDataStr = datas.sort().reverse()[0];
-
-                    // 4. Cria o objeto Date garantindo o meio-dia (12:00) 
-                    // Isso evita que o fuso horário mude o dia ao somar.
-                    let dataBase = new Date(maiorDataStr + 'T12:00:00');
-
-                    // 5. Soma os X dias configurados
-                    dataBase.setDate(dataBase.getDate() + intervalo);
-
-                    // 6. Converte de volta para o formato de input (YYYY-MM-DD)
-                    proximaData = dataBase.toISOString().split('T')[0];
-                }
+            const datas = rows.map(tr => tr.querySelector('.val-data')?.value).filter(d => d);
+            if (datas.length > 0) {
+                let dataBase = new Date(datas.sort().reverse()[0] + 'T12:00:00');
+                dataBase.setDate(dataBase.getDate() + intervalo);
+                proximaData = dataBase.toISOString().split('T')[0];
             }
-
-            // Cria a linha e avisa que há mudanças
             let tr_new = createRow(proximaData, "", false, false, false, false, false, false, false, "", true);
             setTimeout(() => {
-                const inputConteudo = tr_new.querySelector('.val-conteudo');
-                if (inputConteudo) {
-                    // Faz a nova linha deslizar suavemente para o centro da tela
-                    tr_new.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    inputConteudo.focus();
-                    // Opcional: seleciona o texto se houver algo
-                    inputConteudo.select();
-                }
+                const input = tr_new.querySelector('.val-conteudo');
+                if (input) { tr_new.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
             }, 50);
             setUnsavedChanges(true);
         }
 
-
         function loadIntervalConfig() {
             const rawConfig = localStorage.getItem(CONFIG_PREFIX + currentMateria);
-            let intervalo = 7; // Padrão se não houver nada salvo
-
+            let intervalo = 7;
             if (rawConfig) {
                 const cfg = JSON.parse(rawConfig);
-                if (cfg.intervalo !== undefined) {
-                    intervalo = cfg.intervalo;
-                }
+                if (cfg.intervalo !== undefined) intervalo = cfg.intervalo;
             }
-
             document.getElementById('inputIntervaloDias').value = intervalo;
             document.getElementById('checkRepetirIntervalo').checked = false;
         }
 
-        // ==========================================
-        // 🗑️ EXCLUIR UMA LINHA
-        // ==========================================
-        // Passo 1: Abre o modal e "anota" quem deve ser excluído
         function deleteRow(i) {
             const tr = i.closest('tr');
-            const nomeConteudo = tr.querySelector('.val-conteudo').value || "este item";
-
-            rowToDelete = tr; // Guarda a linha
-            isDeletingFullMateria = false; // Garante que não vai apagar a matéria toda
-
-            document.getElementById('msgConfirmacaoExclusao').innerHTML = `Deseja excluir o conteúdo <br><strong>${nomeConteudo}</strong>?`;
+            rowToDelete = tr;
+            isDeletingFullMateria = false;
+            document.getElementById('msgConfirmacaoExclusao').innerHTML = `Deseja excluir o conteúdo <br><strong>${tr.querySelector('.val-conteudo').value || "este item"}</strong>?`;
             new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
         }
 
-        // Passo 2: A execução real (chamada pelo botão do modal)
-        function executeRowDeletion(tr) {
-            tr.remove();
-            saveData();
-            rowToDelete = null;
-        }
+        function executeRowDeletion(tr) { tr.remove(); saveData(); rowToDelete = null; }
 
-        // ==========================================
-        // 🏷️ RENOMEAR A MATÉRIA
-        // ==========================================
-        // Se você clicar no título grande e mudar o nome (ex: "História" pra "História Geral")
         function updateMateriaName() {
-            const newVal = document.getElementById('materiaTitulo').value.trim();
+            debugger
+            const input = document.getElementById('materiaTitulo');
+            const newVal = input.value.trim();
             const oldVal = currentMateria;
-
             if (!newVal || newVal === oldVal) return;
-
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-
-            // 1. Verifica se o novo nome já existe (case-insensitive)
             const nomeExistente = list.find(m => m.toLowerCase() === newVal.toLowerCase());
 
-            if (nomeExistente) {
-                const confirmar = confirm(`A matéria "${nomeExistente}" já existe. \n\nDeseja MESCLAR os conteúdos de "${oldVal}" em "${nomeExistente}"? \n\n(Isso unirá as duas listas e manterá as preferências de "${nomeExistente}")`);
-
-                if (!confirmar) {
-                    document.getElementById('materiaTitulo').value = oldVal;
-                    return;
+            if (nomeExistente && nomeExistente.toLowerCase() === oldVal.toLowerCase()) {
+                list = list.map(m => m === oldVal ? newVal : m);
+                localStorage.setItem(LIST_KEY, JSON.stringify(list));
+                const data = localStorage.getItem(PREFIX + oldVal);
+                const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
+                localStorage.setItem(PREFIX + newVal, data);
+                localStorage.setItem(CONFIG_PREFIX + newVal, config);
+                if (newVal !== oldVal) {
+                    localStorage.removeItem(PREFIX + oldVal);
+                    localStorage.removeItem(CONFIG_PREFIX + oldVal);
                 }
-
-                // --- LÓGICA DE MESCLAGEM ---
-
-                // A. Recupera dados de ambas
+                currentMateria = newVal;
+            } else if (nomeExistente) {
+                if (!confirm(`Deseja MESCLAR "${oldVal}" em "${nomeExistente}"?`)) { input.value = oldVal; return; }
                 let dadosAntigos = JSON.parse(localStorage.getItem(PREFIX + oldVal) || "[]");
                 let dadosDestino = JSON.parse(localStorage.getItem(PREFIX + nomeExistente) || "[]");
 
-                // B. Une as listas evitando duplicados exatos (mesma data e mesmo conteúdo)
+                // Mesclagem inteligente via Hash UID
                 dadosAntigos.forEach(itemAntigo => {
-                    const duplicado = dadosDestino.some(d =>
-                        d.data === itemAntigo.data &&
-                        d.conteudo.trim().toLowerCase() === itemAntigo.conteudo.trim().toLowerCase()
-                    );
-                    if (!duplicado) {
-                        dadosDestino.push(itemAntigo);
-                    }
+                    const uidAntigo = gerarUID(itemAntigo);
+                    if (!uidAntigo) return;
+                    const idx = dadosDestino.findIndex(d => gerarUID(d) === uidAntigo);
+                    if (idx !== -1) dadosDestino[idx] = itemAntigo;
+                    else dadosDestino.push(itemAntigo);
                 });
-
-                // C. Ordena a lista mesclada por data
-                dadosDestino.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-                // D. Salva no destino e remove o antigo
                 localStorage.setItem(PREFIX + nomeExistente, JSON.stringify(dadosDestino));
-
                 localStorage.removeItem(PREFIX + oldVal);
                 localStorage.removeItem(CONFIG_PREFIX + oldVal);
-                localStorage.removeItem('config_intervalo_dias_' + oldVal);
-
-                // E. Remove o nome antigo da lista (o novo nome já está lá, então só filtramos o velho)
                 list = list.filter(m => m !== oldVal);
                 localStorage.setItem(LIST_KEY, JSON.stringify(list));
-
-                // F. Muda a visualização para a matéria de destino
                 currentMateria = nomeExistente;
             } else {
-                // --- LÓGICA DE RENOMEAR SIMPLES (Caminho que já tínhamos) ---
                 const data = localStorage.getItem(PREFIX + oldVal);
                 const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
-                const interval = localStorage.getItem('config_intervalo_dias_' + oldVal);
-
-                if (data) localStorage.setItem(PREFIX + newVal, data);
-                if (config) localStorage.setItem(CONFIG_PREFIX + newVal, config);
-                if (interval) localStorage.setItem('config_intervalo_dias_' + newVal, interval);
-
+                localStorage.setItem(PREFIX + newVal, data);
+                localStorage.setItem(CONFIG_PREFIX + newVal, config);
                 localStorage.removeItem(PREFIX + oldVal);
                 localStorage.removeItem(CONFIG_PREFIX + oldVal);
-                localStorage.removeItem('config_intervalo_dias_' + oldVal);
-
                 list = list.map(m => m === oldVal ? newVal : m);
                 localStorage.setItem(LIST_KEY, JSON.stringify(list));
-
                 currentMateria = newVal;
             }
-
-            // 2. Finalização Comum
             localStorage.setItem('last_active', currentMateria);
-            updateSelect();
-            loadRows(); // Recarrega a tabela para mostrar os dados unidos
-            exibirAlerta("Matéria atualizada com sucesso!", "success");
+            updateSelect(); loadRows(); exibirAlerta("Matéria atualizada!", "success");
         }
 
-        // ==========================================
-        // ✨ CRIAR NOVA MATÉRIA PELO MODAL
-        // ==========================================
         function confirmarNovaMateria() {
             const nom = document.getElementById('novoNomeMateria').value.trim();
             if (nom) {
                 let l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
                 if (!l.includes(nom)) { l.push(nom); localStorage.setItem(LIST_KEY, JSON.stringify(l)); }
-                switchMateria(nom); // Troca para a matéria zerada que acabou de criar
-                bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide(); // Fecha a janela
+                switchMateria(nom);
+                bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide();
             }
         }
 
-        // ==========================================
-        // 🔽 ATUALIZAR O DROPDOWN (Menu de Seleção)
-        // ==========================================
         function updateSelect() {
             const sel = document.getElementById('materiaSelect');
-            const titulo = document.getElementById('materiaTitulo');
-            const containerSeta = document.querySelector('.custom-select-container');
             const l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
-
-            // Monta o menu injetando a tag <option> com todas as matérias que existem salvas
             sel.innerHTML = '<option value="">*** Matéria ***</option>' + l.map(m => `<option value="${m}">${m}</option>`).join('');
             sel.value = currentMateria;
-            // Ajuste de largura dinâmica para o dropdown abrir do tamanho total
-            if (titulo && containerSeta && sel) {
-                // Largura total = largura do campo de texto + largura da setinha
-                const larguraTotal = titulo.offsetWidth + containerSeta.offsetWidth;
-                sel.style.width = larguraTotal + "px";
-            }
+            const titulo = document.getElementById('materiaTitulo');
+            if (titulo && sel) sel.style.width = (titulo.offsetWidth + 40) + "px";
         }
 
-        // ==========================================
-        // 💣 APAGAR A MATÉRIA INTEIRA
-        // ==========================================
-        // Passo 1: Abre o modal e "anota" que queremos apagar a matéria toda (variável global)
         function deleteFullMateria() {
             const selectMateria = document.getElementById('materiaSelect');
             const nomeNoSelect = selectMateria.value;
@@ -3274,135 +2795,81 @@ Aqui é onde os dados vão aparecer de verdade.
             new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
         }
 
-        // Passo 2: A execução real (O código original que você já tinha)
         function executeFullMateriaDeletion() {
             localStorage.removeItem(PREFIX + currentMateria);
             localStorage.removeItem(CONFIG_PREFIX + currentMateria);
-
-            // Remove o nome dela da listinha principal
             let l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").filter(m => m !== currentMateria);
             localStorage.setItem(LIST_KEY, JSON.stringify(l));
-
-            // Limpa a tela
-            //Limpa o registro de "última ativa" já que ela foi deletada
-            localStorage.removeItem('last_active');
-            currentMateria = "";
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = setInitialTableContent(); // Coloca a mensagem de "Selecione uma matéria" no meio da tabela
-
-            document.getElementById('materiaTitulo').value = ""; // Limpa o campo de título
-
-            // Fecha o modal de "Gerenciar/Configurações"
-            const modalConfigEl = document.getElementById('modalConfig');
-            const modalConfig = bootstrap.Modal.getInstance(modalConfigEl);
-            if (modalConfig) modalConfig.hide();
-
-            // Fecha o modal de "Confirmar Exclusão" (o que tem o botão de excluir)
-            const modalConfirmEl = document.getElementById('modalConfirmarExclusao');
-            const modalConfirm = bootstrap.Modal.getInstance(modalConfirmEl);
-            if (modalConfirm) modalConfirm.hide();
-
-            updateTabName(); // Limpa o nome na aba do modal
-            checkInterfaceState(); // 🛠️ FORÇA A INTERFACE A OCULTAR AS PREFERÊNCIAS
-
-            updateSelect();
-            isDeletingFullMateria = false;
+            switchMateria("");
+            closeModals();
         }
 
-        // oculta ou mostra as abas de configuração dependendo se uma matéria está ativa ou não
+
         function checkInterfaceState() {
-            const hasMateria = (currentMateria && currentMateria.trim() !== "");
-            const tabContainer = document.getElementById('configTabContainer');
-            const btnAddContent = document.querySelector('button[onclick="addEmptyRow()"]');
-            const btnSalvarTudo = document.getElementById('btnSalvarTudo');
-            const btnEditarTudo = document.getElementById('btnEditarTudo');
-            const btnExcluirMateria = document.getElementById('btnExcluirMateria');
-            const prefTab = document.getElementById('pref-tab');
 
-            // Seleciona os inputs de cabeçalho e título
-            const inputTitulo = document.getElementById('materiaTitulo');
-            const headerInputs = document.querySelectorAll('.header-edit-input');
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
 
-            if (tabContainer) tabContainer.classList.remove('d-none');
+            const hasM = !!currentMateria;
 
-            if (hasMateria) {
-                // --- ESTADO ATIVO ---
-                if (btnAddContent) btnAddContent.disabled = false;
-                if (btnSalvarTudo) btnSalvarTudo.disabled = false;
-                if (btnEditarTudo) btnEditarTudo.disabled = false;
-                if (btnExcluirMateria) btnExcluirMateria.disabled = false;
-                if (prefTab) prefTab.style.display = "block";
+            // 1. Botões básicos da tabela (Salvar, Editar, Excluir)
+            ['btnSalvarTudo', 'btnEditarTudo', 'btnExcluirMateria'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = !hasM;
+            });
 
-                if (inputTitulo) inputTitulo.disabled = false;
-                headerInputs.forEach(input => input.disabled = false);
+            // 2. Botão de Adicionar Linha e Campo de Título
+            const btnAdd = document.querySelector('button[onclick="addEmptyRow()"]');
+            if (btnAdd) btnAdd.disabled = !hasM;
 
+            const tit = document.getElementById('materiaTitulo');
+            if (tit) tit.disabled = !hasM;
+
+            const btnAuth = document.getElementById('btn-google-auth');
+            const btExport = document.getElementById('btn-google-export');
+            const btImport = document.getElementById('btn-google-import');
+
+            if (chave && chave.includes("_key_")) {
+                btnAuth.style.display = 'block;'
+                btExport.style.display = 'block;'
+                btImport.style.display = 'block;'
+
+                if (accessToken) {
+                    // Estado: Conectado
+                    btnAuth.classList.replace('text-dark', 'text-primary');
+                    btnAuth.title = "Google Drive Conectado";
+                    btnAuth.style.backgroundColor = "#d4edda";
+                    btExport.disabled = false;
+                    btImport.disabled = false;
+
+                } else {
+                    // Estado: Desconectado
+                    btnAuth.classList.replace('text-primary', 'text-dark');
+                    btnAuth.title = "Conectar Google Drive";
+                    btnAuth.style.backgroundColor = "";
+                    btExport.disabled = true;
+                    btImport.disabled = true;
+                }
             } else {
-                // --- ESTADO BLOQUEADO ---
-                if (btnAddContent) btnAddContent.disabled = true;
-
-
-                if (btnExcluirMateria) {
-                    btnExcluirMateria.disabled = true;
-                }
-
-                if (btnEditarTudo) {
-                    btnEditarTudo.disabled = true;
-                }
-
-                if (btnSalvarTudo) {
-                    btnSalvarTudo.disabled = true;
-                    // Opcional: Remove a animação de pulsar se ela estiver ativa
-                    btnSalvarTudo.classList.remove('btn-save-alert');
-                }
-
-                if (inputTitulo) inputTitulo.disabled = true;
-                headerInputs.forEach(input => input.disabled = true);
-
-                if (prefTab) prefTab.style.display = "none";
-
-                // Lógica do Modal (Backup)
-                const backupTab = document.getElementById('backup-tab');
-                if (backupTab && document.getElementById('modalConfig').classList.contains('show')) {
-                    backupTab.click();
-                }
+                btnAuth.style.display = 'none;'
+                btExport.style.display = 'none;'
+                btImport.style.display = 'none;'
             }
         }
 
-        // ==========================================
-        // 🚨 AVISO DE ALTERAÇÕES NÃO SALVAS
-        // ==========================================
-        // Adiciona a classe que faz o botão de salvar piscar vermelho caso houver algo mudado
         function setUnsavedChanges(h) {
-            hasUnsavedChanges = h; // Atualiza o estado global
+            hasUnsavedChanges = h;
             const b = document.getElementById('btnSalvarTudo');
-            h ? b.classList.add('btn-save-alert') : b.classList.remove('btn-save-alert');
+            if (b) h ? b.classList.add('btn-save-alert') : b.classList.remove('btn-save-alert');
         }
 
-        // ==========================================
-        // 📦 EXPORTAR BACKUP (Baixar arquivo pro PC)
-        // ==========================================
         function exportBackup() {
             const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            const allData = {}, configs = {}, automationConfigs = {};
-
+            const allData = {}, configs = {};
             list.forEach(m => {
                 allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
-                const cfg = localStorage.getItem(CONFIG_PREFIX + m);
-                configs[m] = cfg ? JSON.parse(cfg) : null;
+                configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "null");
             });
-
-            // Adicionamos 'automationConfigs' ao pacote final
-            const backupPayload = {
-                app: "Cronograma - Organização de Matérias",
-                version: "2.8.7",
-                list,
-                allData,
-                configs
-            };
-
-            const blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" });
-
-            // Cria um "link invisível", clica nele pro arquivo baixar, e depois descarta
+            const blob = new Blob([JSON.stringify({ app: "Cronograma", version: "2.8.7", list, allData, configs })], { type: "application/json" });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `backup_cronograma_${new Date().toISOString().slice(0, 10)}.json`;
@@ -3410,64 +2877,35 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         function closeModals() {
-            // Seleciona todos os elementos de modal que estão visíveis
-            const openModals = document.querySelectorAll('.modal.show');
-
-            openModals.forEach(modalElement => {
-                const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-            });
+            document.querySelectorAll('.modal.show').forEach(m => bootstrap.Modal.getInstance(m)?.hide());
         }
-        // ==========================================
-        // 📂 ABRIR MODAL PARA IMPORTAR BACKUP
-        // ==========================================
-        // Lê o arquivo que o usuário subiu.
+
         function openImportModal(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    tempImportData = JSON.parse(e.target.result); // Tenta ler o JSON do arquivo
-                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide(); // Fecha config
-                    new bootstrap.Modal(document.getElementById('modalImport')).show(); // Abre perguntas (Mesclar ou Sobrescrever)
-                } catch (err) { exibirAlerta("Erro de leitura do arquivo JSON.", "danger"); }
+                    tempImportData = JSON.parse(e.target.result);
+                    bootstrap.Modal.getInstance(document.getElementById('modalConfig')).hide();
+                    new bootstrap.Modal(document.getElementById('modalImport')).show();
+                } catch (err) { exibirAlerta("JSON inválido.", "danger"); }
             };
             reader.readAsText(input.files[0]);
         }
 
-        // ==========================================
-        // 📥 CONFIRMAR A IMPORTAÇÃO
-        // ==========================================
         function confirmImport(mode) {
             if (!tempImportData) return;
-
-            // Antes de qualquer coisa, criamos um snapshot emergencial para o caso do usuário querer voltar atrás
             criarSnapshotEmergencial();
+            let currentList = mode === 'replace' ? [] : JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            if (mode === 'replace' && !confirm(`Substituir todos os dados atuais pelo backup?`)) return;
 
-            // 1. Recupera a lista atual de matérias
-            let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-
-            // 2. Se for Substituir, limpamos o que existe hoje
             if (mode === 'replace') {
-                const certeza = confirm("⚠️ ATENÇÃO: Isso vai APAGAR todas as suas matérias atuais permanentemente. Deseja continuar?");
-                if (!certeza) return;
-                currentList.forEach(m => {
-                    localStorage.removeItem(PREFIX + m);
-                    localStorage.removeItem(CONFIG_PREFIX + m);
-                    localStorage.removeItem('config_intervalo_dias_' + m);
+                JSON.parse(localStorage.getItem(LIST_KEY) || "[]").forEach(m => {
+                    localStorage.removeItem(PREFIX + m); localStorage.removeItem(CONFIG_PREFIX + m);
                 });
-                // A nova lista será exatamente a do backup (se existir)
                 currentList = tempImportData.list || [];
             } else {
-                // Se for Mesclar, adiciona apenas nomes novos à lista
-                if (tempImportData.list && Array.isArray(tempImportData.list)) {
-                    tempImportData.list.forEach(m => {
-                        if (!currentList.includes(m)) currentList.push(m);
-                    });
-                }
+                (tempImportData.list || []).forEach(m => { if (!currentList.includes(m)) currentList.push(m); });
             }
-
             // 3. Importação Segura dos Dados das Matérias (allData)
             if (tempImportData.allData) {
                 for (let m in tempImportData.allData) {
@@ -3482,54 +2920,13 @@ Aqui é onde os dados vão aparecer de verdade.
             // 4. Importação Segura das Configurações de Coluna (configs)
             // Se o backup for antigo e não tiver 'configs', ele apenas pula
             if (tempImportData.configs) {
-                for (let m in tempImportData.configs) {
-                    const cfg = tempImportData.configs[m];
-                    if (cfg) {
-                        localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
-                    }
-                }
+                for (let m in tempImportData.configs) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
             }
-
-            // 5. Importação Segura das Configurações de Automação (Intervalo)
-            if (tempImportData.configs) {
-                for (let m in tempImportData.configs) {
-                    const cfg = tempImportData.configs[m];
-                    if (cfg && cfg.intervalo) {
-                        localStorage.setItem('config_intervalo_dias_' + m, cfg.intervalo);
-                    }
-                }
-            }
-
-            // Se o backup for de uma versão muito antiga e tiver o intervalo fora do objeto
-            if (tempImportData.automationConfigs) {
-                for (let m in tempImportData.automationConfigs) {
-                    const intervaloAntigo = tempImportData.automationConfigs[m];
-
-                    // Em vez de criar uma chave solta, injetamos no objeto de config
-                    const rawConfig = localStorage.getItem(CONFIG_PREFIX + m);
-                    let cfg = rawConfig ? JSON.parse(rawConfig) : {};
-
-                    // Só atualiza se o objeto novo ainda não tiver um intervalo definido
-                    if (cfg.intervalo === undefined) {
-                        cfg.intervalo = intervaloAntigo;
-                        localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(cfg));
-                    }
-
-                    // Aproveita e limpa qualquer vestígio da chave solta no navegador
-                    localStorage.removeItem('config_intervalo_dias_' + m);
-                }
-            }
-            // 6. Salva a lista final e recarrega
             localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-
-            exibirAlerta("Importação finalizada!", "success");
+            exibirAlerta("Importação concluída!", "success");
             dispararAlertaReload(2000, 1);
         }
 
-        // --- LÓGICA DE IMPORTAÇÃO SELETIVA ---
-
-        // Abre o modal de escolha e lista os itens do JSON
-        // Prepara o modal e preenche o select de matérias dinamicamente
         function prepararEscolhaImport() {
             if (!tempImportData || !tempImportData.allData) { exibirAlerta("Arquivo inválido.", "danger"); return };
 
@@ -3630,143 +3027,59 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         function criarSnapshotEmergencial() {
-            const list = localStorage.getItem(LIST_KEY);
-            if (!list) return; // Nada para salvar
-
-            const backup = {
-                timestamp: new Date().toLocaleString(),
-                list: JSON.parse(list),
-                data: {},
-                configs: {}
-            };
-
-            backup.list.forEach(m => {
+            const listRaw = localStorage.getItem(LIST_KEY);
+            if (!listRaw) return;
+            const list = JSON.parse(listRaw);
+            const backup = { timestamp: new Date().toLocaleString(), list, data: {}, configs: {} };
+            list.forEach(m => {
                 backup.data[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
-                const cfg = localStorage.getItem(CONFIG_PREFIX + m);
-                backup.configs[m] = cfg ? JSON.parse(cfg) : null;
+                backup.configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "null");
             });
-
             localStorage.setItem("EMERGENCY_BACKUP_V1", JSON.stringify(backup));
-            verificarBotaoPanico(); // Atualiza a interface na hora
-            console.log("🛡️ Snapshot de segurança criado!");
+            verificarBotaoPanico();
         }
 
         function filtrarHTML(str) {
-            // Se for null ou undefined, retorna string vazia para não quebrar a UI
-            if (str === null || typeof str === 'undefined') return '';
-
-            // Se for número, converte para string para poder processar
-            const stringParaProcessar = String(str);
-
             const temp = document.createElement('div');
-            temp.innerHTML = stringParaProcessar;
+            temp.innerHTML = String(str || "");
             return temp.textContent || temp.innerText || "";
         }
 
-        // Executa a importação apenas dos itens selecionados
         function executarImportacaoSeletiva() {
             const selecionados = document.querySelectorAll('.check-item-import:checked');
-            if (selecionados.length === 0) { exibirAlerta("Selecione ao menos um item.", "warning"); return; }
-
-            if (!confirm(`Importar ${selecionados.length} itens selecionados?`)) return;
-
-            // Antes de qualquer coisa, criamos um snapshot emergencial para o caso do usuário querer voltar atrás
+            if (!selecionados.length) return;
+            if (!confirm(`Importar ${selecionados.length} itens?`)) return;
             criarSnapshotEmergencial();
-
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
             selecionados.forEach(cb => {
                 const materia = cb.getAttribute('data-materia');
                 const index = cb.getAttribute('data-index');
-
-
-                // O uso do ?. impede que o código quebre se algum nível do objeto estiver faltando
                 const itemParaImportar = tempImportData.allData?.[materia]?.[index];
+                const novoUID = gerarUID(itemParaImportar);
 
-                if (!itemParaImportar) {
-                    console.error(`Falha ao localizar dados para: ${materia} no índice ${index}`);
-                    return; // Pula este item se ele não for encontrado
-                }
-                if (!itemParaImportar || typeof itemParaImportar.conteudo === 'undefined') {
-                    console.warn("Item ignorado: estrutura de dados inválida.");
-                    return;
-                }
-                // 1. Garante que a matéria exista na lista principal
+                if (!novoUID) return;
                 if (!currentList.includes(materia)) {
                     currentList.push(materia);
-                    // Copia a configuração da coluna se existir no backup
-                    if (tempImportData.configs && tempImportData.configs[materia]) {
-                        localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(tempImportData.configs[materia]));
-                    }
+                    if (tempImportData.configs?.[materia]) localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(tempImportData.configs[materia]));
                 }
 
-                // 2. Recupera dados atuais da matéria no LocalStorage
                 let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
 
+                // LÓGICA UPSERT VIA HASH UID
+                const idx = dadosLocais.findIndex(d => gerarUID(d) === novoUID);
+                const itemSanitizado = { ...itemParaImportar, data: filtrarHTML(itemParaImportar.data), conteudo: filtrarHTML(itemParaImportar.conteudo) };
 
-                // 3. Estratégia Upsert: Sobrescreve se o 'conteudo' E 'data' já existirem
-                // Isso garante que você não sobrescreva o conteúdo de um dia diferente
-                const indiceExistente = dadosLocais.findIndex(d =>
-                    d.conteudo === itemParaImportar.conteudo &&
-                    d.data === itemParaImportar.data
-                );
+                if (idx !== -1) dadosLocais[idx] = itemSanitizado;
+                else dadosLocais.push(itemSanitizado);
 
-                const itemParaImportarSanitizado = { ...itemParaImportar };
-                itemParaImportarSanitizado.data = filtrarHTML(itemParaImportarSanitizado.data);
-                itemParaImportarSanitizado.conteudo = filtrarHTML(itemParaImportarSanitizado.conteudo);
-
-                if (indiceExistente !== -1) {
-                    // Se encontrou a combinação exata de Conteúdo + Data, sobrescreve
-                    dadosLocais[indiceExistente] = itemParaImportarSanitizado;
-                } else {
-                    // Se essa combinação é nova, adiciona
-                    dadosLocais.push(itemParaImportarSanitizado);
-                }
-
-                // Salva a lista atualizada (seja por edição ou adição)
                 localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
             });
-
-
-            // Em vez de substituir, a gente garante que NUNCA descarta o que já existe
-            let listNoDisco = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            // Une o que temos na memória com o que está no disco, removendo duplicados
-            currentList = [...new Set([...listNoDisco, ...currentList])];
-            localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-
+            localStorage.setItem(LIST_KEY, JSON.stringify([...new Set([...JSON.parse(localStorage.getItem(LIST_KEY) || "[]"), ...currentList])]));
             dispararAlertaReload(1000, 1);
-
         }
 
-        function verificarAcessoContribuinte() {
-            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-            const btnIA = document.getElementById("btn-importar-ia");
-            const btnAuth = document.getElementById('btn-google-auth');
-            const btExport = document.getElementById('btn-google-export');
-            const btImport = document.getElementById('btn-google-import');
 
-            if (chave && chave.includes("_key_")) {
-                // Se a chave existe e tem o formato esperado, mostra o botão
-                btnIA.style.display = "block";
-                btnAuth.style.display = "block";
-                btImport.style.display = "block";
-                btExport.style.display = "block";
-
-                if (accessToken) {
-                    btnAuth.classList.replace('text-dark', 'text-primary');
-                    btnAuth.title = "Google Conectado";
-                    btnAuth.style.backgroundColor = "#d4edda";
-                    btExport.disabled = false;
-                    btImport.disabled = false;
-                } else {
-                    btnAuth.title = "Conectar com Google Drive";
-                    btnAuth.classList.replace('text-primary', 'text-dark');
-                    btnAuth.style.backgroundColor = "initial";
-                    btExport.disabled = true;
-                    btImport.disabled = true;
-                }
-            }
-        }
 
         // ==========================================
         // 🛡️ PREVENÇÃO DE PERDA DE DADOS (Auto-Save)
@@ -3803,8 +3116,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 });
             }
 
-            // 4. Verificação de acesso ao recurso de IA (Importar IA)
-            verificarAcessoContribuinte();
+
         });
 
         // ==========================================
@@ -3814,121 +3126,43 @@ Aqui é onde os dados vão aparecer de verdade.
 
         // Verifica o status do salvamento a cada 30 segundos
         setInterval(() => {
-            const btnSave = document.getElementById('btnSalvarTudo');
-
-            // Se o botão estiver em modo de alerta (vermelho)
-            if (btnSave && btnSave.classList.contains('btn-save-alert')) {
-
-                // Se acabamos de entrar em estado de alerta, marca o início
-                if (!unsavedStartTime) {
-                    unsavedStartTime = Date.now();
-                }
-
-                // Calcula há quantos milissegundos estamos sem salvar
-                const elapsed = Date.now() - unsavedStartTime;
-                const fiveMinutes = 5 * 60 * 1000;
-
-                if (elapsed >= fiveMinutes) {
-                    console.log("Auto-save: 5 minutos atingidos. Salvando alterações...");
-                    saveAllRows();
-                    unsavedStartTime = null; // Reseta o timer após salvar
-                }
-            } else {
-                // Se o botão não está em alerta, reseta o marcador
+            if (hasUnsavedChanges && unsavedStartTime && (Date.now() - unsavedStartTime >= 300000)) {
+                saveAllRows();
                 unsavedStartTime = null;
+            } else if (hasUnsavedChanges && !unsavedStartTime) {
+                unsavedStartTime = Date.now();
             }
-        }, 30000); // Checagem a cada 30 segundos para economizar processamento
-
+        }, 30000);
 
         function initTokenClient() {
-
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: '749297806019-h4pgn5kdb4rdij99m3vd8ksi53l4ad3h.apps.googleusercontent.com',
                 scope: 'https://www.googleapis.com/auth/drive.file',
-                callback: (response) => {
-                    if (response.access_token) {
-                        accessToken = response.access_token;
+                callback: (res) => {
+                    if (res.access_token) {
+                        accessToken = res.access_token;
                         sessionStorage.setItem('google_access_token', accessToken);
-
-                        // 1. Muda a cor do ícone do Google para colorido ou azul para indicar "Logado"
-                        const btnAuth = document.getElementById('btn-google-auth');
-                        btnAuth.classList.replace('text-dark', 'text-primary');
-                        btnAuth.title = "Google Conectado";
-
-                        // 2. Habilita os botões de Nuvem
-                        document.getElementById('btn-google-export').disabled = false;
-                        document.getElementById('btn-google-import').disabled = false;
-
-                        document.getElementById('btn-google-auth').style.backgroundColor = "#d4edda";
-                        console.log("✅ Login Google realizado com sucesso!");
-                        exibirAlerta("Conectado ao Google Drive.", "success");
-
+                        exibirAlerta("Conectado ao Drive.", "success");
+                        checkInterfaceState();
                     }
-                },
+                }
             });
-
         }
 
         function solicitarAcessoDrive() {
-            if (!tokenClient) {
-                // Se por algum motivo o carregamento atrasou, tenta inicializar agora
-                initTokenClient();
-            }
-
-            if (tokenClient) {
-                tokenClient.requestAccessToken();
-            } else {
-                exibirAlerta("O serviço do Google ainda não carregou. Tente novamente em instantes.", "warning");
-            }
+            if (!tokenClient) initTokenClient();
+            tokenClient.requestAccessToken();
         }
+
         async function getDadosJsonLocais() {
-            // 1. Sincroniza o que está na tela para o LocalStorage antes de empacotar
-            if (typeof saveAllRows === "function") {
-                saveAllRows();
-            }
-
-            let backupData = {
-                "app": "Cronograma",
-                "version": "2.8.7",
-                list: [],      // O índice (LIST_KEY)
-                allData: {},   // Conteúdo das matérias (PREFIX)
-                configs: {},   // Configurações (CONFIG_PREFIX)
-                intervalos: {} // Intervalos de repetição
-            };
-
-            // 2. Captura a lista mestre de matérias
-            const listaRaw = localStorage.getItem(LIST_KEY);
-            if (listaRaw) {
-                try {
-                    backupData.list = JSON.parse(listaRaw);
-                } catch (e) {
-                    console.error("Erro ao ler lista de matérias:", e);
-                }
-            }
-
-            // 3. Varre apenas as matérias que existem na lista
-            backupData.list.forEach(materia => {
-                // Captura os itens/estudos (PREFIX + m)
-                const dadosMateria = localStorage.getItem(PREFIX + materia);
-                if (dadosMateria) {
-                    backupData.allData[materia] = JSON.parse(dadosMateria);
-                }
-
-                // Captura as configurações (CONFIG_PREFIX + m)
-                const configMateria = localStorage.getItem(CONFIG_PREFIX + materia);
-                if (configMateria) {
-                    backupData.configs[materia] = JSON.parse(configMateria);
-                }
-
-                // Captura intervalos específicos (padrão 'config_intervalo_dias_')
-                const intervalo = localStorage.getItem('config_intervalo_dias_' + materia);
-                if (intervalo) {
-                    backupData.intervalos[materia] = intervalo;
-                }
+            await saveAllRows();
+            const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            const allData = {}, configs = {};
+            list.forEach(m => {
+                allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+                configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "null");
             });
-
-            console.log("📦 Estrutura de backup consolidada");
-            return backupData;
+            return { app: "Cronograma", version: "2.8.7", list, allData, configs };
         }
 
         async function exportarManualParaDrive() {
