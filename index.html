@@ -1900,62 +1900,69 @@ Aqui é onde os dados vão aparecer de verdade.
 
                     <div class="tab-pane fade" id="features-pane" role="tabpanel" tabindex="0">
                         <div class="pe-2" style="max-height: 400px; overflow-y: auto;">
-                            <p><strong>Cronograma AI Edition</strong> é uma aplicação Full Stack projetada para
-                                organização inteligente e processamento de dados de alto nível.</p>
+                            <p><strong>Cronograma</strong> é uma ferramenta prática criada para facilitar a organização
+                                dos seus estudos, unindo automação inteligente com controle total dos seus dados.</p>
 
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-robot me-2"></i>Inteligência
-                                Artificial & OCR</h6>
+                            <h6 class="fw-bold text-primary mt-3">
+                                <i class="bi bi-robot me-2"></i>Inteligência Artificial & OCR
+                                <span class="badge rounded-pill bg-light text-dark border fw-normal"
+                                    style="font-size: 0.7em;">requer chave de contribuinte</span>
+                            </h6>
                             <ul class="small text-secondary">
                                 <li><strong>Importação Multi-formato:</strong> Suporte nativo para extração de dados via
-                                    IA de arquivos <strong>PDF, Word (.docx), Excel (.xlsx)</strong> e
-                                    <strong>Imagens (JPG, PNG)</strong>.
-                                </li>
+                                    IA de arquivos <strong>PDF, Word (.docx), Excel (.xlsx)</strong> e <strong>Imagens
+                                        (JPG, PNG)</strong>.</li>
                                 <li><strong>Engine Gemini 2.5 Flash:</strong> Utiliza modelos de linguagem de última
                                     geração para processamento ultrarrápido e estruturação automática de conteúdos.</li>
-                                <li><strong>Agrupamento Inteligente:</strong> A IA identifica e agrupa automaticamente
-                                    múltiplos temas para a mesma data, otimizando o espaço da sua tabela.</li>
+                                <li><strong>Integração Inteligente:</strong> A IA identifica temas e gera
+                                    automaticamente <strong>IDs únicos (UID)</strong> para cada aula, evitando
+                                    duplicatas em reimportações.</li>
                             </ul>
 
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-shield-check me-2"></i>Segurança e
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-shield-lock me-2"></i>Integridade e
                                 Resiliência</h6>
                             <ul class="small text-secondary">
-                                <li><strong>Snapshot de Emergência:</strong> Criação automática de um ponto de
-                                    restauração antes de cada importação, permitindo desfazer mudanças com um clique.
-                                </li>
-                                <li><strong>Merge de Matérias:</strong> Sistema inteligente para fundir e renomear
-                                    matérias sem duplicar conteúdos ou perder histórico.</li>
-                                <li><strong>Privacidade Soberana:</strong> Seus dados de estudo nunca saem do seu PC; o
-                                    backend processa apenas os arquivos brutos para conversão JSON.</li>
+                                <li><strong>Identidade Única (UID):</strong> Cada registro possui uma assinatura digital
+                                    (Hash SDBM) que garante a integridade dos dados durante mesclagens e backups.</li>
+                                <li><strong>Snapshot de Emergência:</strong> Ponto de restauração automático criado
+                                    antes de cada grande importação.</li>
                             </ul>
 
                             <h6 class="fw-bold text-primary mt-3"><i
                                     class="bi bi-layout-three-columns me-2"></i>Interface e Usabilidade</h6>
                             <ul class="small text-secondary">
-                                <li><strong>Bloqueio de Estado:</strong> Interface inteligente que desabilita campos de
-                                    edição quando não há matéria ativa, prevenindo erros de entrada.</li>
-                                <li><strong>Editor Rico (CKEditor 5):</strong> Suporte completo para formatação de texto
-                                    (negrito, cores, listas e links) nas observações.</li>
-                                <li><strong>Assistente Mobile:</strong> Ícone animado que sugere o modo paisagem em
-                                    telemóveis quando detecta tabelas largas.</li>
+                                <li><strong>Editor Rico (CKEditor 5):</strong> Suporte completo para formatação de
+                                    texto, listas de tarefas e links nas observações.</li>
+                                <li><strong>Sincronização de Estado:</strong> Bloqueio inteligente de campos e
+                                    salvamento automático garantem que a interface reflita sempre o estado real dos
+                                    dados.</li>
+                                <li><strong>Assistente Mobile:</strong> Sugestão dinâmica de modo paisagem para
+                                    visualização otimizada de tabelas em telemóveis.</li>
                             </ul>
 
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-magic me-2"></i>Automação e Datas</h6>
-                            <ul class="small text-secondary">
-                                <li><strong>Sugestão de Próxima Data:</strong> Cálculo automático baseado em intervalos
-                                    configuráveis (ex: revisões a cada 7 dias).</li>
-                                <li><strong>Destaque Cronológico:</strong> Coloração dinâmica das linhas para indicar
-                                    atrasos (rosa), tarefas de hoje (azul) ou datas futuras.</li>
-                                <li><strong>Atalhos de Teclado:</strong> Ganhe agilidade com <code>Ctrl + S</code> para
-                                    salvar tudo e <code>Ctrl + B</code> para novo conteúdo.</li>
-                            </ul>
-
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-hdd-network me-2"></i>Portabilidade
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-magic me-2"></i>Automação e Cronologia
                             </h6>
                             <ul class="small text-secondary">
-                                <li><strong>Backup em JSON:</strong> Exporte e restaure todo o seu ecossistema de
-                                    estudos com suporte a mesclagem ou substituição total.</li>
-                                <li><strong>Auto-Save:</strong> Sistema de salvaguarda que grava alterações
-                                    automaticamente a cada 5 minutos.</li>
+                                <li><strong>Ordenação Inteligente:</strong> Algoritmo nativo que organiza
+                                    automaticamente todas as matérias por ordem cronológica após qualquer importação ou
+                                    edição.</li>
+                                <li><strong>Destaque Dinâmico:</strong> Coloração em tempo real: rosa para atrasos, azul
+                                    para hoje e verde para o futuro.</li>
+                                <li><strong>Power Shortcuts:</strong> Use <code>Ctrl + S</code> para salvar e
+                                    <code>Ctrl + B</code> para adicionar conteúdo instantaneamente.
+                                </li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-cloud-check me-2"></i>Sincronização e
+                                Backup <span class="badge rounded-pill bg-light text-dark border fw-normal"
+                                    style="font-size: 0.7em;">requer chave de contribuinte</span></h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Google Drive Sync:</strong> Sincronização direta com sua nuvem pessoal para
+                                    manter o cronograma acessível em múltiplos dispositivos.</li>
+                                <li><strong>Backup Universal:</strong> Exportação em JSON compatível com sistemas de
+                                    mesclagem seletiva ou substituição total.</li>
+                                <li><strong>Privacidade Absoluta:</strong> Seus dados residem exclusivamente no seu
+                                    dispositivo; o processamento de IA é efêmero e focado na conversão de dados.</li>
                             </ul>
                         </div>
                     </div>
