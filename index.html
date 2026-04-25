@@ -2023,6 +2023,37 @@ Aqui é onde os dados vão aparecer de verdade.
         // 🚀 INÍCIO (Ao carregar a página)
         // ==========================================
         window.onload = () => {
+            // --- 🛠️ LÓGICA DE MIGRAÇÃO DE BANCO DE DADOS ---
+            const lastVersion = localStorage.getItem("app_version_installed");
+
+            // Se a versão instalada for diferente da atual (ou não existir)
+            if (lastVersion !== app_version) {
+                console.log(`Migrando banco de dados para a versão ${app_version}...`);
+
+                const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+                list.forEach(m => {
+                    const raw = localStorage.getItem(PREFIX + m);
+                    if (raw) {
+                        try {
+                            let data = JSON.parse(raw);
+                            // Força a geração de UID para cada item que não possui
+                            const updated = data.map(item => {
+                                item.uid = item.uid || gerarUID(item);
+                                return item;
+                            });
+                            localStorage.setItem(PREFIX + m, JSON.stringify(updated));
+                        } catch (e) {
+                            console.error(`Erro ao migrar matéria ${m}:`, e);
+                        }
+                    }
+                });
+
+                // Marca que esta versão já foi processada
+                localStorage.setItem("app_version_installed", app_version);
+                console.log("Migração concluída com sucesso.");
+            }
+            // ----------------------------------------------
+
             const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
             if (chave && chave.includes("_key_")) {
                 const savedToken = sessionStorage.getItem('google_access_token');
@@ -2426,9 +2457,11 @@ Aqui é onde os dados vão aparecer de verdade.
             const tableBody = document.getElementById('tableBody');
             const inputTitulo = document.getElementById('materiaTitulo');
 
+            // 1. Salva a matéria anterior se houver mudanças pendentes
             if (currentMateria && hasUnsavedChanges) {
                 await saveAllRows();
             } else {
+                // Limpa editores ativos para evitar vazamento de memória
                 for (const id in activeEditors) {
                     if (activeEditors[id]) {
                         await activeEditors[id].destroy();
@@ -2440,6 +2473,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             currentMateria = name;
 
+            // 2. Tratamento para seleção vazia
             if (!name || name.trim() === "") {
                 localStorage.removeItem('last_active');
                 tableBody.innerHTML = setInitialTableContent();
@@ -2450,31 +2484,16 @@ Aqui é onde os dados vão aparecer de verdade.
                 return;
             }
 
-            // --- 🚀 LÓGICA DE MIGRAÇÃO AUTOMÁTICA DE UID ---
-            const rawData = localStorage.getItem(PREFIX + name);
-            if (rawData) {
-                let data = JSON.parse(rawData);
-                // Verifica se ao menos um item da lista está sem UID
-                const precisaDeMigracao = data.some(item => !item.uid);
-
-                if (precisaDeMigracao) {
-                    console.log(`Migrando dados de "${name}" para o novo formato de UID...`);
-                    data = data.map(item => {
-                        if (!item.uid) item.uid = gerarUID(item);
-                        return item;
-                    });
-                    // Salva de volta no storage imediatamente para consolidar a migração
-                    localStorage.setItem(PREFIX + name, JSON.stringify(data));
-                }
-            }
-            // -----------------------------------------------
-
+            // 3. Persistência do estado de navegação
             localStorage.setItem('last_active', name);
             if (inputTitulo) inputTitulo.value = name;
 
-            loadColumnNames();
-            loadIntervalConfig();
-            loadRows();
+            // 4. Carregamento dos dados da matéria selecionada
+            loadColumnNames(); // Carrega nomes das colunas e visibilidade
+            loadIntervalConfig(); // Carrega o intervalo de dias
+            loadRows(); // Renderiza as linhas na tabela
+
+            // 5. Atualização da Interface
             updateSelect();
             updateTabName();
             checkInterfaceState();
