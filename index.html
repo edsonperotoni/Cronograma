@@ -2059,11 +2059,11 @@ Aqui é onde os dados vão aparecer de verdade.
 
         // --- 🔑 GERADOR DE IDENTIDADE ÚNICA (HASH SDBM) ---
         function gerarUID(item) {
-            if (!item || !item.data || !item.conteudo) return null;
+            if (!item || !item.data) return null;
 
-            // Normalização: Data + Conteúdo (sem acentos, minúsculo, sem símbolos)
             const dataPart = item.data.trim();
-            const conteudoPart = item.conteudo
+            // Usa "vazio" caso o conteúdo não exista para garantir o hash
+            const conteudoPart = (item.conteudo || "vazio")
                 .toLowerCase()
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "")
@@ -2072,14 +2072,11 @@ Aqui é onde os dados vão aparecer de verdade.
 
             const stringParaHash = `${dataPart}_${conteudoPart}`;
 
-            // Algoritmo SDBM
             let hash = 0;
             for (let i = 0; i < stringParaHash.length; i++) {
                 const char = stringParaHash.charCodeAt(i);
                 hash = char + (hash << 6) + (hash << 16) - hash;
             }
-
-            // Retorna Base 36 (alfanumérico curto)
             return `uid_${(hash >>> 0).toString(36)}`;
         }
 
@@ -2572,25 +2569,35 @@ Aqui é onde os dados vão aparecer de verdade.
             setUnsavedChanges(true);
         }
 
+        // --- 💾 SALVAR DADOS (Com gravação física do UID) ---
         function saveData() {
             if (!currentMateria) return;
-            const items = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
+            const tableRows = Array.from(document.querySelectorAll('#tableBody tr'));
+
+            const items = tableRows.map(tr => {
                 const rowId = tr.id;
                 const vObs = tr.querySelector('.view-obs');
-                if (!vObs) return null;
-                return {
-                    data: tr.querySelector('.val-data').value,
-                    conteudo: tr.querySelector('.val-conteudo').value,
-                    t: tr.querySelector('.val-t').checked,
-                    e1: tr.querySelector('.val-e1').checked,
-                    e2: tr.querySelector('.val-e2').checked,
-                    e3: tr.querySelector('.val-e3').checked,
-                    e4: tr.querySelector('.val-e4').checked,
-                    e5: tr.querySelector('.val-e5').checked,
-                    e6: tr.querySelector('.val-e6').checked,
+                const valData = tr.querySelector('.val-data')?.value;
+                if (!vObs || !valData) return null;
+
+                const rowData = {
+                    data: valData,
+                    conteudo: tr.querySelector('.val-conteudo')?.value || "",
+                    t: tr.querySelector('.val-t')?.checked || false,
+                    e1: tr.querySelector('.val-e1')?.checked || false,
+                    e2: tr.querySelector('.val-e2')?.checked || false,
+                    e3: tr.querySelector('.val-e3')?.checked || false,
+                    e4: tr.querySelector('.val-e4')?.checked || false,
+                    e5: tr.querySelector('.val-e5')?.checked || false,
+                    e6: tr.querySelector('.val-e6')?.checked || false,
                     obs: activeEditors[rowId] ? activeEditors[rowId].getData() : vObs.innerHTML
                 };
+
+                // GERA E GRAVA O UID NO OBJETO (Crítico para exportação)
+                rowData.uid = gerarUID(rowData);
+                return rowData;
             }).filter(item => item !== null && (item.conteudo.trim() !== "" || item.obs.replace(/<[^>]*>|&nbsp;|\s+/g, '').trim() !== ""));
+
             items.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
         }
@@ -2623,7 +2630,7 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         async function saveAllRows() {
-            if (!currentMateria || !hasUnsavedChanges) return;
+            if (!currentMateria) return;
             Object.keys(activeEditors).forEach(id => {
                 if (activeEditors[id]) activeEditors[id].destroy().then(() => delete activeEditors[id]);
             });
@@ -2674,68 +2681,119 @@ Aqui é onde os dados vão aparecer de verdade.
 
         function executeRowDeletion(tr) { tr.remove(); saveData(); rowToDelete = null; }
 
+
         function updateMateriaName() {
-            debugger
             const input = document.getElementById('materiaTitulo');
             const newVal = input.value.trim();
             const oldVal = currentMateria;
+
             if (!newVal || newVal === oldVal) return;
+
             let list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            const nomeExistente = list.find(m => m.toLowerCase() === newVal.toLowerCase());
 
-            if (nomeExistente && nomeExistente.toLowerCase() === oldVal.toLowerCase()) {
-                list = list.map(m => m === oldVal ? newVal : m);
-                localStorage.setItem(LIST_KEY, JSON.stringify(list));
-                const data = localStorage.getItem(PREFIX + oldVal);
-                const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
-                localStorage.setItem(PREFIX + newVal, data);
-                localStorage.setItem(CONFIG_PREFIX + newVal, config);
-                if (newVal !== oldVal) {
-                    localStorage.removeItem(PREFIX + oldVal);
-                    localStorage.removeItem(CONFIG_PREFIX + oldVal);
-                }
-                currentMateria = newVal;
-            } else if (nomeExistente) {
-                if (!confirm(`Deseja MESCLAR "${oldVal}" em "${nomeExistente}"?`)) { input.value = oldVal; return; }
-                let dadosAntigos = JSON.parse(localStorage.getItem(PREFIX + oldVal) || "[]");
-                let dadosDestino = JSON.parse(localStorage.getItem(PREFIX + nomeExistente) || "[]");
+            // Busca normalizada para detectar colisões de "Case" (Ex: Inglês vs INGLÊS)
+            const nomeConflitante = list.find(m => m.toLowerCase() === newVal.toLowerCase());
 
-                // Mesclagem inteligente via Hash UID
-                dadosAntigos.forEach(itemAntigo => {
-                    const uidAntigo = gerarUID(itemAntigo);
-                    if (!uidAntigo) return;
-                    const idx = dadosDestino.findIndex(d => gerarUID(d) === uidAntigo);
-                    if (idx !== -1) dadosDestino[idx] = itemAntigo;
-                    else dadosDestino.push(itemAntigo);
-                });
-                localStorage.setItem(PREFIX + nomeExistente, JSON.stringify(dadosDestino));
-                localStorage.removeItem(PREFIX + oldVal);
-                localStorage.removeItem(CONFIG_PREFIX + oldVal);
-                list = list.filter(m => m !== oldVal);
-                localStorage.setItem(LIST_KEY, JSON.stringify(list));
-                currentMateria = nomeExistente;
-            } else {
-                const data = localStorage.getItem(PREFIX + oldVal);
-                const config = localStorage.getItem(CONFIG_PREFIX + oldVal);
-                localStorage.setItem(PREFIX + newVal, data);
-                localStorage.setItem(CONFIG_PREFIX + newVal, config);
-                localStorage.removeItem(PREFIX + oldVal);
-                localStorage.removeItem(CONFIG_PREFIX + oldVal);
-                list = list.map(m => m === oldVal ? newVal : m);
-                localStorage.setItem(LIST_KEY, JSON.stringify(list));
-                currentMateria = newVal;
+            // --- 1. EXTRAÇÃO TOTAL PARA MEMÓRIA (RAM) ---
+            // Pegamos tudo o que existe nas chaves envolvidas ANTES de deletar qualquer coisa
+            const dadosOrigem = localStorage.getItem(PREFIX + oldVal);
+            const configOrigem = localStorage.getItem(CONFIG_PREFIX + oldVal);
+            const interOrigem = localStorage.getItem('config_intervalo_dias_' + oldVal);
+
+            let dadosDestino = null;
+            let configDestino = null;
+
+            if (nomeConflitante) {
+                dadosDestino = localStorage.getItem(PREFIX + nomeConflitante);
+                configDestino = localStorage.getItem(CONFIG_PREFIX + nomeConflitante);
             }
-            localStorage.setItem('last_active', currentMateria);
-            updateSelect(); loadRows(); exibirAlerta("Matéria atualizada!", "success");
+
+            // --- 2. CONFIRMAÇÃO DE MESCLAGEM ---
+            // Se não for apenas mudança de Case (ex: Bio -> BIO), e o destino já existe com outro nome
+            if (nomeConflitante && nomeConflitante.toLowerCase() !== oldVal.toLowerCase()) {
+                if (!confirm(`A matéria "${nomeConflitante}" já existe. Deseja MESCLAR os conteúdos?`)) {
+                    input.value = oldVal;
+                    return;
+                }
+            }
+
+            // --- 3. LIMPEZA TOTAL DO ARQUIVO MORTO ---
+            // Removemos as chaves antigas do LocalStorage. O dado está seguro nas variáveis acima.
+            localStorage.removeItem(PREFIX + oldVal);
+            localStorage.removeItem(CONFIG_PREFIX + oldVal);
+            localStorage.removeItem('config_intervalo_dias_' + oldVal);
+
+            if (nomeConflitante) {
+                localStorage.removeItem(PREFIX + nomeConflitante);
+                localStorage.removeItem(CONFIG_PREFIX + nomeConflitante);
+            }
+
+            // --- 4. PROCESSAMENTO LOGÍSTICO ---
+            let arrayFinal = JSON.parse(dadosOrigem || "[]");
+
+            if (dadosDestino) {
+                let arrayDestino = JSON.parse(dadosDestino || "[]");
+
+                // Mesclagem via UID para evitar duplicatas
+                arrayFinal.forEach(itemOrigem => {
+                    const uidOrigem = itemOrigem.uid || gerarUID(itemOrigem);
+                    const idx = arrayDestino.findIndex(d => (d.uid || gerarUID(d)) === uidOrigem);
+
+                    if (idx !== -1) {
+                        arrayDestino[idx] = itemOrigem; // Sobrescreve com o dado mais recente
+                    } else {
+                        arrayDestino.push(itemOrigem); // Adiciona novo
+                    }
+                });
+                arrayFinal = arrayDestino;
+            }
+
+            // --- 5. GRAVAÇÃO FINAL ---
+            // Agora gravamos na chave com a grafia NOVA desejada pelo usuário
+            localStorage.setItem(PREFIX + newVal, JSON.stringify(arrayFinal));
+
+            // Preservamos a configuração (preferimos a do destino se houver, ou a da origem)
+            const configParaSalvar = configDestino || configOrigem;
+            if (configParaSalvar) localStorage.setItem(CONFIG_PREFIX + newVal, configParaSalvar);
+            if (interOrigem) localStorage.setItem('config_intervalo_dias_' + newVal, interOrigem);
+
+            // --- 6. ATUALIZAÇÃO DA LISTA MESTRE ---
+            // Removemos qualquer rastro dos nomes antigos (independente de case) e add o novo
+            list = list.filter(m => m.toLowerCase() !== oldVal.toLowerCase() && m.toLowerCase() !== newVal.toLowerCase());
+            list.push(newVal);
+            list = [...new Set(list)].sort();
+
+            localStorage.setItem(LIST_KEY, JSON.stringify(list));
+            localStorage.setItem('last_active', newVal);
+            currentMateria = newVal;
+
+            // --- 7. REFRESH DA UI ---
+            updateSelect();
+            loadRows();
+            exibirAlerta("Matéria atualizada com sucesso!", "success");
         }
 
         function confirmarNovaMateria() {
             const nom = document.getElementById('novoNomeMateria').value.trim();
             if (nom) {
                 let l = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-                if (!l.includes(nom)) { l.push(nom); localStorage.setItem(LIST_KEY, JSON.stringify(l)); }
-                switchMateria(nom);
+
+                // Verifica se o nome já existe (ignorando maiúsculas/minúsculas)
+                const existe = l.some(m => m.toLowerCase() === nom.toLowerCase());
+
+                if (!existe) {
+                    l.push(nom);
+                    localStorage.setItem(LIST_KEY, JSON.stringify(l));
+                    switchMateria(nom);
+                } else {
+                    // Se já existe, apenas troca para a matéria existente em vez de criar duplicada
+                    const nomeOriginal = l.find(m => m.toLowerCase() === nom.toLowerCase());
+                    exibirAlerta(`A matéria "${nomeOriginal}" já existe.`, "warning");
+                    switchMateria(nomeOriginal);
+                }
+
                 bootstrap.Modal.getInstance(document.getElementById('modalNovaMateria')).hide();
+                document.getElementById('novoNomeMateria').value = ""; // Limpa o campo
             }
         }
 
@@ -2892,39 +2950,47 @@ Aqui é onde os dados vão aparecer de verdade.
             reader.readAsText(input.files[0]);
         }
 
+        // --- 📥 CONFIRMAR IMPORTAÇÃO (Unificado com lógica UID) ---
         function confirmImport(mode) {
             if (!tempImportData) return;
             criarSnapshotEmergencial();
-            let currentList = mode === 'replace' ? [] : JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-            if (mode === 'replace' && !confirm(`Substituir todos os dados atuais pelo backup?`)) return;
+
+            let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
             if (mode === 'replace') {
-                JSON.parse(localStorage.getItem(LIST_KEY) || "[]").forEach(m => {
-                    localStorage.removeItem(PREFIX + m); localStorage.removeItem(CONFIG_PREFIX + m);
+                if (!confirm("Isso apagará tudo. Continuar?")) return;
+                currentList.forEach(m => {
+                    localStorage.removeItem(PREFIX + m);
+                    localStorage.removeItem(CONFIG_PREFIX + m);
                 });
                 currentList = tempImportData.list || [];
-            } else {
-                (tempImportData.list || []).forEach(m => { if (!currentList.includes(m)) currentList.push(m); });
-            }
-            // 3. Importação Segura dos Dados das Matérias (allData)
-            if (tempImportData.allData) {
+
                 for (let m in tempImportData.allData) {
-                    // Garante que não estamos salvando algo nulo
-                    const data = tempImportData.allData[m];
-                    if (data) {
-                        localStorage.setItem(PREFIX + m, JSON.stringify(data));
-                    }
+                    // FORCE UPDATE UIDS NA IMPORTAÇÃO
+                    const processados = tempImportData.allData[m].map(item => {
+                        item.uid = item.uid || gerarUID(item);
+                        return item;
+                    });
+                    localStorage.setItem(PREFIX + m, JSON.stringify(processados));
+                    if (tempImportData.configs?.[m]) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
+                }
+            } else {
+                // Lógica de MERGE
+                for (let m in tempImportData.allData) {
+                    if (!currentList.includes(m)) currentList.push(m);
+                    let locais = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+                    tempImportData.allData[m].forEach(imp => {
+                        const uid = imp.uid || gerarUID(imp);
+                        imp.uid = uid;
+                        const idx = locais.findIndex(d => (d.uid || gerarUID(d)) === uid);
+                        if (idx !== -1) locais[idx] = imp;
+                        else locais.push(imp);
+                    });
+                    localStorage.setItem(PREFIX + m, JSON.stringify(locais));
                 }
             }
-
-            // 4. Importação Segura das Configurações de Coluna (configs)
-            // Se o backup for antigo e não tiver 'configs', ele apenas pula
-            if (tempImportData.configs) {
-                for (let m in tempImportData.configs) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
-            }
-            localStorage.setItem(LIST_KEY, JSON.stringify(currentList));
-            exibirAlerta("Importação concluída!", "success");
-            dispararAlertaReload(2000, 1);
+            localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
+            dispararAlertaReload(1000, 1);
         }
 
         function prepararEscolhaImport() {
@@ -3047,35 +3113,62 @@ Aqui é onde os dados vão aparecer de verdade.
 
         function executarImportacaoSeletiva() {
             const selecionados = document.querySelectorAll('.check-item-import:checked');
-            if (!selecionados.length) return;
-            if (!confirm(`Importar ${selecionados.length} itens?`)) return;
+            if (!selecionados.length) { exibirAlerta("Selecione ao menos um item.", "warning"); return; }
+
+            if (!confirm(`Importar ${selecionados.length} itens selecionados?`)) return;
+
+            // Snapshot de segurança antes de alterar o banco
             criarSnapshotEmergencial();
+
             let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
             selecionados.forEach(cb => {
                 const materia = cb.getAttribute('data-materia');
                 const index = cb.getAttribute('data-index');
-                const itemParaImportar = tempImportData.allData?.[materia]?.[index];
-                const novoUID = gerarUID(itemParaImportar);
 
-                if (!novoUID) return;
+                // Recupera o item vindo da IA ou arquivo
+                const itemParaImportar = tempImportData.allData?.[materia]?.[index];
+
+                if (!itemParaImportar || typeof itemParaImportar.conteudo === 'undefined') return;
+
+                // 1. Garantia de que o item ganhe um UID (essencial para dados vindos da IA)
+                const novoUID = itemParaImportar.uid || gerarUID(itemParaImportar);
+                itemParaImportar.uid = novoUID;
+
+                // 2. Garantia da matéria na lista mestra
                 if (!currentList.includes(materia)) {
                     currentList.push(materia);
-                    if (tempImportData.configs?.[materia]) localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(tempImportData.configs[materia]));
+                    if (tempImportData.configs?.[materia]) {
+                        localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(tempImportData.configs[materia]));
+                    }
                 }
 
                 let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
 
-                // LÓGICA UPSERT VIA HASH UID
-                const idx = dadosLocais.findIndex(d => gerarUID(d) === novoUID);
-                const itemSanitizado = { ...itemParaImportar, data: filtrarHTML(itemParaImportar.data), conteudo: filtrarHTML(itemParaImportar.conteudo) };
+                // 3. Lógica de Upsert baseada no UID gerado
+                const idxExistente = dadosLocais.findIndex(d => (d.uid || gerarUID(d)) === novoUID);
 
-                if (idx !== -1) dadosLocais[idx] = itemSanitizado;
-                else dadosLocais.push(itemSanitizado);
+                // Sanitização dos textos para evitar lixo HTML
+                const itemSanitizado = {
+                    ...itemParaImportar,
+                    data: filtrarHTML(itemParaImportar.data),
+                    conteudo: filtrarHTML(itemParaImportar.conteudo)
+                };
+
+                if (idxExistente !== -1) {
+                    // Sobrescreve se já existir
+                    dadosLocais[idxExistente] = itemSanitizado;
+                } else {
+                    // Adiciona se for novo
+                    dadosLocais.push(itemSanitizado);
+                }
 
                 localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
             });
-            localStorage.setItem(LIST_KEY, JSON.stringify([...new Set([...JSON.parse(localStorage.getItem(LIST_KEY) || "[]"), ...currentList])]));
+
+            // Atualiza a lista mestra sem duplicatas
+            localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
+
             dispararAlertaReload(1000, 1);
         }
 
