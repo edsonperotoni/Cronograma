@@ -2425,6 +2425,7 @@ Aqui é onde os dados vão aparecer de verdade.
         async function switchMateria(name) {
             const tableBody = document.getElementById('tableBody');
             const inputTitulo = document.getElementById('materiaTitulo');
+
             if (currentMateria && hasUnsavedChanges) {
                 await saveAllRows();
             } else {
@@ -2436,7 +2437,9 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
                 document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
             }
+
             currentMateria = name;
+
             if (!name || name.trim() === "") {
                 localStorage.removeItem('last_active');
                 tableBody.innerHTML = setInitialTableContent();
@@ -2446,8 +2449,29 @@ Aqui é onde os dados vão aparecer de verdade.
                 updateSelect();
                 return;
             }
+
+            // --- 🚀 LÓGICA DE MIGRAÇÃO AUTOMÁTICA DE UID ---
+            const rawData = localStorage.getItem(PREFIX + name);
+            if (rawData) {
+                let data = JSON.parse(rawData);
+                // Verifica se ao menos um item da lista está sem UID
+                const precisaDeMigracao = data.some(item => !item.uid);
+
+                if (precisaDeMigracao) {
+                    console.log(`Migrando dados de "${name}" para o novo formato de UID...`);
+                    data = data.map(item => {
+                        if (!item.uid) item.uid = gerarUID(item);
+                        return item;
+                    });
+                    // Salva de volta no storage imediatamente para consolidar a migração
+                    localStorage.setItem(PREFIX + name, JSON.stringify(data));
+                }
+            }
+            // -----------------------------------------------
+
             localStorage.setItem('last_active', name);
             if (inputTitulo) inputTitulo.value = name;
+
             loadColumnNames();
             loadIntervalConfig();
             loadRows();
