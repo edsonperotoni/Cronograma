@@ -2975,6 +2975,7 @@ Aqui é onde os dados vão aparecer de verdade.
                     if (tempImportData.configs?.[m]) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
                 }
             } else {
+                if (!confirm("Isso irá inserir conteúdos novos e sobrescrever os existentes. Continuar?")) return;
                 // Lógica de MERGE
                 for (let m in tempImportData.allData) {
                     if (!currentList.includes(m)) currentList.push(m);
