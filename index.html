@@ -2581,7 +2581,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 if (!vObs || !valData) return null;
 
                 const rowData = {
-                    data: valData,
+                    data: valData || new Date().toISOString().split('T')[0],
                     conteudo: tr.querySelector('.val-conteudo')?.value || "",
                     t: tr.querySelector('.val-t')?.checked || false,
                     e1: tr.querySelector('.val-e1')?.checked || false,
@@ -2887,9 +2887,9 @@ Aqui é onde os dados vão aparecer de verdade.
             const btImport = document.getElementById('btn-google-import');
 
             if (chave && chave.includes("_key_")) {
-                btnAuth.style.display = 'block;'
-                btExport.style.display = 'block;'
-                btImport.style.display = 'block;'
+                btnAuth.style.display = 'block';
+                btExport.style.display = 'block';
+                btImport.style.display = 'block';
 
                 if (accessToken) {
                     // Estado: Conectado
@@ -2971,6 +2971,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         item.uid = item.uid || gerarUID(item);
                         return item;
                     });
+                    processados.sort((a, b) => new Date(a.data) - new Date(b.data));
                     localStorage.setItem(PREFIX + m, JSON.stringify(processados));
                     if (tempImportData.configs?.[m]) localStorage.setItem(CONFIG_PREFIX + m, JSON.stringify(tempImportData.configs[m]));
                 }
@@ -2987,6 +2988,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         if (idx !== -1) locais[idx] = imp;
                         else locais.push(imp);
                     });
+                    locais.sort((a, b) => new Date(a.data) - new Date(b.data));
                     localStorage.setItem(PREFIX + m, JSON.stringify(locais));
                 }
             }
@@ -3164,8 +3166,12 @@ Aqui é onde os dados vão aparecer de verdade.
                     dadosLocais.push(itemSanitizado);
                 }
 
+                // ORDENAÇÃO ANTES DE GRAVAR:
+                dadosLocais.sort((a, b) => new Date(a.data) - new Date(b.data));
+
                 localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
             });
+
 
             // Atualiza a lista mestra sem duplicatas
             localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
