@@ -1,6 +1,6 @@
-# 📚 Cronograma de Matérias v2.8.7 — AI Edition 🚀
+# 📚 Cronograma de Matérias v3.0.0 🚀
 
-Uma aplicação **Full Stack** projetada para organização robusta e inteligente de rotinas de estudo. O projeto evoluiu de uma ferramenta estática para um ecossistema completo com processamento de documentos via IA e armazenamento resiliente.
+Uma aplicação projetada para organização de rotinas de estudo.
 
 ---
 
@@ -16,7 +16,7 @@ Uma aplicação **Full Stack** projetada para organização robusta e inteligent
 
 ### 🤖 Inteligência Artificial & OCR
 * **Importação Multi-formato:** Suporte nativo para extração de dados via IA de arquivos **PDF, Word (.docx), Excel (.xlsx, .xls), CSV ** e **Imagens (JPG/PNG)**.
-* **Engine Gemini 2.0 Flash:** Processamento ultrarrápido de documentos para geração automática de cronogramas.
+* **Engine Gemini 2.5 Flash:** Processamento ultrarrápido de documentos para geração automática de cronogramas (requer chave de contribuinte).
 * **Edição Rica com CKEditor 5:** A coluna de observações utiliza o CKEditor para permitir formatação avançada (negrito, cores, listas e links).
 * **Cálculo Automático de Próxima Data:** Sugestão inteligente de datas baseada em intervalos configuráveis (ex: 7 dias), automatizando o planejamento.
 * **Backend Python (FastAPI):** Tradutor binário que converte planilhas complexas em Markdown para leitura precisa da IA.
@@ -24,6 +24,7 @@ Uma aplicação **Full Stack** projetada para organização robusta e inteligent
 ### 🛡️ Resiliência e Segurança de Dados
 * **Persistência Local:** Utiliza a **LocalStorage API**. Seus dados permanecem no seu navegador, garantindo privacidade total (os dados não saem do seu PC).
 * **Backup em JSON:** Sistema de exportação e importação de banco de dados para evitar perda de informações e permitir portabilidade.
+* **Backup para Google Drive:** Exporta e importa dados do Google Drive do usuário (requer chave de contribuinte).
 
 * **Snapshot de Emergência:** O sistema cria um ponto de restauração automático antes de qualquer importação de IA. Se algo der errado, o "Botão de Pânico" restaura tudo em um clique.
 * **Merge Inteligente:** Capacidade de renomear e fundir matérias, unindo conteúdos de nomes duplicados sem perder dados.

@@ -1893,7 +1893,7 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
-                            Versão 2.8.7
+                            Versão <label id="app-version"></label>
                         </span>
                         <div class="mt-3" id="contador-container"></div>
                     </div>
@@ -2003,7 +2003,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
     <script>
         // --- 📂 VARIÁVEIS GLOBAIS ---
-        let app_version = "2.8.7";
+        let app_version = "3.0.0";
         let activeEditors = {};
         let currentMateria = "";
         let tempImportData = null;
@@ -2084,6 +2084,9 @@ Aqui é onde os dados vão aparecer de verdade.
                 const containers = document.querySelectorAll('#contador-container');
                 containers.forEach(div => div.innerHTML = htmlContador);
             }
+
+            const label_app_version = document.getElementById("app-version");
+            label_app_version.innerText = app_version;
 
         };
 
@@ -2955,6 +2958,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 btExport.style.display = 'none;'
                 btImport.style.display = 'none;'
             }
+
         }
 
         function setUnsavedChanges(h) {
@@ -2970,7 +2974,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
                 configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "null");
             });
-            const blob = new Blob([JSON.stringify({ app: "Cronograma", version: "2.8.7", list, allData, configs })], { type: "application/json" });
+            const blob = new Blob([JSON.stringify({ app: "Cronograma", version: app_version, list, allData, configs })], { type: "application/json" });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `backup_cronograma_${new Date().toISOString().slice(0, 10)}.json`;
@@ -3305,7 +3309,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
                 configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "null");
             });
-            return { app: "Cronograma", version: "2.8.7", list, allData, configs };
+            return { app: "Cronograma", version: app_version, list, allData, configs };
         }
 
         async function exportarManualParaDrive() {
