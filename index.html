@@ -2917,9 +2917,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
 
         function checkInterfaceState() {
-
-            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
             const hasM = !!currentMateria;
 
             // 1. Botões básicos da tabela (Salvar, Editar, Excluir)
@@ -2928,32 +2926,35 @@ Aqui é onde os dados vão aparecer de verdade.
                 if (el) el.disabled = !hasM;
             });
 
-            // 2. Botão de Adicionar Linha e Campo de Título
             const btnAdd = document.querySelector('button[onclick="addEmptyRow()"]');
             if (btnAdd) btnAdd.disabled = !hasM;
 
             const tit = document.getElementById('materiaTitulo');
             if (tit) tit.disabled = !hasM;
 
+            // 2. Elementos que requerem Chave de Contribuinte
             const btnAuth = document.getElementById('btn-google-auth');
             const btExport = document.getElementById('btn-google-export');
             const btImport = document.getElementById('btn-google-import');
+            const btnIaContainer = document.getElementById('container-btn-ia'); // Se você tiver um wrapper para o botão de IA
 
-            if (chave && chave.includes("_key_")) {
-                btnAuth.style.display = 'block';
-                btExport.style.display = 'block';
-                btImport.style.display = 'block';
+            if (chave.trim() !== "" && chave.includes("_key_")) {
+                // MOSTRAR elementos de contribuição
+                if (btnAuth) btnAuth.style.setProperty('display', 'block', 'important');
+                if (btExport) btExport.style.setProperty('display', 'block', 'important');
+                if (btImport) btImport.style.setProperty('display', 'block', 'important');
+                // Se o botão de IA estiver no HTML com um ID específico:
+                const btnIa = document.querySelector('button[onclick="acionarIA()"]');
+                if (btnIa) btnIa.style.display = 'inline-block';
 
+                // Lógica de cores do Token Google
                 if (accessToken) {
-                    // Estado: Conectado
                     btnAuth.classList.replace('text-dark', 'text-primary');
                     btnAuth.title = "Google Drive Conectado";
                     btnAuth.style.backgroundColor = "#d4edda";
                     btExport.disabled = false;
                     btImport.disabled = false;
-
                 } else {
-                    // Estado: Desconectado
                     btnAuth.classList.replace('text-primary', 'text-dark');
                     btnAuth.title = "Conectar Google Drive";
                     btnAuth.style.backgroundColor = "";
@@ -2961,11 +2962,14 @@ Aqui é onde os dados vão aparecer de verdade.
                     btImport.disabled = true;
                 }
             } else {
-                btnAuth.style.display = 'none;'
-                btExport.style.display = 'none;'
-                btImport.style.display = 'none;'
-            }
+                // ESCONDER elementos de contribuição (AQUI ESTAVA O ERRO)
+                if (btnAuth) btnAuth.style.display = 'none';
+                if (btExport) btExport.style.display = 'none';
+                if (btImport) btImport.style.display = 'none';
 
+                const btnIa = document.querySelector('button[onclick="acionarIA()"]');
+                if (btnIa) btnIa.style.display = 'none';
+            }
         }
 
         function setUnsavedChanges(h) {
