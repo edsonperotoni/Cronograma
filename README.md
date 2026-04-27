@@ -1,4 +1,4 @@
-# 📚 Cronograma de Matérias v3.0.0 🚀
+# 📚 Cronograma de Matérias v3.0.1 🚀
 
 Uma aplicação projetada para organização de rotinas de estudo.
 
