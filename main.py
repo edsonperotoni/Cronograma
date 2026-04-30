@@ -456,6 +456,8 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         # 5. Sucesso: Incrementa uso e salva banco
         try:
             user_ref.update({"uso": firestore.Increment(1)})
+            uso_atual = user_data.get("uso", 0)
+            limite = user_data.get("limite", 0)
             print(
                 f"📊 Uso incrementado para {user_data['nome']}: {uso_atual + 1}/{limite}"
             )
