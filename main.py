@@ -13,12 +13,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # SDK Moderno
 from google import genai
+from google.cloud import firestore
 from google.genai import types
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from pydantic import BaseModel
 from PyPDF2 import PdfReader
+
+# O ID do projeto
+PROJECT_ID = "cronograma-backend"
+
+# Inicializa o cliente de forma limpa
+# Localmente: ele usará o ADC
+# Na Nuvem: ele usará a conta de serviço do Cloud Run
+db_firestore = firestore.Client(project=PROJECT_ID)
 
 app = FastAPI()
 
@@ -45,21 +54,100 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# --- BANCO DE DADOS LOCAL (JSON) ---
-DB_FILE = "contribuintes_db.json"
+
+async def obter_email_google(token: str):
+    """
+    Verifica o token com o Google e retorna o e-mail do dono do token.
+    Utiliza httpx para comunicação assíncrona.
+    """
+    if not token:
+        return None
+
+    import httpx
+
+    # Limpeza de segurança para evitar caracteres indesejados no token
+    token = token.replace('"', "").replace("'", "").strip()
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Passar o token via Header de Autorização é o padrão mais seguro e moderno,
+            # mas mantemos o fallback de params se o seu ambiente exigir.
+            url = "https://www.googleapis.com/oauth2/v3/userinfo"
+            params = {"access_token": token}
+
+            response = await client.get(url, params=params)
+
+            if response.status_code != 200:
+                print(f"❌ Erro Google Auth ({response.status_code}): {response.text}")
+                return None
+
+            dados = response.json()
+            email = dados.get("email")
+
+            if email:
+                return email.lower().strip()
+
+            return None
+
+    except httpx.RequestError as exc:
+        print(f"💥 Erro de rede ao consultar Google: {exc}")
+        return None
+    except Exception as e:
+        print(f"💥 Erro inesperado na validação do token: {e}")
+        return None
 
 
-def carregar_db():
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
+async def validar_usuario(authorization: str, exige_cota: bool = False):
+    """
+    Centraliza todas as validações de segurança e regras de negócio.
+    Retorna os dados do usuário e a referência do documento se tudo estiver OK.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Chave não fornecida.")
+
+    # 1. Busca no Firestore
+    user_ref = db_firestore.collection("usuarios").document(authorization)
+    user_doc = user_ref.get()
+
+    if not user_doc.exists:
+        print(f"🚫 Chave inválida: {authorization[:10]}...")
+        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
+
+    user_data = user_doc.to_dict()
+
+    # 2. Verificação de Ativo
+    if not user_data.get("ativo", True):
+        raise HTTPException(
+            status_code=403, detail="Esta chave de contribuinte está desativada."
+        )
+
+    # 3. Verificação de Expiração (Robusta para String ou Datetime)
+    raw_expira = user_data.get("expira", "2026-12-31")
+    if isinstance(raw_expira, str):
+        data_expira = datetime.datetime.strptime(raw_expira, "%Y-%m-%d")
     else:
-        return {}
+        # Garante que o datetime do Firestore seja 'naive' (sem fuso) para comparar
+        data_expira = (
+            raw_expira.replace(tzinfo=None)
+            if hasattr(raw_expira, "replace")
+            else raw_expira
+        )
 
+    if datetime.datetime.now() > data_expira:
+        print(f"⚠️ Chave expirada: {user_data['nome']}")
+        raise HTTPException(
+            status_code=403, detail="Sua chave de contribuinte expirou."
+        )
 
-def salvar_db(dados):
-    with open(DB_FILE, "w") as f:
-        json.dump(dados, f, indent=4)
+    # 4. Verificação de Cota (Opcional, pois o sync não gasta cota, só o processar)
+    if exige_cota:
+        uso = user_data.get("uso", 0)
+        limite = user_data.get("limite", 0)
+        if uso >= limite:
+            print(f"🚫 Cota esgotada: {user_data['nome']}")
+            raise HTTPException(status_code=403, detail="Sua cota de IA chegou ao fim.")
+
+    return user_data, user_ref
 
 
 # Inicializa o Cliente Google GenAI
@@ -137,42 +225,72 @@ class SyncRequest(BaseModel):
     google_token: str  # Campo obrigatório para receber o token do Frontend
 
 
+# Modelo para receber o Snapshot Total
+class SyncPayload(BaseModel):
+    full_json: dict
+    version: str
+
+
+class TokenRequest(BaseModel):
+    google_token: str
+
+
 # --- ROTA DE EXPORTAÇÃO (GOOGLE DRIVE) ---
 @app.post("/drive/exportar")
 async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None)):
-    db = carregar_db()
+    # 1. Validação Centralizada no Firestore (Chave, Ativo, Expiração)
+    # Não passamos exige_cota=True aqui pois exportar não deve gastar créditos de IA
+    user_data, _ = await validar_usuario(authorization)
 
-    # 1. Validação de Contribuinte
-    if authorization not in db:
+    # 2. VALIDAÇÃO DE IDENTIDADE CRUZADA 🛡️
+    # (acesso de chave em dicionário)
+    email_google = await obter_email_google(req.google_token)
+    email_firestore = user_data.get("email", "").lower().strip()
+
+    if not email_firestore:
+        # Se o email não estiver no documento, tentamos extrair da própria chave
+        # Já que sua chave segue o padrão email_key_...
+        if "_key_" in authorization:
+            email_firestore = authorization.split("_key_")[0].lower().strip()
+
+    # Limpeza final para comparação justa
+    email_firestore = email_firestore.lower().strip() if email_firestore else ""
+    email_google = email_google.lower().strip() if email_google else ""
+
+    if not email_google or email_google != email_firestore:
         print(
-            f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)"
+            f"❌ BLOQUEIO DE IDENTIDADE: Dono da Chave [{email_firestore}] != Logado no Google [{email_google}]"
         )
-        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
-
-    user = db[authorization]
+        raise HTTPException(
+            status_code=403,
+            detail="O e-mail do Google Drive não coincide com o dono desta chave.",
+        )
+    else:
+        print(f"✅ IDENTIDADE VALIDADA: {email_google} acessando seus próprios dados.")
 
     try:
         # 2. Configura as credenciais usando o token enviado pelo Frontend
-        # Importante: O token vem de 'req.google_token' definido no Pydantic acima
         creds = Credentials(token=req.google_token)
         service = build("drive", "v3", credentials=creds)
 
         # 3. Preparação do arquivo binário (JSON)
-        # Usamos 'req.cronograma_json' para acessar os dados enviados
         json_bytes = json.dumps(
             req.cronograma_json, indent=4, ensure_ascii=False
         ).encode("utf-8")
         buffer = io.BytesIO(json_bytes)
 
+        # Usamos o e-mail que está no Firestore para nomear o arquivo
+        nome_arquivo = f"Backup_Cronograma_{user_data.get('email', 'usuario')}.json"
+
         file_metadata = {
-            "name": f"Backup_Cronograma_{user['email']}.json",
+            "name": nome_arquivo,
             "mimeType": "application/json",
         }
 
         media = MediaIoBaseUpload(buffer, mimetype="application/json", resumable=True)
 
-        # 4. Verifica se o arquivo já existe para atualizar ou criar um novo
-        query = f"name = '{file_metadata['name']}' and trashed = false"
+        # 4. Verifica se o arquivo já existe no Drive para atualizar ou criar
+        query = f"name = '{nome_arquivo}' and trashed = false"
         results = service.files().list(q=query, fields="files(id)").execute()
         files = results.get("files", [])
 
@@ -188,29 +306,47 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
 
         return {
             "status": "success",
-            "message": f"Backup {status} no Google Drive de {user['nome']}!",
+            "message": f"Backup {status} no Google Drive de {user_data['nome']}!",
         }
 
     except Exception as e:
         print(f"❌ Erro no Drive: {e}")
-        # Retorna erro 400 caso o token do Google esteja expirado ou inválido
         raise HTTPException(status_code=400, detail=f"Erro na API do Google: {str(e)}")
 
 
 # --- ROTA PARA BUSCAR BACKUP DO DRIVE (IMPORTAR) ---
 @app.post("/drive/importar")
-async def importar_do_drive(req: dict, authorization: str = Header(None)):
-    db = carregar_db()
+async def importar_do_drive(req: TokenRequest, authorization: str = Header(None)):
+    # 1. Validação Centralizada no Firestore
+    user_data, _ = await validar_usuario(authorization)
 
-    if authorization not in db:
+    # 2. VALIDAÇÃO DE IDENTIDADE CRUZADA 🛡️
+    # (acesso de chave em dicionário)
+    email_google = await obter_email_google(req.google_token)
+    email_firestore = user_data.get("email", "").lower().strip()
+
+    if not email_firestore:
+        # Se o email não estiver no documento, tentamos extrair da própria chave
+        # Já que sua chave segue o padrão email_key_...
+        if "_key_" in authorization:
+            email_firestore = authorization.split("_key_")[0].lower().strip()
+
+    # Limpeza final para comparação justa
+    email_firestore = email_firestore.lower().strip() if email_firestore else ""
+    email_google = email_google.lower().strip() if email_google else ""
+
+    if not email_google or email_google != email_firestore:
         print(
-            f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)"
+            f"❌ BLOQUEIO DE IDENTIDADE: Dono da Chave [{email_firestore}] != Logado no Google [{email_google}]"
         )
-        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
+        raise HTTPException(
+            status_code=403,
+            detail="O e-mail do Google Drive não coincide com o dono desta chave.",
+        )
+    else:
+        print(f"✅ IDENTIDADE VALIDADA: {email_google} acessando seus próprios dados.")
 
-    user = db[authorization]
-    google_token = req.get("google_token")
-
+    google_token = req.google_token
     if not google_token:
         raise HTTPException(status_code=400, detail="Token do Google ausente.")
 
@@ -218,34 +354,41 @@ async def importar_do_drive(req: dict, authorization: str = Header(None)):
         creds = Credentials(token=google_token)
         service = build("drive", "v3", credentials=creds)
 
-        # 1. Busca o arquivo pelo nome exato que usamos no exportar
-        nome_arquivo = f"Backup_Cronograma_{user['email']}.json"
+        # 2. Busca o arquivo pelo nome associado ao e-mail do Firestore
+        nome_arquivo = f"Backup_Cronograma_{user_data.get('email', 'usuario')}.json"
         query = f"name = '{nome_arquivo}' and trashed = false"
         results = service.files().list(q=query, fields="files(id)").execute()
         files = results.get("files", [])
 
         if not files:
+            # Retornamos sucesso mas com aviso, para o frontend tratar
             return {
                 "status": "error",
                 "message": "Nenhum backup encontrado no seu Google Drive.",
             }
 
-        # 2. Baixa o conteúdo do arquivo
+        # 3. Baixa o conteúdo do arquivo
         file_id = files[0]["id"]
         content = service.files().get_media(fileId=file_id).execute()
 
-        # 3. Decodifica o JSON
+        # 4. Decodifica o JSON
         backup_json = json.loads(content.decode("utf-8"))
 
         return {"status": "success", "data": backup_json}
 
     except Exception as e:
         print(f"❌ Erro na importação: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(
+            status_code=400, detail=f"Erro ao acessar Google Drive: {str(e)}"
+        )
 
 
+# rota para importar matérias com IA
 @app.post("/processar")
 async def processar(file: UploadFile = File(...), authorization: str = Header(None)):
+    # Chama a validação centralizada exigindo cota
+    user_data, user_ref = await validar_usuario(authorization, exige_cota=True)
+
     # 0.Definir limite (ex: 5MB)
     MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -256,33 +399,6 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
             status_code=413, detail="Arquivo muito grande. O limite é 5MB."
         )
 
-    # Carrega os dados atualizados do disco a cada tentativa de login
-    db_atualizado = carregar_db()
-
-    # 1. Validação de Existência da Chave
-    if authorization not in db_atualizado:
-        print(
-            f"🚫 Acesso negado: Tentativa com chave inválida ({authorization[:5]}***)"
-        )
-        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
-
-    user = db_atualizado[authorization]
-    nome_usuario = user.get("nome", "Desconhecido")  # Pega o nome do JSON
-    print(f"👤 Usuário identificado: {nome_usuario}")
-
-    # 2. Validação de Expiração
-    data_expira = datetime.datetime.strptime(user["expira"], "%Y-%m-%d")
-    if datetime.datetime.now() > data_expira:
-        print(f"⚠️ Acesso bloqueado (Expirado): {user['nome']}")
-        raise HTTPException(
-            status_code=403, detail="Sua chave de contribuinte expirou."
-        )
-
-    # 3. Validação de Cota de Uso
-    if user["uso"] >= user["limite"]:
-        print(f"🚫 Cota esgotada: {user['nome']} ({user['uso']}/{user['limite']})")
-        raise HTTPException(status_code=403, detail="Sua cota de IA chegou ao fim.")
-
     # 4. Processamento do arquivo
     content = await file.read()
     conteudo_extraido = extrair_conteudo(content, file.filename)
@@ -292,7 +408,7 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
     try:
         target_model = "gemini-2.5-flash"
-        print(f"🚀 {user['nome']} disparando IA para arquivo: {file.filename}")
+        print(f"🚀 {user_data['nome']} disparando IA para arquivo: {file.filename}")
 
         response = None
         for tentativa in range(5):
@@ -338,8 +454,13 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
             raise Exception("Falha ao obter resposta da IA.")
 
         # 5. Sucesso: Incrementa uso e salva banco
-        user["uso"] += 1
-        salvar_db(db_atualizado)
+        try:
+            user_ref.update({"uso": firestore.Increment(1)})
+            print(
+                f"📊 Uso incrementado para {user_data['nome']}: {uso_atual + 1}/{limite}"
+            )
+        except Exception as e:
+            print(f"⚠️ Erro ao atualizar contador: {e}")
 
         res_text = response.text.strip()
 
@@ -352,13 +473,55 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         # Converte para objeto Python para validar se o JSON está ok
         dados_da_ia = json.loads(json_str)
 
-        print(f"📈 Uso atual de {user['nome']}: {user['uso']}/{user['limite']}")
-
         return dados_da_ia
 
     except Exception as e:
         print(f"❌ Erro na IA: {e}")
         return {"error": "Falha na IA", "details": str(e)}
+
+
+# --- ROTA DE SINCRONIZAÇÃO AUTOMÁTICA (FIRESTORE) ---
+# Rota para o Front disparar o "Save" para a Nuvem
+@app.post("/drive/sync")
+async def sync_total_snapshot(req: SyncPayload, authorization: str = Header(None)):
+    user_data, _ = await validar_usuario(
+        authorization
+    )  # Validação básica de chave e data
+
+    try:
+        # No Firestore, o ID do documento será a própria CHAVE do usuário
+        doc_ref = db_firestore.collection("snapshots").document(authorization)
+
+        doc_ref.set(
+            {
+                "payload": req.full_json,
+                "metadata": {
+                    "ultima_sinc": firestore.SERVER_TIMESTAMP,
+                    "versao_app": req.version,
+                },
+            }
+        )
+        return {"status": "success"}
+    except Exception as e:
+        print(f"❌ Erro Firestore: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao salvar.")
+
+
+# Rota para o Front verificar se há algo novo ao carregar a página
+@app.get("/drive/restore")
+async def restore_from_cloud(authorization: str = Header(None)):
+    await validar_usuario(authorization)  # Valida se ainda é contribuinte
+
+    doc = db_firestore.collection("snapshots").document(authorization).get()
+
+    if doc.exists:
+        res = doc.to_dict()
+        # Converte o objeto de data do Google para string ISO (o JS ama isso)
+        if "ultima_sinc" in res["metadata"]:
+            res["metadata"]["ultima_sinc"] = res["metadata"]["ultima_sinc"].isoformat()
+        return {"status": "success", "data": res}
+
+    return {"status": "error", "message": "Nenhum dado na nuvem."}
 
 
 if __name__ == "__main__":

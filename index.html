@@ -1728,7 +1728,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                             <button id="btn-google-export"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
-                                                onclick="exportarManualParaDrive()"
+                                                onclick="exportarParaGoogleDrive()"
                                                 title="Exportar backup para o Google Drive" disabled>
                                                 <i class="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
@@ -1753,7 +1753,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                                             <button id="btn-google-import"
                                                 class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
-                                                onclick="restaurarDoDrive()"
+                                                onclick="restaurarGoogleDrive()"
                                                 title="Importar o arquivo de backup do Google Drive" disabled>
                                                 <i class="bi bi-cloud-download-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
@@ -1808,6 +1808,11 @@ Aqui é onde os dados vão aparecer de verdade.
                                             <input type="password" id="inputChaveAcesso" class="form-control"
                                                 placeholder="Insira sua chave aqui..."
                                                 onchange="saveChaveContribuinte(true)">
+                                        </div>
+                                        <div id="displayEmailChave" class="mt-2 small text-primary fw-bold"
+                                            style="font-size: 0.7rem; display: none;">
+                                            <i class="bi bi-person-circle me-1"></i> Usuário: <span
+                                                id="labelEmailContribuinte"></span>
                                         </div>
                                         <small class="text-muted" style="font-size: 0.65rem;">
                                             Esta chave é fornecida pelo administrador para liberar o uso da IA na
@@ -2194,6 +2199,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 // Marca que esta versão já foi processada
                 localStorage.setItem("app_version_installed", app_version);
                 console.log("Migração concluída com sucesso.");
+
             }
             // ----------------------------------------------
 
@@ -2208,6 +2214,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
             const chaveSalva = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
             document.getElementById('inputChaveAcesso').value = chaveSalva;
+            renderizarEmailChave();
 
             updateSelect();
             const last = localStorage.getItem('last_active');
@@ -2227,6 +2234,10 @@ Aqui é onde os dados vão aparecer de verdade.
                 const containers = document.querySelectorAll('#contador-container');
                 containers.forEach(div => div.innerHTML = htmlContador);
             }
+
+
+            //firestore (nnuvem)
+            inicializarSincronia();
 
             const label_app_version = document.getElementById("app-version");
             label_app_version.innerText = app_version;
@@ -2289,6 +2300,51 @@ Aqui é onde os dados vão aparecer de verdade.
 
         let isProcessingUI = false; // Semáforo global
 
+        // Adicione esta chamada no seu fluxo de inicialização
+        async function inicializarSincronia() {
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            if (!chave || !chave.includes("_key_")) return;
+
+            try {
+                const BASE_URL_SYNC = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+                    ? "http://127.0.0.1:8000"
+                    : "https://cronograma-ia-749297806019.southamerica-east1.run.app";
+
+                const response = await fetch(`${BASE_URL_SYNC}/drive/restore`, {
+                    headers: { "authorization": chave }
+                });
+
+                if (!response.ok) {
+                    // Se o status for 403 (o caso da expiração)
+                    if (response.status === 403) {
+                        const erro = await response.json();
+                        console.warn("Acesso negado pelo servidor:", erro.detail);
+                        // Exibe o alerta visual para o usuário
+                        exibirAlerta(`${erro.detail}`, "danger");
+                    }
+                    return; // Interrompe a execução pois deu erro
+                }
+
+                const res = await response.json();
+
+                if (res.status === "success" && res.data) {
+                    const remoteDate = new Date(res.data.metadata.ultima_sinc);
+                    const localSaveTime = localStorage.getItem("last_local_save_time");
+                    const localDate = localSaveTime ? new Date(localSaveTime) : new Date(0);
+
+                    // Se a nuvem for mais nova que o PC em mais de 5 segundos
+                    if (remoteDate.getTime() > (localDate.getTime() + 5000)) {
+                        console.log("☁️ Conflito detectado: Nuvem é mais recente.");
+                        exibirModalConflito(res.data);
+                    } else {
+                        console.log("✅ Sincronia: Dados locais já estão atualizados.");
+                    }
+                }
+            } catch (e) {
+                console.warn("Falha na checagem de sincronia:", e);
+            }
+        }
+
         async function safeWrapper(fn) {
             if (isProcessingUI) return; // Se já estiver fazendo algo, ignora o novo clique
             isProcessingUI = true;
@@ -2298,6 +2354,23 @@ Aqui é onde os dados vão aparecer de verdade.
             } finally {
                 document.getElementById('btnSalvarTudo').classList.remove('opacity-50');
                 isProcessingUI = false;
+            }
+        }
+
+        function exibirModalConflito(remoteData) {
+            const remoteDate = new Date(remoteData.metadata.ultima_sinc).toLocaleString();
+
+            // Usando o confirm do navegador para teste rápido, 
+            // ou você pode criar um modal Bootstrap bonitão depois.
+            const mensagem = `☁️ SINCRONIZAÇÃO\n\n` +
+                `Encontramos dados mais recentes na nuvem!\n` +
+                `Nuvem: ${remoteDate}\n` +
+                `Deseja carregar o progresso salvo em outro dispositivo?`;
+
+            if (confirm(mensagem)) {
+                mostrarOverlay("Baixando dados da nuvem...");
+                // O payload é o que o Python enviou dentro de res.data.payload
+                processarRestauracaoTotal(remoteData.payload);
             }
         }
         function setButtonsState(loading) {
@@ -2598,12 +2671,63 @@ Aqui é onde os dados vão aparecer de verdade.
             }, 2000);
         }
 
+        // Função para extrair a parte do e-mail da chave (antes do _key_)
+        function renderizarEmailChave() {
+            const input = document.getElementById('inputChaveAcesso');
+            const display = document.getElementById('displayEmailChave');
+            const label = document.getElementById('labelEmailContribuinte');
+            const valor = input.value.trim();
+
+            if (valor.includes("_key_")) {
+                const emailPart = valor.split("_key_")[0];
+                label.innerText = emailPart;
+                display.style.display = "block";
+            } else {
+                display.style.display = "none";
+            }
+        }
+
+        // No seu saveChaveContribuinte, adicione a limpeza da sincronia que discutimos
+        function saveChaveContribuinte(showAlert = false) {
+            const input = document.getElementById('inputChaveAcesso');
+            const valor = input.value.trim();
+
+            localStorage.setItem("config_vBorda_chave_contribuinte", valor);
+
+            // Invalida a sincronia anterior para forçar busca da nova conta
+            localStorage.removeItem("last_local_save_time");
+
+            // Atualiza o rótulo do e-mail imediatamente
+            renderizarEmailChave();
+
+            checkInterfaceState();
+
+            if (showAlert) {
+                exibirAlerta("Chave salva! Reiniciando sincronia...", "success");
+                inicializarSincronia();
+            }
+        }
+
         function saveChaveContribuinte(showAlert = false) {
             const input = document.getElementById('inputChaveAcesso');
             const valor = input.value.trim();
             localStorage.setItem("config_vBorda_chave_contribuinte", valor);
             checkInterfaceState();
-            if (showAlert) exibirAlerta("Chave de Contribuinte salva com sucesso!", "success");
+
+            // 🚀 2. INVALIDA A DATA DE SINCRONIA LOCAL
+            // Isso força o app a considerar a nuvem como "mais nova" no próximo load
+            localStorage.removeItem("last_local_save_time");
+
+            // Atualiza o rótulo do e-mail imediatamente
+            renderizarEmailChave();
+
+            checkInterfaceState();
+
+            if (showAlert) {
+                exibirAlerta("Chave salva! Reiniciando sincronia...", "success");
+                // Opcional: disparar a sincronia imediatamente sem precisar de F5
+                inicializarSincronia();
+            }
         }
 
         function acionarIA() { document.getElementById('iaFile').click(); }
@@ -3062,6 +3186,85 @@ Aqui é onde os dados vão aparecer de verdade.
                 .sort((a, b) => a.data.localeCompare(b.data));
 
             localStorage.setItem(PREFIX + currentMateria, JSON.stringify(items));
+
+            // firestore: Registra o momento do save para a trava de segurança
+            localStorage.setItem("last_local_save_time", new Date().toISOString());
+            setUnsavedChanges(false);
+
+            // Dispara a nuvem em background (sem travar o usuário)
+            persistirSnapshotTotal();
+        }
+
+        function processarRestauracaoTotal(payload) {
+            if (!payload || !payload.allData) return;
+
+            // 1. Limpa chaves antigas de matérias (opcional, para garantir integridade)
+            const currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            currentList.forEach(m => localStorage.removeItem(PREFIX + m));
+
+            // 2. Injeta os novos dados
+            localStorage.setItem(LIST_KEY, JSON.stringify(payload.list));
+
+            for (const materia in payload.allData) {
+                localStorage.setItem(PREFIX + materia, JSON.stringify(payload.allData[materia]));
+                if (payload.configs && payload.configs[materia]) {
+                    localStorage.setItem(CONFIG_PREFIX + materia, JSON.stringify(payload.configs[materia]));
+                }
+            }
+
+            // 3. Atualiza o timestamp local para coincidir com o que acabou de baixar
+            localStorage.setItem("last_local_save_time", new Date().toISOString());
+
+            // 4. Recarrega a interface
+            dispararAlertaReload("Dados sincronizados da nuvem com sucesso!", 1);
+        }
+
+        async function persistirSnapshotTotal() {
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+
+            // Regra de Ouro: Só tenta sincronizar se houver uma chave de contribuinte configurada
+            if (!chave || !chave.includes("_key_")) {
+                console.log("ℹ️ Sincronização em nuvem ignorada: Usuário sem chave de contribuinte.");
+                return;
+            }
+
+            // Coleta o "blocão" de dados que já temos no localStorage
+            // Estou usando a função getDadosJsonLocais() que discutimos antes
+            const fullJson = await getDadosJsonLocais();
+
+            try {
+                // Define a URL base dinamicamente (Desenvolvimento vs Produção)
+                const BASE_URL_SYNC = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+                    ? "http://127.0.0.1:8000"
+                    : "https://cronograma-ia-749297806019.southamerica-east1.run.app";
+
+                console.log("☁️ Enviando Snapshot para o Firestore...");
+
+                const response = await fetch(`${BASE_URL_SYNC}/drive/sync`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "authorization": chave
+                    },
+                    body: JSON.stringify({
+                        full_json: fullJson,
+                        version: app_version
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || "Erro na resposta do servidor");
+                }
+
+                const result = await response.json();
+                console.log("✅ Sincronização Firestore concluída:", result.message);
+
+            } catch (err) {
+                // Aqui não exibimos 'alert' para não interromper o estudo do usuário, 
+                // apenas logamos no console para debug.
+                console.error("❌ Falha na sincronização silenciosa:", err.message);
+            }
         }
 
         async function enableEditMode(rowId) {
@@ -3957,9 +4160,11 @@ Aqui é onde os dados vão aparecer de verdade.
         function initTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: '749297806019-h4pgn5kdb4rdij99m3vd8ksi53l4ad3h.apps.googleusercontent.com',
-                scope: 'https://www.googleapis.com/auth/drive.file',
+                scope: 'https://www.googleapis.com/auth/drive.file email openid',
                 callback: (res) => {
                     if (res.access_token) {
+                        console.log("Token tipo:", typeof res.access_token);
+                        console.log("Início do token:", res.access_token.substring(0, 10));
                         accessToken = res.access_token;
                         sessionStorage.setItem('google_access_token', accessToken);
                         exibirAlerta("Conectado ao Drive.", "success");
@@ -3985,7 +4190,7 @@ Aqui é onde os dados vão aparecer de verdade.
             return { app: "Cronograma", version: app_version, list, allData, configs };
         }
 
-        async function exportarManualParaDrive() {
+        async function exportarParaGoogleDrive() {
             const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
             if (!chaveContribuinte) {
                 exibirAlerta("Configure sua Chave de Acesso primeiro.", "warning");
@@ -4029,6 +4234,19 @@ Aqui é onde os dados vão aparecer de verdade.
                     body: JSON.stringify(payloadParaPython)
                 });
 
+                if (!response.ok) {
+                    const erroData = await response.json();
+
+                    // Se o backend enviou o erro de e-mail incompatível (403)
+                    if (response.status === 403) {
+                        // erroData.detail contém: "O e-mail do Google Drive não coincide..."
+                        exibirAlerta(`🛡️ Segurança: ${erroData.detail}`, "danger");
+                        return;
+                    }
+
+                    throw new Error(erroData.detail || "Erro ao exportar");
+                }
+
                 const res = await response.json();
                 if (res.status === "success") {
                     exibirAlerta("Backup realizado com sucesso no Drive!", "success");
@@ -4044,7 +4262,7 @@ Aqui é onde os dados vão aparecer de verdade.
             }
         }
 
-        async function restaurarDoDrive() {
+        async function restaurarGoogleDrive() {
             // 1. Validação de Token
             if (!accessToken) {
                 exibirAlerta("Por favor, faça login no Google primeiro (Botão Sincronizar).", "warning");
@@ -4081,8 +4299,23 @@ Aqui é onde os dados vão aparecer de verdade.
                 const response = await fetch(url_service_importar_google_drive, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "authorization": chaveContribuinte },
-                    body: JSON.stringify({ google_token: accessToken })
+                    body: JSON.stringify({
+                        google_token: accessToken // O nome da chave aqui deve ser igual ao da classe TokenRequest
+                    })
                 });
+
+                if (!response.ok) {
+                    const erroData = await response.json();
+
+                    // Se o backend enviou o erro de e-mail incompatível (403)
+                    if (response.status === 403) {
+                        // erroData.detail contém: "O e-mail do Google Drive não coincide..."
+                        exibirAlerta(`🛡️ Segurança: ${erroData.detail}`, "danger");
+                        return;
+                    }
+
+                    throw new Error(erroData.detail || "Erro ao exportar");
+                }
 
                 if (response.status === 400 || response.status === 401) {
                     accessToken = null; // Limpa o token inválido
