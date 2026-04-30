@@ -1236,10 +1236,23 @@
             font-weight: 600;
             letter-spacing: -0.025em;
             margin-bottom: 8px;
+
+            /* 1. Defina o fundo primeiro */
             background: linear-gradient(to right, #60a5fa, #a78bfa);
-            /* Gradiente roxo/azul */
+
+            /* 2. Recorte o fundo para o formato do texto (Vendor Prefixes) */
             -webkit-background-clip: text;
+            /* Para Chrome, Safari e Edge */
+            -moz-background-clip: text;
+            /* Para versões legadas do Firefox */
+            background-clip: text;
+            /* Propriedade padrão W3C */
+
+            /* 3. Deixe o preenchimento transparente para o gradiente aparecer */
             -webkit-text-fill-color: transparent;
+            /* Necessário para Webkit */
+            color: transparent;
+            /* Fallback padrão */
         }
 
         .loading-subtext p {
