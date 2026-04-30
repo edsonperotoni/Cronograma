@@ -1922,6 +1922,37 @@ Aqui é onde os dados vão aparecer de verdade.
         </div>
     </div>
 
+    <!-- Modal de Conflito de Sincronização -->
+    <div class="modal fade" id="modalConflito" tabindex="-1" aria-labelledby="modalConflitoLabel" aria-hidden="true"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalConflitoLabel">
+                        <i class="bi bi-cloud-arrow-down-fill me-2"></i>Sincronização
+                    </h5>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-exclamação-circle text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="fs-5">Encontramos dados mais recentes na nuvem!</p>
+                    <div class="alert alert-light border small text-start">
+                        <strong>Data na Nuvem:</strong> <span id="remoteDate"></span><br>
+                        <strong>App Versão:</strong> <span id="remoteVersion"></span>
+                    </div>
+                    <p class="text-muted small">Deseja carregar o progresso salvo em outro dispositivo?</p>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Manter
+                        Local</button>
+                    <button type="button" id="btnConfirmarRestauracao" class="btn btn-primary px-4">Carregar
+                        Nuvem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal "Sobre" (Aquelas informações extras sobre versão e autor) -->
     <div class="modal fade" id="modalAbout" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -2358,21 +2389,34 @@ Aqui é onde os dados vão aparecer de verdade.
         }
 
         function exibirModalConflito(remoteData) {
-            const remoteDate = new Date(remoteData.metadata.ultima_sinc).toLocaleString();
+            const remoteDateStr = new Date(remoteData.metadata.ultima_sinc).toLocaleString('pt-BR');
 
-            // Usando o confirm do navegador para teste rápido, 
-            // ou você pode criar um modal Bootstrap bonitão depois.
-            const mensagem = `☁️ SINCRONIZAÇÃO\n\n` +
-                `Encontramos dados mais recentes na nuvem!\n` +
-                `Nuvem: ${remoteDate}\n` +
-                `Deseja carregar o progresso salvo em outro dispositivo?`;
+            // Atualiza os textos dentro do Modal
+            document.getElementById('remoteDate').innerText = remoteDateStr;
+            document.getElementById('remoteVersion').innerText = remoteData.metadata.versao_app || "N/A";
 
-            if (confirm(mensagem)) {
+            // Inicializa o modal do Bootstrap
+            const myModal = new bootstrap.Modal(document.getElementById('modalConflito'));
+            myModal.show();
+
+            // Configura o evento do botão de confirmação
+            const btnConfirmar = document.getElementById('btnConfirmarRestauracao');
+
+            // Removemos ouvintes antigos para evitar execuções duplicadas
+            const novoBtn = btnConfirmar.cloneNode(true);
+            btnConfirmar.parentNode.replaceChild(novoBtn, btnConfirmar);
+
+            novoBtn.addEventListener('click', () => {
+                myModal.hide();
                 mostrarOverlay("Baixando dados da nuvem...");
-                // O payload é o que o Python enviou dentro de res.data.payload
-                processarRestauracaoTotal(remoteData.payload);
-            }
+
+                // Pequeno delay para o modal fechar suavemente antes do overlay aparecer
+                setTimeout(() => {
+                    processarRestauracaoTotal(remoteData.payload);
+                }, 300);
+            });
         }
+
         function setButtonsState(loading) {
             const ids = ['btnSalvarTudo', 'btnEditarTudo', 'btnExcluirMateria', 'materiaSelect'];
 
