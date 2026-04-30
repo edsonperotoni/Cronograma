@@ -1,47 +1,42 @@
-# 📚 Cronograma de Matérias v3.0.1 🚀
+# 📚 Cronograma de Matérias v3.5.0 🚀
 
-Uma aplicação projetada para organização de rotinas de estudo.
+Uma aplicação full-stack de alta performance para organização de rotinas de estudo, integrando Inteligência Artificial e sincronização em nuvem.
 
 ---
 
 ## 🎨 Interface e Experiência do Usuário (UX)
 * **Layout Responsivo:** Desenvolvido com **Bootstrap 5**, garantindo adaptação total para dispositivos móveis e desktop.
-* **Modo Impressão:** Otimização via CSS `@media print` para formato A4 (paisagem), removendo botões de controle e ajustando o layout para papel ou PDF.
-* **Bloqueio de Estado Inteligente:** A interface desabilita controles de edição automaticamente quando nenhuma matéria está selecionada, prevenindo erros de gravação.
-* **Assistente Mobile:** Ícone animado que detecta a necessidade de rolagem lateral e sugere o modo paisagem em dispositivos móveis.
-* **Cabeçalhos Dinâmicos:** Renomeie as colunas (Teoria, Exercícios, etc.) diretamente na tabela ou através do painel de preferências.
-* **Visibilidade Seletiva:** Oculte colunas que você não utiliza para manter a interface limpa e focada no que importa.
+* **Modo Impressão:** Otimização via CSS `@media print` para formato A4 (paisagem), removendo controles de interface para um documento limpo e profissional.
+* **Assistente Mobile:** Detector inteligente de orientação que sugere o modo paisagem para melhor visualização da tabela em telas pequenas.
+* **Edição Rica:** Integração com **CKEditor 5** para anotações detalhadas com formatação avançada, links e listas.
 
 ## 🚀 Funcionalidades Principais
 
 ### 🤖 Inteligência Artificial & OCR
-* **Importação Multi-formato:** Suporte nativo para extração de dados via IA de arquivos **PDF, Word (.docx), Excel (.xlsx, .xls), CSV ** e **Imagens (JPG/PNG)**.
-* **Engine Gemini 2.5 Flash:** Processamento ultrarrápido de documentos para geração automática de cronogramas (requer chave de contribuinte).
-* **Edição Rica com CKEditor 5:** A coluna de observações utiliza o CKEditor para permitir formatação avançada (negrito, cores, listas e links).
-* **Cálculo Automático de Próxima Data:** Sugestão inteligente de datas baseada em intervalos configuráveis (ex: 7 dias), automatizando o planejamento.
-* **Backend Python (FastAPI):** Tradutor binário que converte planilhas complexas em Markdown para leitura precisa da IA.
+* **Engine Gemini 2.0 Flash:** Processamento de documentos via **Google GenAI SDK** para geração automática de cronogramas.
+* **Processamento Multimodal:** Suporte para extração de dados de **PDF (limite de 5 páginas), Word, Excel, CSV** e **Imagens (OCR nativo da IA)**.
+* **Tradutor de Formatos:** Backend especializado que converte arquivos binários em Markdown para garantir precisão cirúrgica na interpretação da IA.
 
-### 🛡️ Resiliência e Segurança de Dados
-* **Persistência Local:** Utiliza a **LocalStorage API**. Seus dados permanecem no seu navegador, garantindo privacidade total (os dados não saem do seu PC).
-* **Backup em JSON:** Sistema de exportação e importação de banco de dados para evitar perda de informações e permitir portabilidade.
-* **Backup para Google Drive:** Exporta e importa dados do Google Drive do usuário (requer chave de contribuinte).
-
-* **Snapshot de Emergência:** O sistema cria um ponto de restauração automático antes de qualquer importação de IA. Se algo der errado, o "Botão de Pânico" restaura tudo em um clique.
-* **Merge Inteligente:** Capacidade de renomear e fundir matérias, unindo conteúdos de nomes duplicados sem perder dados.
-* **Auto-Save & Proteção:** Salvamento automático a cada 5 minutos e alertas visuais para mudanças pendentes.
+### 🛡️ Resiliência e Segurança de Dados (Cloud Hybrid)
+* **Persistência Local:** Prioridade para **LocalStorage API**, mantendo a velocidade de acesso e privacidade offline.
+* **Sincronização Firestore:** Backup automático do estado da aplicação no **Google Firebase**, permitindo restaurar o progresso em múltiplos dispositivos de forma transparente.
+* **Backup no Google Drive:** Integração oficial com a API do Google Drive para exportação e importação de arquivos JSON de backup.
+* **Validação de Identidade Cruzada:** Sistema de segurança robusto que vincula a **Chave de Contribuinte** ao e-mail autenticado do Google, impedindo acessos não autorizados aos dados na nuvem.
+* **Snapshot de Emergência:** Ponto de restauração automático gerado antes de cada importação de IA (o "Botão de Pânico").
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
-* **Core:** HTML5, CSS3 e JavaScript (ES6+).
-* **Editor:** CKEditor 5 (Rich Text Edition).
-* **UI Framework:** Bootstrap 5.3.2 + Bootstrap Icons.
+* **Core:** HTML5, CSS3, JavaScript (ES6+).
+* **Framework:** Bootstrap 5.3 + Bootstrap Icons.
+* **Integração:** Google Identity Services (OAuth2).
 
-### Backend (IA Service)
+### Backend (Cloud Native)
 * **Linguagem:** Python 3.11+.
-* **Framework:** FastAPI + Uvicorn.
-* **Processamento:** Pandas (Excel/CSV), python-docx (Word), PyPDF2 (PDF).
-* **Modelos:** Google GenAI SDK (Gemini 2.5 Flash).
+* **Framework:** FastAPI + Uvicorn (Arquitetura assíncrona).
+* **Banco de Dados:** Google Firestore (NoSQL).
+* **Hospedagem:** Google Cloud Run (Serverless).
+* **Bibliotecas:** Pandas, BeautifulSoup4, PyPDF2, python-docx, Google GenAI.
 
 ## 📦 Estrutura do Projeto
 
@@ -49,7 +44,6 @@ Uma aplicação projetada para organização de rotinas de estudo.
 ├── index.html          # Interface principal e lógica JS
 ├── main.py             # Backend Python (API de Processamento IA)
 ├── prompt_template.txt # O "Cérebro" da IA (Instruções do sistema)
-├── contribuintes_db.json # Gestão de acesso e cotas de uso
 ├── ckeditor5/          # Editor de texto rico
 └── image/              # Ativos visuais (Logotipos e SVGs)
 ```

@@ -2035,12 +2035,35 @@ Aqui é onde os dados vão aparecer de verdade.
                             EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES NO SOFTWARE.
                         </div>
                         <hr>
-                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias</h6>
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">Tecnologias & Stack</h6>
                         <div class="d-flex flex-wrap gap-2 pb-2">
-                            <span class="badge border text-dark fw-normal">CKEditor 5</span>
-                            <span class="badge border text-dark fw-normal">Bootstrap 5</span>
-                            <span class="badge border text-dark fw-normal">JavaScript ES6</span>
-                            <span class="badge border text-dark fw-normal">LocalStorage API</span>
+                            <!-- Frontend -->
+                            <span class="badge border text-dark fw-normal bg-light">
+                                <i class="bi bi-browser-chrome me-1"></i>JavaScript ES6+
+                            </span>
+                            <span class="badge border text-dark fw-normal bg-light">
+                                <i class="bi bi-bootstrap me-1"></i>Bootstrap 5.3
+                            </span>
+                            <span class="badge border text-dark fw-normal bg-light">
+                                <i class="bi bi-pencil-square me-1"></i>CKEditor 5
+                            </span>
+                            <span class="badge border text-dark fw-normal bg-light">
+                                <i class="bi bi-database me-1"></i>LocalStorage API
+                            </span>
+
+                            <!-- Backend & Cloud -->
+                            <span class="badge border text-primary fw-normal bg-primary-subtle">
+                                <i class="bi bi-filetype-py me-1"></i>FastAPI (Python)
+                            </span>
+                            <span class="badge border text-primary fw-normal bg-primary-subtle">
+                                <i class="bi bi-robot me-1"></i>Gemini 2.5 Flash
+                            </span>
+                            <span class="badge border text-primary fw-normal bg-primary-subtle">
+                                <i class="bi bi-cloud-check me-1"></i>Google Firestore
+                            </span>
+                            <span class="badge border text-primary fw-normal bg-primary-subtle">
+                                <i class="bi bi-google me-1"></i>Drive API (OAuth2)
+                            </span>
                         </div>
                         <span class="badge rounded-pill bg-primary border border-primary-subtle px-3 py-2 shadow-sm"
                             style="font-size: 0.7rem; font-weight: 600;">
@@ -2051,8 +2074,9 @@ Aqui é onde os dados vão aparecer de verdade.
 
                     <div class="tab-pane fade" id="features-pane" role="tabpanel" tabindex="0">
                         <div class="pe-2" style="max-height: 400px; overflow-y: auto;">
-                            <p><strong>Cronograma</strong> é uma ferramenta prática criada para facilitar a organização
-                                dos seus estudos, unindo automação inteligente com controle total dos seus dados.</p>
+                            <p><strong>Cronograma</strong> é uma solução full-stack projetada para organizar rotinas de
+                                estudo com o poder da Inteligência Artificial e a segurança da sincronização em nuvem.
+                            </p>
 
                             <h6 class="fw-bold text-primary mt-3">
                                 <i class="bi bi-robot me-2"></i>Inteligência Artificial & OCR
@@ -2060,60 +2084,60 @@ Aqui é onde os dados vão aparecer de verdade.
                                     style="font-size: 0.7em;">requer chave de contribuinte</span>
                             </h6>
                             <ul class="small text-secondary">
-                                <li><strong>Importação Multi-formato:</strong> Suporte nativo para extração de dados via
-                                    IA de arquivos <strong>PDF, Word (.docx), Excel (.xlsx)</strong> e <strong>Imagens
-                                        (JPG, PNG)</strong>.</li>
-                                <li><strong>Engine Gemini 2.5 Flash:</strong> Utiliza modelos de linguagem de última
-                                    geração para processamento ultrarrápido e estruturação automática de conteúdos.</li>
-                                <li><strong>Integração Inteligente:</strong> A IA identifica temas e gera
-                                    automaticamente <strong>IDs únicos (UID)</strong> para cada aula, evitando
-                                    duplicatas em reimportações.</li>
+                                <li><strong>Importação Multi-formato:</strong> Extração inteligente de dados de arquivos
+                                    <strong>PDF (até 5 pág.), Word, Excel, CSV</strong> e <strong>Imagens</strong> via
+                                    OCR.
+                                </li>
+                                <li><strong>Engine Gemini 2.5 Flash:</strong> Processamento de última geração via Google
+                                    GenAI SDK, garantindo estruturação de conteúdos com velocidade milimétrica.</li>
+                                <li><strong>Mapeamento por UID:</strong> A IA identifica temas e gera assinaturas
+                                    digitais únicas para cada aula, permitindo mesclagens inteligentes sem duplicatas.
+                                </li>
+                            </ul>
+
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-cloud-check me-2"></i>Sincronização e
+                                Backup Cloud
+                                <span class="badge rounded-pill bg-light text-dark border fw-normal"
+                                    style="font-size: 0.7em;">requer chave de contribuinte</span>
+                            </h6>
+                            <ul class="small text-secondary">
+                                <li><strong>Sincronização Firestore:</strong> Seus dados são salvos em tempo real no
+                                    Google Firebase, permitindo alternar entre dispositivos sem perda de progresso.</li>
+                                <li><strong>Identidade Protegida:</strong> Validação cruzada que vincula seu e-mail
+                                    Google à sua chave, garantindo que apenas o dono acesse os dados na nuvem.</li>
+                                <li><strong>Google Drive Integration:</strong> Exportação de snapshots diretamente para
+                                    sua pasta pessoal no Drive como camada extra de segurança.</li>
                             </ul>
 
                             <h6 class="fw-bold text-primary mt-3"><i class="bi bi-shield-lock me-2"></i>Integridade e
                                 Resiliência</h6>
                             <ul class="small text-secondary">
-                                <li><strong>Identidade Única (UID):</strong> Cada registro possui uma assinatura digital
-                                    (Hash SDBM) que garante a integridade dos dados durante mesclagens e backups.</li>
-                                <li><strong>Snapshot de Emergência:</strong> Ponto de restauração automático criado
-                                    antes de cada grande importação.</li>
+                                <li><strong>Snapshot de Emergência:</strong> Ponto de restauração automático (Botão de
+                                    Pânico) criado antes de qualquer operação crítica de IA.</li>
+                                <li><strong>Persistência Híbrida:</strong> Combina LocalStorage (velocidade offline) com
+                                    Cloud Firestore (segurança online).</li>
                             </ul>
 
                             <h6 class="fw-bold text-primary mt-3"><i
                                     class="bi bi-layout-three-columns me-2"></i>Interface e Usabilidade</h6>
                             <ul class="small text-secondary">
-                                <li><strong>Editor Rico (CKEditor 5):</strong> Suporte completo para formatação de
-                                    texto, listas de tarefas e links nas observações.</li>
-                                <li><strong>Sincronização de Estado:</strong> Bloqueio inteligente de campos e
-                                    salvamento automático garantem que a interface reflita sempre o estado real dos
-                                    dados.</li>
-                                <li><strong>Assistente Mobile:</strong> Sugestão dinâmica de modo paisagem para
-                                    visualização otimizada de tabelas em telemóveis.</li>
-                            </ul>
-
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-magic me-2"></i>Automação e Cronologia
-                            </h6>
-                            <ul class="small text-secondary">
-                                <li><strong>Ordenação Inteligente:</strong> Algoritmo nativo que organiza
-                                    automaticamente todas as matérias por ordem cronológica após qualquer importação ou
-                                    edição.</li>
-                                <li><strong>Destaque Dinâmico:</strong> Coloração em tempo real: rosa para atrasos, azul
-                                    para hoje e verde para o futuro.</li>
-                                <li><strong>Power Shortcuts:</strong> Use <code>Ctrl + S</code> para salvar e
-                                    <code>Ctrl + B</code> para adicionar conteúdo instantaneamente.
+                                <li><strong>Editor Rico (CKEditor 5):</strong> Anotações com formatação avançada, links
+                                    e listas de tarefas integradas à tabela.</li>
+                                <li><strong>Assistente Mobile:</strong> Detecção inteligente de orientação que sugere o
+                                    modo paisagem para melhor visualização em telas pequenas.</li>
+                                <li><strong>Shortcuts de Poder:</strong> Use <code>Ctrl + S</code> para salvar e
+                                    <code>Ctrl + B</code> para inserção rápida de matérias.
                                 </li>
                             </ul>
 
-                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-cloud-check me-2"></i>Sincronização e
-                                Backup <span class="badge rounded-pill bg-light text-dark border fw-normal"
-                                    style="font-size: 0.7em;">requer chave de contribuinte</span></h6>
+                            <h6 class="fw-bold text-primary mt-3"><i class="bi bi-magic me-2"></i>Automação Cronológica
+                            </h6>
                             <ul class="small text-secondary">
-                                <li><strong>Google Drive Sync:</strong> Sincronização direta com sua nuvem pessoal para
-                                    manter o cronograma acessível em múltiplos dispositivos.</li>
-                                <li><strong>Backup Universal:</strong> Exportação em JSON compatível com sistemas de
-                                    mesclagem seletiva ou substituição total.</li>
-                                <li><strong>Privacidade Absoluta:</strong> Seus dados residem exclusivamente no seu
-                                    dispositivo; o processamento de IA é efêmero e focado na conversão de dados.</li>
+                                <li><strong>Ordenação Nativa:</strong> Reorganização automática por data após qualquer
+                                    importação ou edição de conteúdo.</li>
+                                <li><strong>Destaque por Status:</strong> Identificação visual imediata: <span
+                                        class="badge bg-danger-subtle text-danger">rosa para atrasos</span> e <span
+                                        class="badge bg-primary-subtle text-primary">azul para hoje</span>.</li>
                             </ul>
                         </div>
                     </div>
@@ -2191,7 +2215,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
     <script>
         // --- 📂 VARIÁVEIS GLOBAIS ---
-        let app_version = "3.0.1";
+        let app_version = "3.5.0";
         let activeEditors = {};
         let currentMateria = "";
         let tempImportData = null;
