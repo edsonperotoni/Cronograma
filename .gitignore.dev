@@ -1,6 +1,5 @@
 # --- Segurança e Dados Sensíveis ---
 # Ignora chaves, banco de usuários e a lógica da IA
-contribuintes_db.json
 gestao_usuarios.py
 .env
 
