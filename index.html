@@ -1285,6 +1285,48 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Estilo para o Modal Customizado de Troca de Usuário */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            /* Controlado pelo JS */
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            /* Garante que fique acima de tudo */
+        }
+
+        .modal-overlay .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        .modal-overlay .modal-header {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1rem;
+            padding: 0;
+        }
+
+        .modal-overlay .modal-footer {
+            border-top: 1px solid #eee;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
     </style>
 </head>
 
@@ -1399,7 +1441,7 @@
             <div class="col-12 col-lg-4 d-flex gap-2 gap-md-4 justify-content-lg-end">
                 <button id="btnSalvarTudo"
                     class="btn btn-success flex-grow-1 flex-lg-grow-0 px-3 py-2 shadow-sm position-relative d-flex align-items-center justify-content-center"
-                    onclick="saveAllRows()" style="min-height: 48px; border-radius: 8px;">
+                    onclick="saveAllRows();" style="min-height: 48px; border-radius: 8px;">
 
                     <span class="text-white-50 d-none d-md-inline-block position-absolute fw-bold"
                         style="font-size: 0.55rem; top: 2px; right: 6px;">CTRL+S</span>
@@ -1771,6 +1813,15 @@ Aqui é onde os dados vão aparecer de verdade.
                                                 <i class="bi bi-cloud-download-fill me-2 text-primary"></i>
                                                 <strong>Google Drive</strong>
                                             </button>
+
+                                            <!-- Adicionar dentro da <div class="col-12 col-md-6"> de Importar backup -->
+                                            <button id="btn-force-cloud-restore"
+                                                class="btn btn-light border-0 text-secondary text-start btn-sm py-2 px-3 shadow-sm font-weight-bold"
+                                                onclick="confirmarRestauracaoForcadaNuvem()"
+                                                title="Descarta as mudanças locais e baixa o que está na nuvem">
+                                                <i class="bi bi-cloud-download me-2"></i>
+                                                <strong>Restaurar da Nuvem</strong>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1820,16 +1871,45 @@ Aqui é onde os dados vão aparecer de verdade.
                                                     class="bi bi-shield-lock"></i></span>
                                             <input type="password" id="inputChaveAcesso" class="form-control"
                                                 placeholder="Insira sua chave aqui..."
-                                                onchange="saveChaveContribuinte(true)">
+                                                onchange="saveChaveContribuinte()">
                                         </div>
+
+                                        <!-- Identificação do Usuário -->
                                         <div id="displayEmailChave" class="mt-2 small text-primary fw-bold"
                                             style="font-size: 0.7rem; display: none;">
-                                            <i class="bi bi-person-circle me-1"></i> Usuário: <span
+                                            <i class="bi bi-person-check-fill me-1"></i> <span
                                                 id="labelEmailContribuinte"></span>
                                         </div>
-                                        <small class="text-muted" style="font-size: 0.65rem;">
-                                            Esta chave é fornecida pelo administrador para liberar o uso da IA na
-                                            importação de Matérias (esta funcionalidade está em testes).
+
+                                        <!-- Monitoramento de Uso (Será exibido via JS ao validar) -->
+                                        <div id="containerStatusIA" class="mt-3 pt-3 border-top" style="display: none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fw-bold text-uppercase"
+                                                    style="font-size: 0.6rem;">Consumo de Cota de IA</span>
+                                                <span id="labelConsumoIA" class="badge bg-primary-subtle text-primary"
+                                                    style="font-size: 0.6rem;">0 / 0</span>
+                                            </div>
+                                            <div class="progress mb-2" style="height: 6px; background-color: #e9ecef;">
+                                                <div id="barraProgressoIA"
+                                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                                    role="progressbar" style="width: 0%; transition: width 1s ease;">
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <div class="text-muted" style="font-size: 0.6rem;">
+                                                    <i class="bi bi-calendar-event me-1"></i> Expira em: <span
+                                                        id="labelExpiracaoIA" class="fw-bold text-dark">-</span>
+                                                </div>
+                                                <span id="badgeStatusChave" class="badge rounded-pill"
+                                                    style="font-size: 0.55rem;">-</span>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-3 op-25">
+                                        <small class="text-muted d-block" style="font-size: 0.65rem;">
+                                            A chave de contribuinte libera o processamento via <strong>Gemini 2.5
+                                                Flash</strong> e sincronização em nuvem.
                                         </small>
                                     </div>
                                 </div>
@@ -1837,6 +1917,29 @@ Aqui é onde os dados vão aparecer de verdade.
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Restauração Forçada -->
+    <div id="modalConfirmarRestoreNuvem" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-primary fw-bold"><i class="bi bi-cloud-arrow-down me-2"></i>Restaurar Nuvem</h4>
+            </div>
+            <div class="modal-body">
+                <p>Deseja descartar todas as alterações feitas <strong>neste computador</strong> e baixar a última
+                    versão salva na nuvem?</p>
+                <div class="alert alert-warning py-2 small">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Esta ação não pode ser desfeita localmente. O progresso atual não sincronizado será perdido.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm px-4"
+                    onclick="fecharModalRestoreForcado(false)">Cancelar</button>
+                <button class="btn btn-primary btn-sm px-4 fw-bold" onclick="fecharModalRestoreForcado(true)">Sim,
+                    Restaurar</button>
             </div>
         </div>
     </div>
@@ -2159,7 +2262,7 @@ Aqui é onde os dados vão aparecer de verdade.
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center py-2">
-                    <h5 id="msgConfirmacaoExclusao" class="mb-0 text-secondary"></h5>
+                    <p id="msgConfirmacaoExclusao" class="mb-0 text-secondary"></p>
                 </div>
                 <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
                     <button type="button" class="btn btn-sm btn-secondary px-4" data-bs-dismiss="modal">
@@ -2172,6 +2275,81 @@ Aqui é onde os dados vão aparecer de verdade.
             </div>
         </div>
     </div>
+
+    <!-- Modal de Chave Inválida -->
+    <div id="modalChaveInvalida" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-danger fw-bold"><i class="bi bi-shield-x me-2"></i>Chave Inválida</h4>
+            </div>
+            <div class="modal-body">
+                <p>A chave inserida não foi reconhecida pelo servidor ou está expirada.</p>
+                <div class="alert alert-secondary py-2 small">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Se você prosseguir, o sistema entrará em <strong>Modo Local</strong>. As alterações recentes ficarão
+                    apenas neste computador.
+                </div>
+                <p class="text-muted small">Deseja deslogar da conta anterior mesmo assim?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm px-4" onclick="fecharModalChaveInvalida(false)">Corrigir
+                    Chave</button>
+                <button class="btn btn-danger btn-sm px-4 fw-bold" onclick="fecharModalChaveInvalida(true)">Sair e Modo
+                    Local</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Saída com Erro de Sync -->
+    <div id="modalErroSyncSair" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-warning fw-bold"><i class="bi bi-cloud-slash me-2"></i>Falha na Sincronização</h4>
+            </div>
+            <div class="modal-body">
+                <p>Não foi possível enviar seus dados para a nuvem devido a uma falha de conexão ou erro no servidor.
+                </p>
+                <div class="alert alert-danger py-2 small">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Se você sair agora, as alterações recentes ficarão salvas <strong>apenas
+                        neste computador</strong> e não aparecerão em outros dispositivos.
+                </div>
+                <p class="text-muted small">Deseja deslogar e entrar em modo local mesmo assim?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm px-4" onclick="fecharModalErroSync(false)">Cancelar
+                    (Ficar)</button>
+                <button class="btn btn-outline-danger btn-sm px-4" onclick="fecharModalErroSync(true)">Deslogar mesmo
+                    assim</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Troca de Usuário -->
+    <div id="modalTrocaUsuario" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-danger fw-bold"><i class="bi bi-person-exclamation me-2"></i>Troca de Contribuinte</h4>
+            </div>
+            <div class="modal-body">
+                <p>Você está prestes a alternar para a conta de: <br><strong id="nomeNovoUsuario"
+                        class="fs-5">...</strong></p>
+                <p class="text-muted small">Isso removerá as matérias locais atuais para carregar o progresso da nova
+                    conta.</p>
+
+                <div id="avisoSincroniaPendente" class="alert alert-warning py-2 small" style="display:none;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Você tem alterações que ainda não subiram para a nuvem!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm px-4" onclick="fecharModalTroca(false)">Cancelar</button>
+                <button class="btn btn-danger btn-sm px-4 fw-bold" onclick="fecharModalTroca(true)">Sim, Trocar e
+                    Limpar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalRecarregando" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -2231,9 +2409,35 @@ Aqui é onde os dados vão aparecer de verdade.
         const MIN_OVERLAY_TIME_DEFAULT = 2800; // 2.8 segundos
         let MIN_OVERLAY_TIME = MIN_OVERLAY_TIME_DEFAULT;
 
+        // Variável global para controlar o resolve da troca
+        let resolveTrocaUsuario;
+        let resolveErroSync;
+        let resolveChaveInvalida;
+        let resolveRestoreForcado;
+
+        // Substitua a variável let cloudSyncPending por estas funções:
+        const CloudSync = {
+            get isPending() {
+                return localStorage.getItem("config_vBorda_cloud_pending") === "true";
+            },
+            set pending(status) {
+                localStorage.setItem("config_vBorda_cloud_pending", status);
+            }
+        };
+
         const PREFIX = "study_vBorda_";
         const LIST_KEY = "materias_list_vBorda";
         const CONFIG_PREFIX = "config_vBorda_";
+
+        const BASE_URL_SYNC = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+            ? "http://127.0.0.1:8000"
+            : "https://cronograma-ia-749297806019.southamerica-east1.run.app";
+
+        // Se não estiver no localhost, desativa todos os logs
+        if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+            console.log = function () { };
+            console.warn = function () { };
+        }
 
         // ==========================================
         // 🚀 INÍCIO (Ao carregar a página)
@@ -2267,7 +2471,6 @@ Aqui é onde os dados vão aparecer de verdade.
                 // Marca que esta versão já foi processada
                 localStorage.setItem("app_version_installed", app_version);
                 console.log("Migração concluída com sucesso.");
-
             }
             // ----------------------------------------------
 
@@ -2304,13 +2507,141 @@ Aqui é onde os dados vão aparecer de verdade.
             }
 
 
-            //firestore (nnuvem)
+            //firestore (nuvem)
             inicializarSincronia();
 
             const label_app_version = document.getElementById("app-version");
             label_app_version.innerText = app_version;
 
+            if (localStorage.getItem("config_vBorda_chave_contribuinte")) {
+                if (CloudSync.isPending) {
+                    console.log("⚠️ Detectada pendência de sincronia de uma sessão anterior.");
+                    setUnsavedChanges(true); // Já deixa o botão de salvar em alerta
+                }
+            }
         };
+
+        const btnSalvar = document.getElementById('btnSalvarTudo');
+        if (btnSalvar) {
+            btnSalvar.addEventListener('click', async () => {
+                // O safeWrapper evita cliques duplos durante o processamento
+                await safeWrapper(async () => {
+                    await executarFluxoSalvamentoCompleto();
+                });
+            });
+        }
+
+        async function confirmarRestauracaoForcadaNuvem() {
+            // Só permite se houver uma chave
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            if (!chave || !chave.includes("_key_")) {
+                exibirAlerta("Você precisa estar conectado a uma conta para restaurar da nuvem.", "warning");
+                return;
+            }
+
+            document.getElementById('modalConfirmarRestoreNuvem').style.display = 'flex';
+            return new Promise((resolve) => {
+                resolveRestoreForcado = resolve;
+            }).then(async (confirmado) => {
+                if (confirmado) {
+                    await executarDownloadForcadoFirestore();
+                }
+            });
+        }
+
+        function fecharModalRestoreForcado(confirmado) {
+            document.getElementById('modalConfirmarRestoreNuvem').style.display = 'none';
+            if (resolveRestoreForcado) resolveRestoreForcado(confirmado);
+        }
+
+        async function executarDownloadForcadoFirestore() {
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+
+            closeModals(); // Fecha o modal de config
+            mostrarOverlay("Buscando sua última versão na nuvem...");
+
+            try {
+                const response = await fetch(`${BASE_URL_SYNC}/nuvem/restore`, {
+                    headers: { "authorization": chave }
+                });
+
+                if (!response.ok) throw new Error("Não foi possível conectar ao servidor.");
+
+                const res = await response.json();
+
+                if (res.status === "success" && res.data) {
+                    // A função processarRestauracaoTotal já injeta os dados e dá o Reload
+                    processarRestauracaoTotal(res.data.payload);
+                } else {
+                    exibirAlerta("Nenhum dado encontrado na nuvem para esta conta.", "warning");
+                    esconderOverlay();
+                }
+            } catch (e) {
+                console.error(e);
+                exibirAlerta("Erro ao restaurar: " + e.message, "danger");
+                esconderOverlay();
+            }
+        }
+
+        async function confirmarChaveInvalidaModal() {
+            document.getElementById('modalChaveInvalida').style.display = 'flex';
+            return new Promise((resolve) => {
+                resolveChaveInvalida = resolve;
+            });
+        }
+
+        function fecharModalChaveInvalida(confirmado) {
+            document.getElementById('modalChaveInvalida').style.display = 'none';
+            if (resolveChaveInvalida) resolveChaveInvalida(confirmado);
+        }
+
+        async function confirmarErroSyncModal() {
+            document.getElementById('modalErroSyncSair').style.display = 'flex';
+            return new Promise((resolve) => {
+                resolveErroSync = resolve;
+            });
+        }
+
+        function fecharModalErroSync(confirmado) {
+            document.getElementById('modalErroSyncSair').style.display = 'none';
+            if (resolveErroSync) resolveErroSync(confirmado);
+        }
+
+        async function confirmarTrocaModal(nomeUsuario, temPendencia) {
+            const modal = document.getElementById('modalTrocaUsuario');
+            const nomeTxt = document.getElementById('nomeNovoUsuario');
+            const aviso = document.getElementById('avisoSincroniaPendente');
+
+            nomeTxt.innerText = nomeUsuario;
+            aviso.style.display = temPendencia ? 'block' : 'none';
+            modal.style.display = 'flex';
+
+            return new Promise((resolve) => {
+                resolveTrocaUsuario = resolve;
+            });
+        }
+
+        function fecharModalTroca(confirmado) {
+            document.getElementById('modalTrocaUsuario').style.display = 'none';
+            if (resolveTrocaUsuario) resolveTrocaUsuario(confirmado);
+        }
+
+        // Orquestra o salvamento local e a subida para a nuvem
+        async function executarFluxoSalvamentoCompleto() {
+            try {
+                // 1. O saveAllRows já cuida de destruir editores e gravar no LocalStorage
+                await saveAllRows();
+
+                // 2. Só tentamos a nuvem se houver algo para salvar e a chave estiver lá
+                const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+                if (chave && chave.includes("_key_")) {
+                    await persistirSnapshotTotal();
+                }
+            } catch (err) {
+                console.error("❌ Falha no fluxo de salvamento:", err);
+                exibirAlerta("Erro ao salvar dados.", "danger");
+            }
+        }
 
         document.querySelector('#tableBody').addEventListener('click', function (e) {
             // 1. Filtro de alvo: checkbox dentro da coluna de observações
@@ -2371,45 +2702,54 @@ Aqui é onde os dados vão aparecer de verdade.
         // Adicione esta chamada no seu fluxo de inicialização
         async function inicializarSincronia() {
             const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-            if (!chave || !chave.includes("_key_")) return;
+            const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+
+            // Só prossegue se houver uma chave configurada
+            if (!chave || !chave.includes("_key_")) {
+                console.log("ℹ️ Sincronia: Modo local (sem chave).");
+                return;
+            }
 
             try {
-                const BASE_URL_SYNC = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-                    ? "http://127.0.0.1:8000"
-                    : "https://cronograma-ia-749297806019.southamerica-east1.run.app";
-
-                const response = await fetch(`${BASE_URL_SYNC}/drive/restore`, {
+                const response = await fetch(`${BASE_URL_SYNC}/nuvem/restore`, {
                     headers: { "authorization": chave }
                 });
 
-                if (!response.ok) {
-                    // Se o status for 403 (o caso da expiração)
-                    if (response.status === 403) {
-                        const erro = await response.json();
-                        console.warn("Acesso negado pelo servidor:", erro.detail);
-                        // Exibe o alerta visual para o usuário
-                        exibirAlerta(`${erro.detail}`, "danger");
-                    }
-                    return; // Interrompe a execução pois deu erro
-                }
+                if (!response.ok) return;
 
                 const res = await response.json();
 
                 if (res.status === "success" && res.data) {
-                    const remoteDate = new Date(res.data.metadata.ultima_sinc);
+                    const remoteDate = new Date(res.data.metadata.ultima_sinc).getTime();
                     const localSaveTime = localStorage.getItem("last_local_save_time");
-                    const localDate = localSaveTime ? new Date(localSaveTime) : new Date(0);
 
-                    // Se a nuvem for mais nova que o PC em mais de 5 segundos
-                    if (remoteDate.getTime() > (localDate.getTime() + 5000)) {
-                        console.log("☁️ Conflito detectado: Nuvem é mais recente.");
+                    // --- CENÁRIO 1: NAVEGADOR VAZIO (AUTO-RESTORE) ---
+                    if (!localSaveTime || list.length === 0) {
+                        console.log("📥 Primeiro acesso detectado. Restaurando dados da nuvem automaticamente...");
+                        // Usamos o overlay para o usuário saber que algo está acontecendo
+                        mostrarOverlay("Sincronizando seus dados...");
+
+                        // Pequeno delay para a animação aparecer
+                        setTimeout(() => {
+                            processarRestauracaoTotal(res.data.payload);
+                            esconderOverlay();
+                        }, 1000);
+                        return;
+                    }
+
+                    // --- CENÁRIO 2: CONFLITO DE DATAS ---
+                    const localDate = new Date(localSaveTime).getTime();
+
+                    // Margem de 5 segundos para evitar falsos positivos
+                    if (remoteDate > (localDate + 5000)) {
+                        console.log("☁️ Conflito: Nuvem é mais recente.");
                         exibirModalConflito(res.data);
                     } else {
-                        console.log("✅ Sincronia: Dados locais já estão atualizados.");
+                        console.log("✅ Sincronia: Dados locais estão atualizados.");
                     }
                 }
             } catch (e) {
-                console.warn("Falha na checagem de sincronia:", e);
+                console.warn("💥 Falha na checagem de sincronia:", e);
             }
         }
 
@@ -2610,10 +2950,28 @@ Aqui é onde os dados vão aparecer de verdade.
             bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusao')).hide();
         });
 
+
         window.addEventListener('beforeunload', (e) => {
-            if (hasUnsavedChanges) {
+            const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+            const temChave = chave && chave.includes("_key_");
+
+            // 1. Se não tem chave, a sincronia de nuvem não existe
+            if (!temChave) {
+                CloudSync.pending = false;
+            }
+            // 2. Se tem chave e a nuvem está pendente, forçamos o alerta visual
+            else if (CloudSync.isPending) {
+                setUnsavedChanges(true); // Faz o botão "Salvar Tudo" brilhar/ficar vermelho
+            }
+
+            // 3. O navegador trava a saída se houver pendência local OU de nuvem
+            if (hasUnsavedChanges || CloudSync.isPending) {
+                const msg = "Existem dados não salvos ou pendentes de sincronização com a nuvem.";
+
+                // Configuração padrão de segurança dos browsers modernos
                 e.preventDefault();
-                e.returnValue = 'Você possui alterações não salvas. Deseja realmente sair?';
+                e.returnValue = msg;
+                return msg;
             }
         });
 
@@ -2622,10 +2980,10 @@ Aqui é onde os dados vão aparecer de verdade.
             loadColumnNames();
         });
 
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        document.addEventListener('keydown', async (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
-                saveAllRows();
+                await executarFluxoSalvamentoCompleto();
             }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
                 e.preventDefault();
@@ -2642,9 +3000,19 @@ Aqui é onde os dados vão aparecer de verdade.
         });
 
         function dispararAlertaReload(mensagem = "", segundos = 1) {
+            // 1. Forçamos a limpeza das travas de segurança
+            hasUnsavedChanges = false;
+            CloudSync.pending = false;
+
+            // 2. Atualizamos o texto do overlay que já está na tela
             const loadingText = document.getElementById("loading-text");
             if (loadingText) loadingText.innerText = mensagem;
+
+            // 3. Executamos o reload após o tempo solicitado
             setTimeout(() => {
+                // Escondemos o overlay apenas para garantir que não haja "flicker" antes do reload
+                const overlay = document.getElementById("loading-overlay");
+                if (overlay) overlay.style.display = "none";
                 location.reload();
             }, segundos * 1000);
         }
@@ -2752,62 +3120,325 @@ Aqui é onde os dados vão aparecer de verdade.
             }, 2000);
         }
 
+        // 1. Adicione esta função para gerenciar o dashboard de uso
+        function renderizarStatusIA(data) {
+            const containerStatus = document.getElementById('containerStatusIA');
+            const displayEmail = document.getElementById('displayEmailChave');
+
+            if (!containerStatus) return; // Segurança caso o elemento não exista
+
+            // Exibe os containers
+            containerStatus.style.display = 'block';
+            if (displayEmail) displayEmail.style.display = 'block';
+
+            const uso = data.uso_atual || 0;
+            const cota = data.cota_maxima || 0;
+            const percentual = Math.min((uso / cota) * 100, 100);
+
+            // Atualiza Barra e Texto de Consumo
+            const labelConsumo = document.getElementById('labelConsumoIA');
+            const barra = document.getElementById('barraProgressoIA');
+
+            if (labelConsumo) labelConsumo.innerText = `${uso} / ${cota}`;
+            if (barra) {
+                barra.style.width = `${percentual}%`;
+                // Ajusta cores conforme o uso
+                barra.className = 'progress-bar progress-bar-striped progress-bar-animated';
+                if (percentual > 85) barra.classList.add('bg-danger');
+                else if (percentual > 50) barra.classList.add('bg-warning');
+                else barra.classList.add('bg-primary');
+            }
+
+            // Atualiza Data de Expiração
+            const labelExp = document.getElementById('labelExpiracaoIA');
+            if (labelExp && data.expiracao) {
+                // 1. Pega apenas a parte da data (YYYY-MM-DD), ignorando qualquer "T00:00:00"
+
+                const dataApenas = data.expiracao.split('T')[0];
+                // 2. Divide as partes para inverter o padrão
+                const partes = dataApenas.split('-');
+
+                if (partes.length === 3) {
+                    // Formata para o padrão brasileiro: DD/MM/YYYY
+                    labelExp.innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                } else {
+                    labelExp.innerText = dataApenas;
+                }
+            }
+
+            // Atualiza Badge de Status
+            const badge = document.getElementById('badgeStatusChave');
+            if (badge) {
+                if (data.valido) {
+                    badge.innerText = 'ATIVO';
+                    badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success';
+                } else {
+                    badge.innerText = 'INATIVO';
+                    badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger';
+                }
+            }
+        }
         // Função para extrair a parte do e-mail da chave (antes do _key_)
-        function renderizarEmailChave() {
+        async function renderizarEmailChave() {
             const input = document.getElementById('inputChaveAcesso');
             const display = document.getElementById('displayEmailChave');
             const label = document.getElementById('labelEmailContribuinte');
+            const containerStatus = document.getElementById('containerStatusIA');
+            const valor = input.value.trim();
+            const emailPart = valor.includes("_key_") ? valor.split("_key_")[0] : "Chave inválida!";
+
+            label.innerText = emailPart;
+            display.style.display = "block";
+            input.classList.remove('is-invalid');
+
+            try {
+                const response = await fetch(`${BASE_URL_SYNC}/validar-contribuinte`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chave: valor })
+                });
+
+                const dados = await response.json();
+
+                // 2. Verificamos se a rede deu erro (400, 403, 500...)
+                if (!response.ok) {
+                    if (containerStatus) containerStatus.style.display = "none";
+                    input.classList.add('is-invalid');
+
+                    // Agora usamos os 'dados' que já foram lidos
+                    console.warn(`⚠️ Falha na validação: ${dados.detail || 'Erro desconhecido'}`);
+                    return;
+                }
+
+                // 3. Sucesso: Se chegamos aqui, o status é 2xx e temos os dados
+                if (dados.status === "success" && dados.valido) {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    renderizarStatusIA(dados);
+                }
+
+            } catch (error) {
+                console.error("💥 Erro de conexão com o servidor:", error);
+            }
+
+        }
+
+        // ==========================================
+        // 🔑 GESTÃO DE ACESSO E CONTRIBUINTE
+        // ==========================================
+
+        /**
+         * Salva a nova chave de contribuinte com segurança.
+         * Garante que os dados locais sejam limpos ou salvos 
+         * antes da troca para evitar colisão entre usuários diferentes.
+         */
+        async function saveChaveContribuinte() {
+            const input = document.getElementById('inputChaveAcesso');
+            const novaChave = input.value.trim();
+            const chaveAntiga = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
+
+            // 1. Evita processamento se a chave for idêntica
+            if (novaChave === chaveAntiga) return;
+
+            // --- CENÁRIO A: LOGOUT (CHAVE ESVAZIADA) ---
+            if (novaChave === "") {
+                // Se havia algo pendente, tentamos salvar na conta que está saindo
+                if (chaveAntiga && (hasUnsavedChanges || CloudSync.isPending)) {
+                    const sucessoSync = await persistirSnapshotTotal();
+                    if (!sucessoSync) {
+                        const sairMesmoAssim = await confirmarErroSyncModal();
+                        if (!sairMesmoAssim) {
+                            input.value = chaveAntiga;
+                            return;
+                        }
+                    }
+                }
+
+                console.log("🔌 Saindo da conta e entrando em modo local.");
+                localStorage.setItem("config_vBorda_chave_contribuinte", "");
+                CloudSync.pending = false; // Limpa pendência pois não há mais nuvem
+                renderizarEmailChave();
+                checkInterfaceState();
+                return;
+            }
+
+            // --- CENÁRIO B: TROCA OU NOVA CONEXÃO ---
+
+            // Tenta salvar o progresso atual antes de validar a nova chave
+            if (chaveAntiga && (hasUnsavedChanges || CloudSync.isPending)) {
+                await persistirSnapshotTotal();
+            }
+
+            // Validação no Backend (Protegendo a RegEx)
+            const dadosValidacao = await validarChaveNoServidor(novaChave);
+
+            if (dadosValidacao.valido) {
+
+                const temPendencia = hasUnsavedChanges || CloudSync.isPending;
+
+                // Usando o modal customizado em vez do confirm nativo
+                const prosseguir = await confirmarTrocaModal(dadosValidacao.nome, temPendencia);
+
+                if (!prosseguir) {
+                    input.value = chaveAntiga;
+                    return;
+                }
+
+
+                // Se chegou aqui: ou era o primeiro login ou o usuário aceitou a troca no modal
+                limparDadosLocaisParaNovoUsuario(); // Remove last_local_save_time para forçar auto-restore
+                localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                CloudSync.pending = false; // Reset para a nova conta
+
+                renderizarStatusIA(dadosValidacao);
+                checkInterfaceState();
+                exibirAlerta(`Conectado como ${dadosValidacao.nome}!`, "success");
+
+                // Dispara a busca do backup da nova conta
+                inicializarSincronia();
+            }
+            else {
+                // --- 🚨 CHAVE INVÁLIDA OU EXPIRADA ---
+                // Aqui usamos o seu texto específico para o confirm
+                const prosseguir = await confirmarChaveInvalidaModal();
+
+                if (prosseguir) {
+                    // O usuário aceitou sair mesmo com a chave errada
+                    localStorage.setItem("config_vBorda_chave_contribuinte", "");
+                    CloudSync.pending = false;
+                    renderizarEmailChave();
+                    checkInterfaceState();
+                    exibirAlerta("Entrou em modo local.", "info");
+                } else {
+                    // O usuário quer tentar digitar a chave novamente
+                    input.value = chaveAntiga;
+                    // Opcional: foca no input para ele tentar de novo
+                    setTimeout(() => input.focus(), 100);
+                }
+            }
+        }
+
+        /**
+         * Função auxiliar para isolar a chamada de rede
+         */
+        async function validarChaveNoServidor(chave) {
+            try {
+                const response = await fetch(`${BASE_URL_SYNC}/validar-contribuinte`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chave: chave })
+                });
+                const dados = await response.json();
+                return {
+                    valido: response.ok && dados.valido,
+                    nome: dados.nome || "Usuário",
+                    uso_atual: dados.uso_atual,
+                    cota_maxima: dados.cota_maxima,
+                    expiracao: dados.expiracao
+                };
+            } catch (e) {
+                return { valido: false };
+            }
+        }
+
+        // Auxiliar para manter o código limpo
+        function limparDadosLocaisParaNovoUsuario() {
+            console.log("🧹 Executando limpeza atômica para troca de conta.");
+            const lista = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            lista.forEach(m => {
+                localStorage.removeItem(PREFIX + m);
+                localStorage.removeItem(CONFIG_PREFIX + m);
+            });
+            localStorage.removeItem(LIST_KEY);
+            localStorage.removeItem("last_local_save_time");
+            localStorage.removeItem("last_active");
+            document.getElementById('tableBody').innerHTML = setInitialTableContent();
+        }
+
+        /**
+         * Auxiliar para verificar se existem dados populados no LocalStorage
+         */
+        function itensCronogramaExistentes() {
+            const lista = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            return lista.length > 0;
+        }
+
+        /**
+         * Limpa o estado da aplicação para troca de usuário ou logout.
+         */
+        function limparEstadoLocalTotal() {
+            console.log("🧹 Limpando estado local para transição de usuário...");
+
+            // Limpa lista de matérias e conteúdos
+            const lista = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+            lista.forEach(m => {
+                localStorage.removeItem(PREFIX + m);
+                localStorage.removeItem(CONFIG_PREFIX + m);
+            });
+            localStorage.removeItem(LIST_KEY);
+
+            // Limpa travas de sincronia e navegação
+            localStorage.removeItem("last_local_save_time");
+            localStorage.removeItem("last_active");
+            sessionStorage.removeItem('google_access_token');
+
+            // Reseta variáveis globais de controle
+            currentMateria = "";
+            accessToken = null;
+            hasUnsavedChanges = false;
+            activeEditors = {}; // Nota: os editores reais devem ser destruídos via saveAllRows se necessário
+        }
+
+        /**
+         * Renderiza o status da IA e valida a chave com RegEx
+         */
+        async function renderizarEmailChave() {
+            const input = document.getElementById('inputChaveAcesso');
+            const display = document.getElementById('displayEmailChave');
+            const label = document.getElementById('labelEmailContribuinte');
+            const containerStatus = document.getElementById('containerStatusIA');
             const valor = input.value.trim();
 
-            if (valor.includes("_key_")) {
-                const emailPart = valor.split("_key_")[0];
-                label.innerText = emailPart;
-                display.style.display = "block";
-            } else {
+            // Se o campo estiver vazio, apenas limpamos a interface e saímos
+            if (!valor) {
                 display.style.display = "none";
+                if (containerStatus) containerStatus.style.display = "none";
+                input.classList.remove('is-invalid', 'is-valid');
+                return;
             }
-        }
 
-        // No seu saveChaveContribuinte, adicione a limpeza da sincronia que discutimos
-        function saveChaveContribuinte(showAlert = false) {
-            const input = document.getElementById('inputChaveAcesso');
-            const valor = input.value.trim();
+            try {
+                // Enviamos para o backend sem validar formato no cliente
+                const response = await fetch(`${BASE_URL_SYNC}/validar-contribuinte`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chave: valor })
+                });
 
-            localStorage.setItem("config_vBorda_chave_contribuinte", valor);
+                const dados = await response.json();
 
-            // Invalida a sincronia anterior para forçar busca da nova conta
-            localStorage.removeItem("last_local_save_time");
+                if (!response.ok) {
+                    // O backend vai retornar 400 (formato inválido) ou 403 (chave não existe)
+                    // Tratamos ambos como "Chave Inválida" visualmente para o usuário
+                    if (containerStatus) containerStatus.style.display = "none";
+                    display.style.display = "none";
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    console.warn(`⚠️ Validação recusada pelo servidor: ${dados.detail}`);
+                    return;
+                }
 
-            // Atualiza o rótulo do e-mail imediatamente
-            renderizarEmailChave();
+                // Se o status for 200 OK, a chave passou na RegEx do Python e existe no Firestore
+                if (dados.status === "success" && dados.valido) {
+                    label.innerText = valor.includes("_key_") ? valor.split("_key_")[0] : "Usuário Ativo";
+                    display.style.display = "block";
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    renderizarStatusIA(dados);
+                }
 
-            checkInterfaceState();
-
-            if (showAlert) {
-                exibirAlerta("Chave salva! Reiniciando sincronia...", "success");
-                inicializarSincronia();
-            }
-        }
-
-        function saveChaveContribuinte(showAlert = false) {
-            const input = document.getElementById('inputChaveAcesso');
-            const valor = input.value.trim();
-            localStorage.setItem("config_vBorda_chave_contribuinte", valor);
-            checkInterfaceState();
-
-            // 🚀 2. INVALIDA A DATA DE SINCRONIA LOCAL
-            // Isso força o app a considerar a nuvem como "mais nova" no próximo load
-            localStorage.removeItem("last_local_save_time");
-
-            // Atualiza o rótulo do e-mail imediatamente
-            renderizarEmailChave();
-
-            checkInterfaceState();
-
-            if (showAlert) {
-                exibirAlerta("Chave salva! Reiniciando sincronia...", "success");
-                // Opcional: disparar a sincronia imediatamente sem precisar de F5
-                inicializarSincronia();
+            } catch (error) {
+                console.error("💥 Falha de comunicação com o servidor:", error);
             }
         }
 
@@ -2829,10 +3460,7 @@ Aqui é onde os dados vão aparecer de verdade.
             const formData = new FormData();
             formData.append('file', file);
             try {
-                let url_service_ia = (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
-                    ? "https://cronograma-ia-749297806019.southamerica-east1.run.app/processar"
-                    : "http://127.0.0.1:8000/processar";
-                const response = await fetch(url_service_ia, {
+                const response = await fetch(`${BASE_URL_SYNC}/processar`, {
                     method: "POST",
                     headers: {
                         // Esta chave deve ser IGUAL à CHAVE_CONTRIBUINTE_VALIDA no seu main.py
@@ -3272,8 +3900,8 @@ Aqui é onde os dados vão aparecer de verdade.
             localStorage.setItem("last_local_save_time", new Date().toISOString());
             setUnsavedChanges(false);
 
-            // Dispara a nuvem em background (sem travar o usuário)
-            persistirSnapshotTotal();
+            // MARCA QUE A NUVEM ESTÁ DESATUALIZADA
+            CloudSync.pending = true;
         }
 
         function processarRestauracaoTotal(payload) {
@@ -3296,32 +3924,35 @@ Aqui é onde os dados vão aparecer de verdade.
             // 3. Atualiza o timestamp local para coincidir com o que acabou de baixar
             localStorage.setItem("last_local_save_time", new Date().toISOString());
 
+            hasUnsavedChanges = false;
+            CloudSync.pending = false;
+
+            closeModals();
             // 4. Recarrega a interface
-            dispararAlertaReload("Dados sincronizados da nuvem com sucesso!", 1);
+            dispararAlertaReload("Dados restaurados da nuvem com sucesso!", 1);
         }
 
         async function persistirSnapshotTotal() {
             const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
 
-            // Regra de Ouro: Só tenta sincronizar se houver uma chave de contribuinte configurada
+            // 1. Validação de saída (Prevenção de requisições inúteis)
             if (!chave || !chave.includes("_key_")) {
                 console.log("ℹ️ Sincronização em nuvem ignorada: Usuário sem chave de contribuinte.");
                 return;
             }
 
-            // Coleta o "blocão" de dados que já temos no localStorage
-            // Estou usando a função getDadosJsonLocais() que discutimos antes
-            const fullJson = await getDadosJsonLocais();
-
             try {
-                // Define a URL base dinamicamente (Desenvolvimento vs Produção)
-                const BASE_URL_SYNC = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-                    ? "http://127.0.0.1:8000"
-                    : "https://cronograma-ia-749297806019.southamerica-east1.run.app";
+                console.log("☁️ Iniciando ciclo de persistência atômica...");
 
-                console.log("☁️ Enviando Snapshot para o Firestore...");
+                // 2. O PULO DO GATO: Salva tudo o que está aberto ANTES de ler o LocalStorage
+                // Isso garante que o que o usuário acabou de digitar no CKEditor seja computado.
+                await saveAllRows();
 
-                const response = await fetch(`${BASE_URL_SYNC}/drive/sync`, {
+                // 3. CAPTURA: Agora sim, pegamos o JSON que já contém os dados salvos no passo anterior
+                const fullJson = await getDadosJsonLocais();
+
+                // 4. ENVIO: Dispara para o Cloud Run
+                const response = await fetch(`${BASE_URL_SYNC}/nuvem/sync`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -3339,11 +3970,12 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
 
                 const result = await response.json();
-                console.log("✅ Sincronização Firestore concluída:", result.message);
+                CloudSync.pending = false;// Nuvem e Local agora são iguais
+
+                console.log("✅ Snapshot sincronizado com sucesso no Firestore.");
 
             } catch (err) {
-                // Aqui não exibimos 'alert' para não interromper o estudo do usuário, 
-                // apenas logamos no console para debug.
+                // Logamos o erro de rede, mas sem interromper o fluxo do usuário (silencioso)
                 console.error("❌ Falha na sincronização silenciosa:", err.message);
             }
         }
@@ -3488,6 +4120,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 const global = document.getElementById('checkLimpezaGlobal').checked;
                 modal.hide();
                 await executarLimpezaPrazos(global);
+                CloudSync.pending = true;
             };
 
             modal.show();
@@ -3780,7 +4413,7 @@ Aqui é onde os dados vão aparecer de verdade.
                                         <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
                                     </div>
                                     <h6 class="fw-bold text-uppercase text-danger mb-3">ATENÇÃO</h6>
-                                    <p class="small text-muted mb-4">
+                                    <p>
                                         Você está prestes a excluir a matéria <strong>${currentMateria}</strong><br><br>
 
                                         Esta ação apagará TODOS os conteúdos e notas associadas. Você precisará
@@ -3822,13 +4455,16 @@ Aqui é onde os dados vão aparecer de verdade.
             const btnAuth = document.getElementById('btn-google-auth');
             const btExport = document.getElementById('btn-google-export');
             const btImport = document.getElementById('btn-google-import');
-            const btnIaContainer = document.getElementById('container-btn-ia'); // Se você tiver um wrapper para o botão de IA
+            const btnIaContainer = document.getElementById('container-btn-ia');
+            const btnbtnForceCloudRestore = document.getElementById('btn-google-auth');
+
 
             if (chave.trim() !== "" && chave.includes("_key_")) {
                 // MOSTRAR elementos de contribuição
                 if (btnAuth) btnAuth.style.setProperty('display', 'block', 'important');
                 if (btExport) btExport.style.setProperty('display', 'block', 'important');
                 if (btImport) btImport.style.setProperty('display', 'block', 'important');
+                if (btnbtnForceCloudRestore) btnbtnForceCloudRestore.style.setProperty('display', 'block', 'important');
                 // Se o botão de IA estiver no HTML com um ID específico:
                 const btnIa = document.querySelector('button[onclick="acionarIA()"]');
                 if (btnIa) btnIa.style.display = 'inline-block';
@@ -3852,10 +4488,19 @@ Aqui é onde os dados vão aparecer de verdade.
                 if (btnAuth) btnAuth.style.display = 'none';
                 if (btExport) btExport.style.display = 'none';
                 if (btImport) btImport.style.display = 'none';
+                if (btnbtnForceCloudRestore) btnbtnForceCloudRestore.style.display = 'none';
 
                 const btnIa = document.querySelector('button[onclick="acionarIA()"]');
                 if (btnIa) btnIa.style.display = 'none';
             }
+            const materiaTitulo = document.getElementById('materiaTitulo').value.trim();
+            if (materiaTitulo) {
+                const rawConfig = localStorage.getItem(CONFIG_PREFIX + materiaTitulo);
+                if (!rawConfig) {
+                    switchMateria("");
+                }
+            }
+
         }
 
         function setUnsavedChanges(h) {
@@ -4296,17 +4941,8 @@ Aqui é onde os dados vão aparecer de verdade.
                     google_token: accessToken  // Deve bater com o nome na classe SyncRequest
                 };
 
-                let url_service_exportar_google_drive;
 
-                if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-                    // 2. Produção (Google Cloud) 
-                    url_service_exportar_google_drive = "https://cronograma-ia-749297806019.southamerica-east1.run.app/drive/exportar";
-                } else {
-                    // 3. Desenvolvimento (Seu CachyOS local)
-                    url_service_exportar_google_drive = "http://127.0.0.1:8000/drive/exportar";
-                }
-
-                const response = await fetch(url_service_exportar_google_drive, {
+                const response = await fetch(`${BASE_URL_SYNC}/drive/exportar`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -4370,14 +5006,8 @@ Aqui é onde os dados vão aparecer de verdade.
                 }
 
                 const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
-                if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-                    // 2. Produção (Google Cloud) 
-                    url_service_importar_google_drive = "https://cronograma-ia-749297806019.southamerica-east1.run.app/drive/importar";
-                } else {
-                    // 3. Desenvolvimento (Seu CachyOS local)
-                    url_service_importar_google_drive = "http://127.0.0.1:8000/drive/importar";
-                }
-                const response = await fetch(url_service_importar_google_drive, {
+
+                const response = await fetch(`${BASE_URL_SYNC}/drive/importar`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "authorization": chaveContribuinte },
                     body: JSON.stringify({

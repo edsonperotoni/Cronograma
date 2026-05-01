@@ -16,11 +16,12 @@ Regras de Negócio:
 - EXTRAIA APENAS as matérias e conteúdos presentes no arquivo/documento/texto/imagem fornecido.
 - PROIBIDO INVENTAR, sugerir ou adicionar matérias, conteúdos e observações que não estejam explicitamente escritas no arquivo.
 - Se não identificar conteúdos claros, retorne o JSON com a lista vazia, mas NUNCA invente dados.
+- Sempre que encontrar um bloco de texto sob um título de matéria, quebre cada frase ou linha nova em um objeto JSON separado, mesmo que não haja numeração explícita.
 
 Retorne APENAS o JSON puro seguindo este modelo exato:
 {{
     "app": "Cronograma",
-    "version": "2.8.7",
+    "version": "3.5.0",
     "list": ["Nome da Matéria"],
     "allData": {{
         "Nome da Matéria": [

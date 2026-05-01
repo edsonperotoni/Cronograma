@@ -5,6 +5,7 @@ import os
 import re
 import time
 
+import httpx
 import pandas as pd  # suporte arquivo de Excel e CSV
 from bs4 import BeautifulSoup
 from docx import Document  # suporte arquivo de Word
@@ -46,6 +47,8 @@ else:
         "http://127.0.0.1:5500",
     ]
 
+REGEX_CHAVE = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,7}+_key_[a-zA-Z0-9]+$"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ORIGENS_PERMITIDAS,
@@ -56,44 +59,18 @@ app.add_middleware(
 
 
 async def obter_email_google(token: str):
-    """
-    Verifica o token com o Google e retorna o e-mail do dono do token.
-    Utiliza httpx para comunicação assíncrona.
-    """
+    """Verifica o token com o Google e retorna o e-mail logado."""
     if not token:
         return None
-
-    import httpx
-
-    # Limpeza de segurança para evitar caracteres indesejados no token
     token = token.replace('"', "").replace("'", "").strip()
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            # Passar o token via Header de Autorização é o padrão mais seguro e moderno,
-            # mas mantemos o fallback de params se o seu ambiente exigir.
             url = "https://www.googleapis.com/oauth2/v3/userinfo"
-            params = {"access_token": token}
-
-            response = await client.get(url, params=params)
-
+            response = await client.get(url, params={"access_token": token})
             if response.status_code != 200:
-                print(f"❌ Erro Google Auth ({response.status_code}): {response.text}")
                 return None
-
-            dados = response.json()
-            email = dados.get("email")
-
-            if email:
-                return email.lower().strip()
-
-            return None
-
-    except httpx.RequestError as exc:
-        print(f"💥 Erro de rede ao consultar Google: {exc}")
-        return None
-    except Exception as e:
-        print(f"💥 Erro inesperado na validação do token: {e}")
+            return response.json().get("email", "").lower().strip()
+    except Exception:
         return None
 
 
@@ -103,11 +80,20 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
     Retorna os dados do usuário e a referência do documento se tudo estiver OK.
     """
     if not authorization:
-        raise HTTPException(status_code=401, detail="Chave não fornecida.")
+        raise HTTPException(
+            status_code=401, detail="Chave de contribuinte não fornecida."
+        )
 
     # 1. Busca no Firestore
     user_ref = db_firestore.collection("usuarios").document(authorization)
     user_doc = user_ref.get()
+    authorization = authorization.strip()
+
+    if not re.match(REGEX_CHAVE, authorization, re.IGNORECASE):
+        print(f"🛑 Formato inválido interceptado: {authorization[:15]}")
+        raise HTTPException(
+            status_code=400, detail="O formato da chave de contribuinte é inválido."
+        )
 
     if not user_doc.exists:
         print(f"🚫 Chave inválida: {authorization[:10]}...")
@@ -123,20 +109,21 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
 
     # 3. Verificação de Expiração (Robusta para String ou Datetime)
     raw_expira = user_data.get("expira", "2026-12-31")
-    if isinstance(raw_expira, str):
-        data_expira = datetime.datetime.strptime(raw_expira, "%Y-%m-%d")
-    else:
-        # Garante que o datetime do Firestore seja 'naive' (sem fuso) para comparar
-        data_expira = (
-            raw_expira.replace(tzinfo=None)
-            if hasattr(raw_expira, "replace")
-            else raw_expira
-        )
+    try:
+        if isinstance(raw_expira, str):
+            data_expira = datetime.datetime.strptime(
+                raw_expira.split("T")[0], "%Y-%m-%d"
+            )
+        else:
+            data_expira = raw_expira.replace(tzinfo=None)
 
-    if datetime.datetime.now() > data_expira:
-        print(f"⚠️ Chave expirada: {user_data['nome']}")
+        if datetime.datetime.now() > data_expira:
+            raise HTTPException(
+                status_code=403, detail="Sua chave de contribuinte expirou."
+            )
+    except Exception:
         raise HTTPException(
-            status_code=403, detail="Sua chave de contribuinte expirou."
+            status_code=500, detail="Erro ao validar data de expiração."
         )
 
     # 4. Verificação de Cota (Opcional, pois o sync não gasta cota, só o processar)
@@ -144,16 +131,9 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
         uso = user_data.get("uso", 0)
         limite = user_data.get("limite", 0)
         if uso >= limite:
-            print(f"🚫 Cota esgotada: {user_data['nome']}")
             raise HTTPException(status_code=403, detail="Sua cota de IA chegou ao fim.")
 
     return user_data, user_ref
-
-
-# Inicializa o Cliente Google GenAI
-client = genai.Client(
-    api_key=os.environ.get("GEMINI_API_KEY"), http_options={"api_version": "v1"}
-)
 
 
 # --- FUNÇÃO PARA CARREGAR O PROMPT EXTERNO ---
@@ -167,10 +147,11 @@ def carregar_prompt(ano_atual, hoje, conteudo_extraido):
 
 # --- TRADUTOR DE FORMATOS ATUALIZADO ---
 def extrair_conteudo(file_content, filename):
+    """Extrai texto de diversos formatos. Lança erro 400 se falhar."""
     ext = filename.split(".")[-1].lower()
 
     try:
-        # A IA moderna do Google é super inteligente, mas ainda não consegue ler o conteúdo de imagens. Para esses casos, retornamos None e deixamos a IA analisar o binário diretamente.
+        # imagens analisa o binário diretamente.
         if ext in ["jpg", "jpeg", "png"]:
             return None
         elif ext == "html":
@@ -197,7 +178,6 @@ def extrair_conteudo(file_content, filename):
             excel_file = io.BytesIO(file_content)
             # Lê a primeira aba do Excel
             df = pd.read_excel(excel_file)
-            # Converte para Markdown: a IA entende tabelas assim com precisão cirúrgica
             return df.to_markdown(index=False)
 
         elif ext == "csv":
@@ -209,17 +189,21 @@ def extrair_conteudo(file_content, filename):
                 csv_file.seek(0)
                 df = pd.read_csv(csv_file, sep=";")
             return df.to_markdown(index=False)
-
         else:
             # Para .txt e outros formatos de texto puro
             return file_content.decode("utf-8", errors="ignore")
-
-    except Exception as e:
-        print(f"❌ Erro ao extrair {filename}: {e}")
-        return f"Erro ao processar o arquivo {filename}."
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erro ao processar o conteúdo do arquivo {filename}.",
+        )
 
 
 # --- MODELOS DE DADOS ---
+class ValidarChaveRequest(BaseModel):
+    chave: str
+
+
 class SyncRequest(BaseModel):
     cronograma_json: dict
     google_token: str  # Campo obrigatório para receber o token do Frontend
@@ -233,6 +217,26 @@ class SyncPayload(BaseModel):
 
 class TokenRequest(BaseModel):
     google_token: str
+
+
+@app.post("/validar-contribuinte")
+async def consultar_status_chave(req: ValidarChaveRequest):
+    """Retorna os dados para o dashboard 'renderizarStatusIA' do frontend."""
+    # O validar_usuario já cuida de lançar 400 ou 403 se a chave for ruim
+    user_data, _ = await validar_usuario(req.chave, exige_cota=False)
+
+    # Prepara a data de expiração para o JS
+    expira = user_data.get("expira", "2026-12-31")
+    expira_limpa = expira if isinstance(expira, str) else expira.strftime("%Y-%m-%d")
+
+    return {
+        "status": "success",
+        "valido": True,
+        "nome": user_data.get("nome", "Usuário"),
+        "uso_atual": user_data.get("uso", 0),
+        "cota_maxima": user_data.get("limite", 0),
+        "expiracao": expira_limpa,
+    }
 
 
 # --- ROTA DE EXPORTAÇÃO (GOOGLE DRIVE) ---
@@ -258,15 +262,10 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
     email_google = email_google.lower().strip() if email_google else ""
 
     if not email_google or email_google != email_firestore:
-        print(
-            f"❌ BLOQUEIO DE IDENTIDADE: Dono da Chave [{email_firestore}] != Logado no Google [{email_google}]"
-        )
         raise HTTPException(
             status_code=403,
             detail="O e-mail do Google Drive não coincide com o dono desta chave.",
         )
-    else:
-        print(f"✅ IDENTIDADE VALIDADA: {email_google} acessando seus próprios dados.")
 
     try:
         # 2. Configura as credenciais usando o token enviado pelo Frontend
@@ -308,9 +307,10 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
             "status": "success",
             "message": f"Backup {status} no Google Drive de {user_data['nome']}!",
         }
-
+    except HTTPException:
+        # Re-levanta erros de negócio (403, 404)
+        raise
     except Exception as e:
-        print(f"❌ Erro no Drive: {e}")
         raise HTTPException(status_code=400, detail=f"Erro na API do Google: {str(e)}")
 
 
@@ -336,15 +336,10 @@ async def importar_do_drive(req: TokenRequest, authorization: str = Header(None)
     email_google = email_google.lower().strip() if email_google else ""
 
     if not email_google or email_google != email_firestore:
-        print(
-            f"❌ BLOQUEIO DE IDENTIDADE: Dono da Chave [{email_firestore}] != Logado no Google [{email_google}]"
-        )
         raise HTTPException(
             status_code=403,
             detail="O e-mail do Google Drive não coincide com o dono desta chave.",
         )
-    else:
-        print(f"✅ IDENTIDADE VALIDADA: {email_google} acessando seus próprios dados.")
 
     google_token = req.google_token
     if not google_token:
@@ -376,8 +371,10 @@ async def importar_do_drive(req: TokenRequest, authorization: str = Header(None)
 
         return {"status": "success", "data": backup_json}
 
+    except HTTPException:
+        # Re-levanta erros de negócio (403, 404)
+        raise
     except Exception as e:
-        print(f"❌ Erro na importação: {e}")
         raise HTTPException(
             status_code=400, detail=f"Erro ao acessar Google Drive: {str(e)}"
         )
@@ -408,7 +405,11 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
     try:
         target_model = "gemini-2.5-flash"
-        print(f"🚀 {user_data['nome']} disparando IA para arquivo: {file.filename}")
+
+        # Inicializa o Cliente Google GenAI
+        client = genai.Client(
+            api_key=os.environ.get("GEMINI_API_KEY"), http_options={"api_version": "v1"}
+        )
 
         response = None
         for tentativa in range(5):
@@ -445,7 +446,6 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
                 break
             except Exception as e:
                 if "503" in str(e) and tentativa < 4:
-                    print(f"⚠️ Servidor ocupado, tentativa {tentativa + 1}...")
                     time.sleep(tentativa + 2)
                 else:
                     raise e
@@ -456,11 +456,6 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
         # 5. Sucesso: Incrementa uso e salva banco
         try:
             user_ref.update({"uso": firestore.Increment(1)})
-            uso_atual = user_data.get("uso", 0)
-            limite = user_data.get("limite", 0)
-            print(
-                f"📊 Uso incrementado para {user_data['nome']}: {uso_atual + 1}/{limite}"
-            )
         except Exception as e:
             print(f"⚠️ Erro ao atualizar contador: {e}")
 
@@ -477,14 +472,16 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
         return dados_da_ia
 
+    except HTTPException:
+        # Re-levanta erros de negócio (403, 404)
+        raise
     except Exception as e:
-        print(f"❌ Erro na IA: {e}")
         return {"error": "Falha na IA", "details": str(e)}
 
 
 # --- ROTA DE SINCRONIZAÇÃO AUTOMÁTICA (FIRESTORE) ---
 # Rota para o Front disparar o "Save" para a Nuvem
-@app.post("/drive/sync")
+@app.post("/nuvem/sync")
 async def sync_total_snapshot(req: SyncPayload, authorization: str = Header(None)):
     user_data, _ = await validar_usuario(
         authorization
@@ -504,13 +501,12 @@ async def sync_total_snapshot(req: SyncPayload, authorization: str = Header(None
             }
         )
         return {"status": "success"}
-    except Exception as e:
-        print(f"❌ Erro Firestore: {e}")
+    except Exception:
         raise HTTPException(status_code=500, detail="Erro interno ao salvar.")
 
 
 # Rota para o Front verificar se há algo novo ao carregar a página
-@app.get("/drive/restore")
+@app.get("/nuvem/restore")
 async def restore_from_cloud(authorization: str = Header(None)):
     await validar_usuario(authorization)  # Valida se ainda é contribuinte
 
