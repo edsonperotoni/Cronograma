@@ -1,0 +1,1301 @@
+.container-fluid {
+    max-width: 1280px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Borda quase invisível */
+    border-radius: 12px;
+    background-color: #f0f4f8 !important;
+    /* Cor de papel de alta qualidade */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    /* Sombra suave para dar profundidade */
+}
+
+.logo {
+    height: 50px;
+    width: 50px;
+    padding-right: 5px;
+}
+
+/* Estilizando o editor de texto rico (CKEditor) */
+.ck-editor__editable_inline {
+    border: 1px solid #0d6efd !important;
+    border-radius: 6px !important;
+    padding: 5px 10px !important;
+    min-height: 60px;
+    background: white;
+}
+
+.ck-toolbar {
+    border: none !important;
+}
+
+/* Configuração de impressão (quando apertar Ctrl+P, a folha deita) */
+@page {
+    size: landscape;
+    margin: 1cm;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    padding: 10px;
+}
+
+/* Estilo da tabela principal de estudos */
+.study-table {
+    width: 100%;
+    background-color: #fff;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Cabeçalho da tabela (parte escura lá em cima) */
+.study-table thead th {
+    background-color: #0b0c1e !important;
+    color: #ffffff !important;
+    padding: 12px 5px;
+    text-align: center;
+    border: none;
+    font-size: 0.85rem;
+}
+
+/* Células comuns da tabela */
+.study-table tbody td {
+    vertical-align: middle;
+    padding: 5px 4px !important;
+    font-size: 9pt !important;
+    border: 0.5pt solid #ccc;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.text-start-custom {
+    text-align: left !important;
+}
+
+/* Linhas pares da tabela têm uma borda mais grossa embaixo */
+.study-table tbody tr:nth-child(2n) {
+    border-bottom: 2px solid #333 !important;
+}
+
+/* Estilo dos quadradinhos de marcar (Checkboxes falsos/visuais) */
+.check-toggle {
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.bi-check-square-fill {
+    color: #007bff !important;
+}
+
+/* Quadrado Azul (marcado) */
+.bi-square {
+    color: #ccc !important;
+}
+
+/* Largura da coluna Conteúdo */
+.val-content-col {
+    min-width: 350px;
+}
+
+/* Ajuste para dispositivos móveis (telas menores que 768px) */
+@media (max-width: 767px) {
+    .val-content-col {
+        min-width: auto !important;
+        width: auto !important;
+    }
+
+    .logo {
+        height: 40px;
+        width: 40px;
+        padding-right: 5px;
+    }
+}
+
+/* Estilo do texto de observações no modo normal (sem estar editando) */
+.view-obs {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #555;
+    font-size: 0.8rem;
+    padding-left: 8px;
+}
+
+/* Caixinhas para digitar texto */
+.edit-input,
+.edit-textarea {
+    border-radius: 6px;
+    border: 1px solid #86b7fe;
+    padding: 4px 8px;
+    width: 100%;
+    font-size: 13px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    /* Suaviza a transição do foco */
+}
+
+/* Efeito de foco nos campos da tabela (Conteúdo e Data) */
+.edit-input:focus,
+.edit-textarea:focus {
+    outline: none;
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25) !important;
+    background-color: #fff;
+}
+
+/* Título grandão da matéria */
+/* Título estilizado como o cabeçalho da tabela */
+.title-input {
+    background-color: #0b0c1e;
+    /* Mesmo tom escuro das colunas */
+    color: #ffffff;
+    border: 1px dashed rgba(255, 255, 255, 0.5);
+    /* Borda tracejada indicando edição */
+    border-radius: 6px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 8px 15px;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    /* Opcional: para combinar com o "NOVA MATÉRIA" */
+}
+
+/* Efeito ao clicar para digitar */
+.title-input:focus {
+    background-color: #16183a;
+    border-style: solid;
+    border-color: #0d6efd;
+    /* Azul de destaque ao editar */
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+/* Placeholder (texto de fundo) mais claro para leitura no escuro */
+.title-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* * TRUQUE DE MÁGICA: Alternar entre ver e editar
+         * Se a linha não tem a classe "is-editing", mostramos os textos normais.
+         * Se a linha ganha a classe "is-editing", escondemos os textos e mostramos as caixas de digitar.
+         */
+.view-mode {
+    display: block;
+}
+
+.edit-mode {
+    display: none;
+}
+
+tr.is-editing .view-mode {
+    display: none !important;
+}
+
+tr.is-editing .edit-mode {
+    display: inline-block !important;
+}
+
+/* Botõezinhos de ação (lápis e lixeira) */
+.btn-action {
+    display: inline;
+    transition: 0.1s;
+    cursor: pointer;
+    margin: 0 2px;
+    font-size: 1rem;
+}
+
+/* Estilo para renomear as colunas lá no topo da tabela */
+.header-edit-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px dashed rgba(255, 255, 255, 0.5);
+    color: #fff;
+    text-align: center;
+    width: 100%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.header-edit-input:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    border-style: solid;
+}
+
+/* Animação que faz o botão de Salvar piscar em vermelho quando há alterações */
+@keyframes pulse-red {
+    0% {
+        background-color: #28a745;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    50% {
+        background-color: #dc3545;
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+
+    100% {
+        background-color: #28a745;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.btn-save-alert {
+    animation: pulse-red 1.5s;
+    border-color: #dc3545 !important;
+    background-color: #dc3545 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.col-hidden {
+    display: none !important;
+}
+
+/* Estilo para riscar o label quando o checkbox de ocultar estiver marcado */
+.span-ocultar {
+    text-decoration: line-through;
+    color: #dc3545;
+}
+
+.check-hide-col:checked+.form-check-label {
+    text-decoration: line-through;
+    color: #dc3545;
+    /* Vermelho para dar ênfase de "removido" */
+    opacity: 0.7;
+}
+
+/* Transição suave para o efeito */
+.form-check-label {
+    transition: all 0.2s ease;
+}
+
+.nome-materia-modal {
+    display: inline-block;
+    max-width: 150px;
+    /* Ajuste conforme necessário */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* Configurações para quando for imprimir a página */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+
+
+    /* Esconde botões na impressão */
+    .title-input {
+        background: transparent !important;
+        color: #000000 !important;
+        /* Texto preto puro */
+        border: none !important;
+        /* Remove a borda tracejada na impressão */
+        padding: 0 !important;
+        font-size: 20pt !important;
+        /* Tamanho fixo para papel */
+        text-transform: uppercase;
+    }
+
+    .header-edit-input {
+        border: none !important;
+        background: transparent !important;
+        color: white !important;
+    }
+
+    .study-table thead th {
+        background-color: #0b0c1e !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .study-table tbody tr:nth-child(2n) {
+        border-bottom: 2.5pt solid #000 !important;
+    }
+
+    .col-hidden {
+        display: none !important;
+    }
+}
+
+/* Efeito de foco no título da matéria */
+#materiaTitulo:focus {
+    background-color: #fff;
+    border-color: #86b7fe;
+    /* Cor neutra enquanto focado, pois o pai brilhará */
+    box-shadow: none !important;
+    outline: 0;
+    z-index: 3;
+}
+
+/* Quando houver foco em qualquer lugar dentro do grupo da matéria */
+.input-group:focus-within {
+    border-radius: 8px;
+    /* O mesmo que você usou nas pontas */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    /* O brilho azul do Bootstrap */
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Garante que a divisória entre o input e a seta fique azul no foco */
+.input-group:focus-within #materiaTitulo,
+.input-group:focus-within .custom-select-container {
+    border-color: #86b7fe !important;
+}
+
+/* Ajuste para dispositivos móveis */
+@media (max-width: 768px) {
+    .input-group {
+        flex-wrap: wrap;
+        /* Permite quebrar se o nome for muito longo em telas minúsculas */
+    }
+
+    #materiaSelect {
+        max-width: unset !important;
+        /* No mobile, deixa o select ocupar o espaço necessário */
+        flex: 1 1 100% !important;
+        border-top: 0;
+        /* Remove borda dupla ao quebrar linha */
+    }
+}
+
+
+
+/* Truque para mostrar "Observações" no desktop e "Obs." no mobile usando os atributos data-texto-desktop e data-texto-mobile */
+.header-obs::after {
+    content: attr(data-texto-desktop);
+}
+
+@media (max-width: 768px) {
+    .header-obs::after {
+        content: attr(data-texto-mobile);
+    }
+}
+
+/* Estilo para o KBD dentro do botão */
+kbd {
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Botão de adicionar no cabeçalho */
+.study-table thead th .btn-primary {
+    transition: transform 0.2s, background-color 0.2s;
+    background-color: #0d6efd;
+}
+
+.study-table thead th .btn-primary:hover {
+    transform: scale(1.1);
+    background-color: #0b5ed7;
+}
+
+/* Garante que o input group da matéria e a tabela tenham um respiro */
+.table-responsive {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Container da Setinha - A "âncora" */
+.custom-select-container {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    align-self: stretch;
+    background-color: #f8f9fa;
+    position: relative;
+    /* Importante para o absolute do select */
+    border-left: none !important;
+    z-index: 5;
+
+    /* 1. Arredondamento das quinas externas */
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    /* 2. Garante a borda para não ficar "apagada" */
+    border: 1px solid #86b7fe !important;
+    /* Fecha o meio */
+    margin-left: -1px;
+    /* Sobrepõe levemente para não dobrar a espessura da linha */
+    border: 1px solid #86b7fe !important;
+    /* Remove a borda esquerda para colar no input */
+    margin-left: -1px;
+    /* Sobrepõe levemente o input para selar a fresta */
+    z-index: 5;
+    /* Garante que fique acima se necessário */
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    border-left: 1px solid #86b7fe !important;
+
+}
+
+/* O botão de "+" (Primeiro elemento) */
+.input-group>.btn:first-child {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+}
+
+/* O Select Invisível - O "Gigante" */
+.materia-select-hidden {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /* Forçamos uma largura bem grande (ex: 500px) para garantir que cubra o título. 
+       O 'right: 0' garante que ele alinhe pela direita (pela seta). */
+    width: 500px;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    /* z-index baixo para o Título (input) ficar por cima e ser editável */
+    z-index: 1;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Título da Matéria - Ocupa o espaço visual */
+#materiaTitulo {
+    border-right: none !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    position: relative;
+    /* z-index alto para permitir o clique de edição (cursor de texto) */
+    z-index: 10;
+    background-color: transparent;
+}
+
+
+
+/* A Seta Azul - Precisa estar ACIMA do Título para abrir o select no clique */
+.select-icon-large {
+    width: 20px;
+    height: 20px;
+    color: #0d6efd;
+    position: relative;
+    z-index: 15;
+    /* Maior que o Título */
+    pointer-events: none;
+    /* Clique atravessa o ícone e acerta o select atrás */
+}
+
+/* Garante que o form-floating não quebre o alinhamento */
+.input-group>.form-floating {
+    flex-grow: 1;
+}
+
+.custom-select-container:hover .select-icon-large {
+    transform: translateY(2px);
+    opacity: 1;
+}
+
+/* 1.1. O input dentro do form-floating precisa ocupar 100% da altura do grupo para alinhar com o select */
+.input-group>.form-floating>.form-control {
+    height: 100%;
+    /* Força o input a ocupar a altura total do grupo */
+    border-radius: 0;
+}
+
+.input-group .btn {
+    position: relative;
+    z-index: 20 !important;
+}
+
+
+
+.input-group>.form-floating>.form-control {
+    height: 100%;
+    /* Força o input a ocupar o espaço total */
+    min-height: 58px;
+    /* Altura padrão do floating do Bootstrap */
+}
+
+/* Ajusta o tamanho do checkbox real (modo edição) para alinhar com o ícone (modo visualização) */
+.edit-mode.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 2px solid #86b7fe !important;
+    /* Azul suave na borda do checkbox */
+}
+
+.edit-mode.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25) !important;
+    border-color: #86b7fe !important;
+}
+
+/* Borda e Brilho quando o editor de observações está em foco */
+.ck.ck-editor__editable_inline.ck-focused {
+    border: 1px solid #86b7fe !important;
+    /* O seu azul padrão */
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25) !important;
+    /* O glow azul */
+    outline: none !important;
+}
+
+/* Ajuste da borda padrão (sem foco) para o mesmo azul suave */
+.ck-editor__editable_inline {
+    border: 1px solid #86b7fe !important;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out !important;
+}
+
+:root {
+    /* Sobrescreve as variáveis internas do CKEditor para combinar com seu tema */
+    --ck-color-focus-border: #86b7fe;
+    --ck-color-shadow-inner: rgba(13, 110, 253, 0.25);
+}
+
+/* Garante que o checkbox real não apareça fora do modo edição */
+tr:not(.is-editing) .edit-mode {
+    display: none !important;
+}
+
+/* Garante que o ícone suma quando o checkbox real aparecer */
+tr.is-editing .view-mode {
+    display: none !important;
+}
+
+/* Ajuste fino para o checkbox que aumentamos de tamanho */
+.edit-mode.form-check-input {
+    display: none;
+    /* Inicia escondido via CSS */
+}
+
+.study-table thead th {
+    vertical-align: middle !important;
+    /* Força o alinhamento central em todas as células do topo */
+}
+
+/* Ajuste específico para o label "Conteúdo" não subir */
+.val-content-col div span {
+    display: inline-block;
+    line-height: 1;
+}
+
+/* Garante que o ícone e o checkbox ocupem o mesmo espaço na célula */
+.study-table td .check-toggle,
+.study-table td .form-check-input {
+    display: inline-block;
+    transition: transform 0.1s ease;
+}
+
+/* O checkbox real só aparece no modo edição, e o ícone só aparece no modo visualização. Ambos ocupam o mesmo espaço para evitar saltos de layout.*/
+.study-table td .form-check-input.edit-mode {
+    display: none;
+    /* Escondido por padrão */
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0 auto;
+    /* Centraliza horizontalmente */
+    float: none;
+    /* Garante que o Bootstrap não o jogue para a esquerda */
+    vertical-align: middle;
+    cursor: pointer;
+    border: 2px solid #0d6efd;
+}
+
+/* Efeito de escala ao passar o mouse para dar feedback de clique */
+.study-table td .form-check-input:hover {
+    transform: scale(1.1);
+}
+
+.study-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Estiliza os inputs de renomear colunas dentro do modal */
+#tab-pref .form-control {
+    border: 1px solid #dee2e6;
+    /* Borda neutra inicial */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Aplica o foco azul idêntico ao título e à tabela */
+#tab-pref .form-control:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25) !important;
+    color: #0d6efd;
+    /* Deixa o texto levemente azulado ao editar para dar feedback */
+    outline: none;
+}
+
+/* Ajuste para o "Input Group Text" (onde fica o checkbox) */
+/* Quando o input ao lado ganha foco, a caixinha do checkbox também pode reagir */
+#tab-pref .input-group:focus-within .input-group-text {
+    border-color: #86b7fe !important;
+    background-color: #f8fbff !important;
+    /* Um tom de azul quase branco */
+}
+
+/* Na tela, o cabeçalho de impressão nunca aparece */
+.print-only-header {
+    display: none !important;
+}
+
+@media screen {
+
+    /* Data que já passou (Atraso) - Um rosa bem pálido, quase neutro */
+    .data-passada {
+        background-color: #fcf1f2 !important;
+        color: #a35d65 !important;
+        border-left: 4px solid #f1d7d9 !important;
+        /* Uma borda fina é menos distrativa que um ícone */
+    }
+
+    /* Data de hoje - Um azul suave para indicar foco atual */
+    .data-hoje {
+        background-color: #eef6ff !important;
+        color: #316cf4 !important;
+        font-weight: 600;
+        border-left: 4px solid #316cf4 !important;
+    }
+
+    /* Data futura - Mantemos o padrão da tabela */
+    .data-futura {
+        background-color: transparent !important;
+    }
+}
+
+@media print {
+
+    /* Na impressão, escondemos a barra superior de controles e mostramos o cabeçalho novo */
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only-header {
+        display: block !important;
+    }
+
+    /* Ajuste para a tabela começar logo abaixo do cabeçalho */
+    body {
+        padding: 0 !important;
+        background-color: white !important;
+    }
+
+    .container-fluid-background {
+        background-color: transparent !important;
+        padding: 0 !important;
+    }
+
+    .header-obs::after {
+        content: attr(data-texto-desktop);
+    }
+}
+
+/* Cor padrão para os nomes das colunas no modal (Cinza/Escuro) */
+#tab-pref .form-control {
+    color: #6c757d;
+    /* Um cinza suave */
+    transition: color 0.2s ease-in-out;
+    /* Transição suave para o azul */
+}
+
+/* Cor quando o campo recebe o foco (Clique ou Cursor) */
+#tab-pref .form-control:focus {
+    color: #0d6efd !important;
+    /* Azul vibrante */
+}
+
+/* Opcional: Se quiser que o campo de intervalo siga exatamente o mesmo comportamento */
+#inputIntervaloDias {
+    color: #212529;
+}
+
+#inputIntervaloDias:focus {
+    color: #0d6efd !important;
+}
+
+
+/* Efeito de Hover apenas no botão de incluir na tabela */
+.btn-plus-conteudo:hover,
+.btn-clear-tasks-late:hover {
+    background-color: #0d6efd !important;
+    /* Azul de ação */
+    border-color: #0d6efd !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+    /* Leve brilho azul */
+}
+
+/* Efeito de clique no botão */
+.btn-plus-conteudo:active,
+.btn-clear-tasks-late:active {
+    background-color: #0a58ca !important;
+    transform: translateY(1px);
+}
+
+/* No computador (telas maiores que 768px) */
+@media (min-width: 768px) {
+    .label-conteudo-dinamico {
+        min-width: 150px;
+    }
+}
+
+
+.val-content-col,
+.header-obs {
+    width: 30% !important;
+    min-width: 250px !important;
+    /* Garante que a coluna não esmague o botão */
+}
+
+.header-actions {
+    width: 1% !important;
+}
+
+/* No celular (telas menores que 768px) */
+@media (max-width: 767px) {
+    .label-conteudo-dinamico {
+        min-width: 80px;
+        /* Largura menor para caber no celular */
+        font-size: 0.75rem;
+        /* Diminui um pouco a letra para ganhar espaço */
+        letter-spacing: 0;
+    }
+
+    .val-content-col,
+    .header-obs {
+        min-width: 200px !important;
+        /* Garante que a coluna não esmague o botão */
+    }
+}
+
+/* ======================================================================
+   📏 CLASSES DE TAMANHO DE FONTE DO CKEDITOR (Modo Visualização)
+   Garante que o texto continue grande/pequeno após salvar.
+   ====================================================================== */
+
+/* Texto Muito Pequeno */
+.view-obs .text-tiny {
+    font-size: 0.6em !important;
+}
+
+/* Texto Pequeno */
+.view-obs .text-small {
+    font-size: 0.85em !important;
+}
+
+/* Texto Grande */
+.view-obs .text-big {
+    font-size: 1.2em !important;
+    font-weight: 600;
+}
+
+/* Texto Muito Grande (Huge) */
+.view-obs .text-huge {
+    font-size: 1.6em !important;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Garante que o alinhamento de texto também funcione na visualização */
+.view-obs .text-align-center {
+    text-align: center !important;
+    display: block;
+}
+
+.view-obs .text-align-right {
+    text-align: right !important;
+    display: block;
+}
+
+.view-obs .text-align-justify {
+    text-align: justify !important;
+    display: block;
+}
+
+@media (max-width: 600px) {
+
+    /* Diminui o tamanho das células para caber mais coisa */
+    .table th,
+    .table td {
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.8rem;
+    }
+
+    /* Garante que o input de conteúdo não force a largura */
+    .input-conteudo {
+        min-width: 120px !important;
+    }
+}
+
+/* Animação para a seta "quicar" levemente para o lado */
+@keyframes arrow-bounce {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+}
+
+/* Container que mantém os ícones no mesmo lugar */
+.icon-anim-container {
+    position: relative;
+    width: 40px;
+    /* Tamanho fixo para garantir centralização */
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Base dos ícones */
+.icon-anim-container i {
+    position: absolute;
+    font-size: 1.8rem;
+    color: #ffd700;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Animação do Celular: Ele começa em pé e 'tomba' para o lado */
+@keyframes phone-rotate {
+    0% {
+        transform: rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    40% {
+        transform: rotate(-90deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: rotate(-90deg);
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Animação da Seta: Aparece quando o celular some */
+@keyframes arrow-fade {
+
+    0%,
+    50% {
+        opacity: 0;
+        transform: translateX(-5px);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    90% {
+        opacity: 1;
+        transform: translateX(5px);
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.icon-phone {
+    animation: phone-rotate 4s ease-in-out 3;
+    /* O '3' indica o número de repetições */
+    animation-fill-mode: forwards;
+    opacity: 0;
+}
+
+.icon-arrow {
+    animation: arrow-fade 4s ease-in-out 3;
+    animation-fill-mode: forwards;
+    opacity: 0;
+}
+
+/* 1. Garante que o container da tabela seja a referência de posição */
+.position-relative {
+    position: relative;
+}
+
+/* 2. Reposiciona o indicador para o canto superior direito */
+.scroll-indicator {
+    position: absolute;
+    right: 5px;
+    /* Pequeno respiro da borda direita */
+    top: 5px;
+    /* Pequeno respiro da borda superior (sobre o cabeçalho) */
+    z-index: 1050;
+    /* Garante que fique acima do cabeçalho da tabela */
+    pointer-events: none;
+    /* O clique passa através dele para não atrapalhar a tabela */
+    background: rgba(11, 12, 30, 0.4);
+    /* Fundo semi-transparente escuro para dar contraste */
+    border-radius: 50%;
+    padding: 2px;
+}
+
+/* 3. Ajuste para o mobile: agora ele não precisa mais do translate-y central */
+@media (max-width: 768px) {
+    .scroll-indicator {
+        display: block;
+        transform: none;
+        /* Remove a centralização vertical anterior */
+    }
+}
+
+/* --- ESTILO DOS CHECKBOXES DA TODO-LIST (VISUALIZAÇÃO) --- */
+.view-mode .todo-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.view-mode .todo-list li {
+    margin-bottom: 4px;
+}
+
+.view-mode .todo-list input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 15px;
+    /* Tamanho próximo ao bi-check-square */
+    height: 15px;
+    border: 2px solid #ccc;
+    /* Cor do bi-square */
+    border-radius: 4px;
+    background-color: transparent;
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    margin-right: 8px;
+    vertical-align: middle;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Quando marcado: Fica azul igual ao bi-check-square-fill */
+.view-mode .todo-list input[type="checkbox"]:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Criando o "V" (Checkmark) branco idêntico ao ícone do Bootstrap */
+.view-mode .todo-list input[type="checkbox"]::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: white;
+    /* Este clip-path desenha o formato exato do check do Bootstrap */
+    /* Tick mais fino e refinado */
+    clip-path: polygon(14% 44%, 0 65%, 42% 100%, 100% 16%, 86% 0, 42% 76%);
+}
+
+.view-mode .todo-list input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+
+/* --- SOBRESCREVENDO O VERDE DO CKEDITOR --- */
+:is(.ck-content .todo-list .todo-list__label > input,
+    .ck-editor__editable.ck-content .todo-list .todo-list__label > span[contenteditable="false"] > input)[checked]::before {
+    background: #007bff !important;
+    border-color: #007bff !important;
+}
+
+/* Garante que o estado de foco/hover também não puxe o verde */
+.ck-content .todo-list .todo-list__label>input:hover,
+.ck-content .todo-list .todo-list__label>input:focus {
+    border-color: #007bff !important;
+}
+
+/* Força as colunas de tick a serem o mais estreitas possível */
+.study-table th[data-col^="e"],
+.study-table th[data-col="t"],
+.study-table td:has(.check-toggle),
+.study-table td:has(.form-check-input) {
+    width: 1% !important;
+    white-space: nowrap !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    min-width: 40px;
+    /* Garante que não suma totalmente */
+}
+
+/* Ajusta o input dentro do cabeçalho para não forçar largura */
+.header-edit-input {
+    width: 100%;
+    max-width: 45px;
+    /* Limita o tamanho do texto (Teoria, Ex1...) */
+    text-overflow: ellipsis;
+}
+
+.data-conteudo {
+    padding-right: 5px;
+}
+
+/* --- AJUSTE DE LARGURA E ESCALA DO CKEDITOR CLASSIC --- */
+
+/* Define o tamanho do contêiner do CKEditor */
+.ck.ck-editor {
+    min-width: 200px;
+    max-width: 600px;
+    width: 100%;
+    /* Ocupa o máximo disponível, respeitando min/max */
+}
+
+/* Define a altura da área de edição (opcional) */
+.ck-editor__editable {
+    min-height: 150px;
+    max-height: 200px;
+    padding-top: 8px !important;
+}
+
+/* 3. A Barra de Ferramentas (Toolbar) */
+.ck-editor__top .ck-toolbar {
+    transform: scale(0.80) !important;
+    transform-origin: top left !important;
+
+    /* Compensa o scale: 100% / 0.8 = 125% */
+    width: 125% !important;
+
+    /* Força os ícones a quebrarem linha se a célula for muito estreita */
+    flex-wrap: wrap !important;
+    display: flex !important;
+
+    margin-bottom: -10px;
+    /* Puxa a área de texto para cima para fechar o buraco do scale */
+
+
+    margin-bottom: -5px !important;
+    border: none !important;
+}
+
+.ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content {
+    border: none !important;
+}
+
+/* 4. Itens internos da barra: remove barreiras de largura */
+.ck-toolbar__items {
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+}
+
+/* 5. Prevenção de corte */
+.ck-editor__top {
+    overflow: visible !important;
+    border-bottom: 1px solid #ccced1 !important;
+}
+
+/* 6. Conteúdo: Quebra de linha correta */
+.ck-content {
+    word-break: break-word !important;
+}
+
+@media print {
+    .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: white;
+    }
+
+    /* Adiciona um espaço no final de cada página para o rodapé não cobrir os dados */
+    body {
+        margin-bottom: 2cm;
+    }
+
+    /* Truque para numeração automática de páginas (suportado pela maioria dos browsers) */
+    .page-number::after {
+        content: counter(page);
+    }
+}
+
+@media print {
+
+    /* Inicializa o contador de páginas */
+    body {
+        counter-reset: page;
+        margin-bottom: 2cm;
+    }
+
+    .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: white;
+    }
+
+    /* Garante que o conteúdo do número da página seja gerado */
+    .page-number::after {
+        counter-increment: page;
+        content: counter(page);
+    }
+}
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    /* Azul marinho profundo */
+    backdrop-filter: blur(8px);
+    /* Efeito de vidro jateado */
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+}
+
+.spinner-restore {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: #3b82f6;
+    /* Azul brilhante */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    /* Força a aceleração de hardware */
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000;
+    transform: translateZ(0);
+    /* Truque clássico para GPU */
+}
+
+#loading-text {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin-bottom: 8px;
+
+    /* 1. Defina o fundo primeiro */
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+
+    /* 2. Recorte o fundo para o formato do texto (Vendor Prefixes) */
+    -webkit-background-clip: text;
+    /* Para Chrome, Safari e Edge */
+    -moz-background-clip: text;
+    /* Para versões legadas do Firefox */
+    background-clip: text;
+    /* Propriedade padrão W3C */
+
+    /* 3. Deixe o preenchimento transparente para o gradiente aparecer */
+    -webkit-text-fill-color: transparent;
+    /* Necessário para Webkit */
+    color: transparent;
+    /* Fallback padrão */
+}
+
+.loading-subtext p {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    max-width: 250px;
+    text-align: center;
+    font-style: italic;
+}
+
+.badge-study {
+    background: #1e293b;
+    color: #3b82f6;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 5px;
+    border: 1px solid #3b82f6;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Estilo para o Modal Customizado de Troca de Usuário */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    /* Controlado pelo JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    /* Garante que fique acima de tudo */
+}
+
+.modal-overlay .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.modal-overlay .modal-header {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+    padding: 0;
+}
+
+.modal-overlay .modal-footer {
+    border-top: 1px solid #eee;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Dá um respiro para o texto não colar na barra de rolagem do modal Sobre */
+#features-pane .pe-2 {
+    padding-right: 1.5rem !important;
+    /* Aumenta a distância da barra de scroll */
+    text-align: justify;
+    /* Opcional: deixa o visual mais profissional */
+}
+
+/* Estilização opcional para deixar a barra de scroll mais discreta */
+#features-pane div::-webkit-scrollbar {
+    width: 6px;
+}
+
+#features-pane div::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}

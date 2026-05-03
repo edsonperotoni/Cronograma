@@ -1,9 +1,9 @@
-import datetime
 import io
 import json
 import os
 import re
 import time
+from datetime import datetime, timezone  # Para uso limpo no código
 
 import httpx
 import pandas as pd  # suporte arquivo de Excel e CSV
@@ -90,13 +90,11 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
     authorization = authorization.strip()
 
     if not re.match(REGEX_CHAVE, authorization, re.IGNORECASE):
-        print(f"🛑 Formato inválido interceptado: {authorization[:15]}")
         raise HTTPException(
             status_code=400, detail="O formato da chave de contribuinte é inválido."
         )
 
     if not user_doc.exists:
-        print(f"🚫 Chave inválida: {authorization[:10]}...")
         raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
 
     user_data = user_doc.to_dict()
@@ -111,27 +109,26 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
     raw_expira = user_data.get("expira", "2026-12-31")
     try:
         if isinstance(raw_expira, str):
-            data_expira = datetime.datetime.strptime(
-                raw_expira.split("T")[0], "%Y-%m-%d"
-            )
+            data_expira = datetime.strptime(raw_expira.split("T")[0], "%Y-%m-%d")
         else:
             data_expira = raw_expira.replace(tzinfo=None)
 
-        if datetime.datetime.now() > data_expira:
+        if datetime.now() > data_expira:
             raise HTTPException(
-                status_code=403, detail="Sua chave de contribuinte expirou."
+                status_code=403,
+                detail=f"Sua chave de contribuinte expirou em {str(data_expira)}",
             )
-    except Exception:
-        raise HTTPException(
-            status_code=500, detail="Erro ao validar data de expiração."
-        )
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=f"{str(e.detail)}")
 
     # 4. Verificação de Cota (Opcional, pois o sync não gasta cota, só o processar)
     if exige_cota:
         uso = user_data.get("uso", 0)
         limite = user_data.get("limite", 0)
         if uso >= limite:
-            raise HTTPException(status_code=403, detail="Sua cota de IA chegou ao fim.")
+            raise HTTPException(
+                status_code=403, detail=f"Sua cota de IA ({str(limite)}) chegou ao fim."
+            )
 
     return user_data, user_ref
 
@@ -213,10 +210,34 @@ class SyncRequest(BaseModel):
 class SyncPayload(BaseModel):
     full_json: dict
     version: str
+    hash: str
 
 
 class TokenRequest(BaseModel):
     google_token: str
+
+
+# Adicione esta rota ao seu main.py
+@app.get("/nuvem/check-status")
+async def check_status(authorization: str = Header(None)):
+    # 1. Validação mínima (Chave, Ativo)
+    await validar_usuario(authorization)
+
+    # 2. Busca apenas o campo 'metadata' para economizar banda e CPU
+    doc_ref = db_firestore.collection("snapshots").document(authorization)
+    doc = doc_ref.get(field_paths=["metadata"])
+
+    if doc.exists:
+        res = doc.to_dict()
+        metadata = res.get("metadata", {})
+
+        # Converte a data do Google para string ISO para o JS comparar
+        if "ultima_sinc" in metadata:
+            metadata["ultima_sinc"] = metadata["ultima_sinc"].isoformat()
+
+        return {"status": "success", "metadata": metadata}
+
+    return {"status": "error", "message": "Sem dados"}
 
 
 @app.post("/validar-contribuinte")
@@ -233,6 +254,7 @@ async def consultar_status_chave(req: ValidarChaveRequest):
         "status": "success",
         "valido": True,
         "nome": user_data.get("nome", "Usuário"),
+        "tem_nuvem": user_data.get("possui_snapshot", False),
         "uso_atual": user_data.get("uso", 0),
         "cota_maxima": user_data.get("limite", 0),
         "expiracao": expira_limpa,
@@ -480,29 +502,42 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
 
 
 # --- ROTA DE SINCRONIZAÇÃO AUTOMÁTICA (FIRESTORE) ---
-# Rota para o Front disparar o "Save" para a Nuvem
 @app.post("/nuvem/sync")
 async def sync_total_snapshot(req: SyncPayload, authorization: str = Header(None)):
-    user_data, _ = await validar_usuario(
-        authorization
-    )  # Validação básica de chave e data
+    # 1. Validação (Chave, Ativo, Expiração)
+    user_data, _ = await validar_usuario(authorization)
 
     try:
-        # No Firestore, o ID do documento será a própria CHAVE do usuário
-        doc_ref = db_firestore.collection("snapshots").document(authorization)
+        # Marcador para o banco de dados (o Google decide a hora lá)
+        agora_google = firestore.SERVER_TIMESTAMP
 
+        # String ISO para o Frontend (o JavaScript entende e compara fácil)
+        # O replace garante o sufixo 'Z' (UTC/Zulu), padrão do toISOString()
+        agora_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+        # Atualiza Metadados do Usuário
+        user_ref = db_firestore.collection("usuarios").document(authorization)
+        user_ref.set({"possui_snapshot": True, "ultima_sinc": agora_google}, merge=True)
+
+        # Salva o Snapshot dos Dados
+        doc_ref = db_firestore.collection("snapshots").document(authorization)
         doc_ref.set(
             {
                 "payload": req.full_json,
                 "metadata": {
-                    "ultima_sinc": firestore.SERVER_TIMESTAMP,
+                    "ultima_sinc": agora_google,
+                    "hash": req.hash,
                     "versao_app": req.version,
                 },
             }
         )
-        return {"status": "success"}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Erro interno ao salvar.")
+
+        # Retornamos o 'server_time' para alinhar o relógio do PC do usuário
+        return {"status": "success", "server_time": agora_iso}
+
+    except Exception as e:
+        print(f"❌ Erro técnico no Firestore: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 
 # Rota para o Front verificar se há algo novo ao carregar a página
