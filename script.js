@@ -1709,27 +1709,33 @@ function processarRestauracaoTotal(data) {
 
 async function persistirSnapshotTotal() {
     const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-
-    // 1. Validação de saída (Prevenção de requisições inúteis)
-    if (!chave || !chave.includes("_key_")) {
-        console.log("ℹ️ Sincronização em nuvem ignorada: Usuário sem chave de contribuinte.");
-        return;
-    }
+    if (!chave || !chave.includes("_key_")) return;
 
     try {
-        console.log("☁️ Iniciando ciclo de persistência atômica...");
+        console.log("☁️ Consultando estado da nuvem antes de salvar...");
 
-        // 2. O PULO DO GATO: Salva tudo o que está aberto ANTES de ler o LocalStorage
-        // Isso garante que o que o usuário acabou de digitar no CKEditor seja computado.
-        await saveAllRows();
+        // 1. Gera o hash do que temos LOCALMENTE agora
+        const hashLocal = await gerarHashLocal();
 
-        // 3. CAPTURA: Agora sim, pegamos o JSON que já contém os dados salvos no passo anterior
+        // 2. Consulta o status na nuvem
+        const responseStatus = await fetch(`${BASE_URL_SYNC}/nuvem/check-status`, {
+            headers: { "authorization": chave }
+        });
+
+        if (responseStatus.ok) {
+            const status = await responseStatus.json();
+            // Se o hash da nuvem for igual ao local, encerramos por aqui
+            if (status.metadata && status.metadata.hash === hashLocal) {
+                console.log("✅ Nuvem já está atualizada (Hashes coincidem).");
+                CloudSync.pending = false;
+                return true;
+            }
+        }
+
+        // 3. Se os hashes forem diferentes, enviamos os dados
+        console.log("📤 Enviando atualizações para o Firestore...");
         const fullJson = await getDadosJsonLocais();
-        // 2. Gera o Hash do conteúdo real
-        const hashGerado = await gerarHashLocal(); // Aquela função que usa SubtleCrypto
-
-        // 4. ENVIO: Dispara para o Cloud Run
-        const response = await fetch(`${BASE_URL_SYNC}/nuvem/sync`, {
+        const responseSync = await fetch(`${BASE_URL_SYNC}/nuvem/sync`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -1738,25 +1744,22 @@ async function persistirSnapshotTotal() {
             body: JSON.stringify({
                 full_json: fullJson,
                 version: app_version,
-                hash: hashGerado
+                hash: hashLocal
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Erro na resposta do servidor");
-        }
+        if (!responseSync.ok) throw new Error("Falha no upload");
 
-        const result = await response.json();
-        CloudSync.pending = false;// Nuvem e Local agora são iguais
-        // O Firestore gravou lá, e o servidor te devolveu o timestamp DELE.
+        const result = await responseSync.json();
         localStorage.setItem("last_local_save_time", result.server_time);
-
+        CloudSync.pending = false;
         console.log("✅ Snapshot sincronizado com sucesso no Firestore.");
 
+        return true;
+
     } catch (err) {
-        // Logamos o erro de rede, mas sem interromper o fluxo do usuário (silencioso)
-        console.error("❌ Falha na sincronização silenciosa:", err.message);
+        console.error("❌ Erro na persistência:", err.message);
+        return false;
     }
 }
 
