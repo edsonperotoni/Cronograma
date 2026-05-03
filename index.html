@@ -797,6 +797,7 @@ Aqui é onde os dados vão aparecer de verdade.
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 40px;" class="text-center">#</th>
+                                    <th style="width: 100px;" class="text-center">Status</th>
                                     <th style="width: 100px;">Data</th>
                                     <th style="width: 150px;">Matéria</th>
                                     <th>Conteúdo</th>
@@ -810,6 +811,29 @@ Aqui é onde os dados vão aparecer de verdade.
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button id="btnConfirmarImportSeletiva" type="button" class="btn btn-primary">Confirmar
                         Importação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDiff" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-primary">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-primary fw-bold">
+                        <i class="bi bi-question-circle me-2"></i>O que você quer manter?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
+                            <tbody id="corpoTabelaDiff"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Cancelar</button>
                 </div>
             </div>
         </div>

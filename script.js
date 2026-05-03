@@ -695,7 +695,7 @@ async function confirmarTrocaModal(nomeUsuario, temPendencia, tipo = 'troca') {
     if (tipo === 'conflito_inicial') {
         titulo.innerHTML = '<i class="bi bi-cloud-arrow-down-fill me-2"></i>Dados Encontrados na Nuvem';
         msg.innerHTML = `Olá <strong>${nomeUsuario}</strong>, identificamos que você já possui dados salvos na nuvem.`;
-        textoAviso.innerText = "Você deseja manter os dados que estão neste computador ou baixar o que está salvo na sua conta?";
+        textoAviso.innerText = "Você deseja manter os dados que estão neste dispositivo ou baixar o que está salvo na sua conta?";
         footerSimples.classList.add('d-none');
         footerConflito.classList.remove('d-none');
     } else {
@@ -913,18 +913,85 @@ async function inicializarSincronia() {
 }
 
 async function gerarHashLocal() {
-    const backup = {
-        list: JSON.parse(localStorage.getItem(LIST_KEY) || "[]"),
+    // 1. Buscamos a lista e ORDENAMOS para garantir que a sequência seja sempre a mesma
+    const listaMaterias = JSON.parse(localStorage.getItem(LIST_KEY) || "[]").sort();
+
+    const dadosParaHash = {
+        list: listaMaterias,
         allData: {},
         configs: {}
     };
-    backup.list.forEach(m => {
-        backup.allData[m] = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
-        backup.configs[m] = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "{}");
+
+    listaMaterias.forEach(m => {
+        // 2. Buscamos os dados e garantimos que campos nulos/undefined não quebrem o JSON
+        const itens = JSON.parse(localStorage.getItem(PREFIX + m) || "[]");
+        const config = JSON.parse(localStorage.getItem(CONFIG_PREFIX + m) || "{}");
+
+        // 3. Normalização dos itens: 
+        // Removemos o que não deve afetar o hash (ex: ids temporários de UI se houver)
+        // e garantimos que a estrutura de cada item seja idêntica
+        dadosParaHash.allData[m] = itens.map(item => ({
+            uid: item.uid || gerarUID(item),
+            data: item.data,
+            conteudo: item.conteudo,
+            t: !!item.t,
+            e1: !!item.e1, e2: !!item.e2, e3: !!item.e3,
+            e4: !!item.e4, e5: !!item.e5, e6: !!item.e6,
+            obs: item.obs || ""
+        }));
+
+        // 4. Normalização das Configurações
+        // Ordenamos as chaves da config para evitar hash diferente por ordem de inserção
+        const configOrdenada = {};
+        Object.keys(config).sort().forEach(key => {
+            configOrdenada[key] = config[key];
+        });
+        dadosParaHash.configs[m] = configOrdenada;
     });
-    const msgUint8 = new TextEncoder().encode(JSON.stringify(backup));
+
+    // 5. Gerar a string final (O replacer null, 0 garante um JSON compacto e previsível)
+    const jsonString = JSON.stringify(dadosParaHash);
+    const msgUint8 = new TextEncoder().encode(jsonString);
+
+    // 6. SHA-1 (conforme o seu original)
     const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // 7. Conversão para Hexadecimal
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+/**
+ * Gera um hash curto para uma linha individual baseando-se nos dados críticos.
+ * Foca em: Conteúdo, os 7 Checkboxes (T, E1-E6) e Observações.
+ */
+async function gerarHashLinha(row) {
+    // Selecionamos apenas o que importa para a comparação de "mudança"
+    const stringParaHash = JSON.stringify({
+        c: row.conteudo,
+        t: row.t,
+        e1: row.e1, e2: row.e2, e3: row.e3, e4: row.e4, e5: row.e5, e6: row.e6,
+        o: row.obs || ""
+    });
+
+    const msgUint8 = new TextEncoder().encode(stringParaHash);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 8); // 8 caracteres bastam
+}
+/**
+ * Decide se houve alteração significativa entre a linha local e a importada.
+ * Retorna true se os hashes forem diferentes.
+ */
+async function detectarAlteracao(linhaLocal, linhaImportada) {
+    // Se a linha local nem existe, é uma alteração (é um registro NOVO)
+    if (!linhaLocal) return true;
+
+    const hashLocal = await gerarHashLinha(linhaLocal);
+    const hashImportada = await gerarHashLinha(linhaImportada);
+
+    return hashLocal !== hashImportada;
 }
 
 async function safeWrapper(fn) {
@@ -2229,6 +2296,7 @@ async function persistirSnapshotTotal() {
     }
 }
 
+
 async function enableEditMode(rowId) {
     const tr = document.getElementById(rowId);
     if (!tr) {
@@ -2884,32 +2952,68 @@ async function confirmImport(mode, isSilent = false) {
     }
 }
 
-function prepararEscolhaImport() {
-    if (!tempImportData || !tempImportData.allData) { exibirAlerta("Arquivo inválido.", "danger"); return };
+async function prepararEscolhaImport() {
+    if (!tempImportData || !tempImportData.allData) {
+        exibirAlerta("Arquivo inválido.", "danger");
+        return;
+    }
 
     const lista = document.getElementById('listaEscolherImport');
     const selectFiltro = document.getElementById('filtroMateriaImport');
 
     lista.innerHTML = "";
-    selectFiltro.innerHTML = '<option value="">Todas as Matérias</option>'; // Reseta o filtro
+    selectFiltro.innerHTML = '<option value="">Todas as Matérias</option>';
 
-    // Fecha o modal de escolha inicial
     const modalIni = bootstrap.Modal.getInstance(document.getElementById('modalImport'));
     if (modalIni) modalIni.hide();
 
     let totalItens = 0;
     const materiasNoJson = Object.keys(tempImportData.allData).sort();
 
-    // Preenche o Select de matérias do filtro
+    // 1. Preenche o Select de matérias
     materiasNoJson.forEach(materia => {
         const opt = document.createElement('option');
         opt.value = materia;
         opt.innerText = materia;
         selectFiltro.appendChild(opt);
+    });
 
-        // Preenche a tabela com todos os itens inicialmente
-        tempImportData.allData[materia].forEach((item, index) => {
+    // 2. Loop principal (Assíncrono para processar os Hashes)
+    for (const materia of materiasNoJson) {
+        // Busca correta usando o PREFIX do seu sistema
+        const dadosMateriaLocal = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+
+        for (const [index, item] of tempImportData.allData[materia].entries()) {
             totalItens++;
+
+            // --- Lógica de Identificação de Mudança ---
+            // 1. Tenta pelo UID (ID único)
+            let itemLocal = dadosMateriaLocal.find(l => (l.uid || gerarUID(l)) === (item.uid || gerarUID(item)));
+
+            // 2. Fallback: Se não achar por UID, busca pelo CONTEÚDO exato
+            if (!itemLocal) {
+                itemLocal = dadosMateriaLocal.find(l => l.conteudo === item.conteudo);
+            }
+
+            let statusBadge = '<span class="badge bg-success">NOVO</span>';
+            let btnDiff = '';
+
+            if (itemLocal) {
+                // Se o item existe, comparamos o hash para ver se conteúdo/checks/obs mudaram
+                const mudou = await detectarAlteracao(itemLocal, item);
+                if (mudou) {
+                    statusBadge = '<span class="badge bg-warning text-dark">MODIFICADO</span>';
+                    btnDiff = `
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2 btn-ver-diff" 
+                        data-materia="${materia}" data-index="${index}" title="Ver Diferenças">
+                        <i class="bi bi-eye"></i>
+                    </button>`;
+                } else {
+                    statusBadge = '<span class="badge bg-light text-muted opacity-50">IDÊNTICO</span>';
+                }
+            }
+            // ------------------------------------------
+
             const tr = document.createElement('tr');
             tr.setAttribute('data-materia-row', materia);
             tr.setAttribute('data-conteudo-row', (item.conteudo || "").toLowerCase());
@@ -2917,29 +3021,151 @@ function prepararEscolhaImport() {
             tr.innerHTML = `
                 <td class="text-center">
                     <input class="form-check-input check-item-import" type="checkbox" 
-                        data-materia="${materia}" data-index="${index}">
+                        data-materia="${materia}" data-index="${index}" 
+                        ${(!itemLocal || statusBadge.includes('MODIFICADO')) ? 'checked' : ''}>
                 </td>
+                <td class="small text-center">${statusBadge}</td>
                 <td class="small">${formatDateToBR(item.data)}</td>
                 <td class="small fw-bold text-primary">${materia}</td>
-                <td class="small">${item.conteudo || '<span class="text-muted italic">Sem título</span>'}</td>
+                <td class="small">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span>${item.conteudo || '<span class="text-muted italic">Sem título</span>'}</span>
+                        ${btnDiff}
+                    </div>
+                </td>
             `;
 
             tr.style.cursor = "pointer";
+
+            // Gerenciamento de cliques na linha
             tr.onclick = (e) => {
+                // Se clicar no botão de olho ou no ícone dentro dele, para aqui
+                if (e.target.closest('.btn-ver-diff')) {
+                    e.stopPropagation();
+                    return;
+                }
+
+                // Se não foi no checkbox, inverte o estado dele
                 if (e.target.type !== 'checkbox') {
                     const cb = tr.querySelector('.check-item-import');
                     cb.checked = !cb.checked;
                 }
             };
+
             lista.appendChild(tr);
-        });
-    });
+        }
+    }
 
     document.getElementById('infoQtdImport').innerText = `${totalItens} itens no arquivo`;
     document.getElementById('checkMarcarTodosImport').checked = false;
     document.getElementById('buscaConteudoImport').value = "";
 
+    // Abre o modal de escolha
     new bootstrap.Modal(document.getElementById('modalEscolherImport')).show();
+
+    // Ativa os listeners do botão de olho
+    atracarEventosDiff();
+}
+
+function abrirVisualizadorDiff(materia, index) {
+    const itemImportado = tempImportData.allData[materia][index];
+    const dadosMateriaLocal = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+    const itemLocal = dadosMateriaLocal.find(l => (l.uid || gerarUID(l)) === (itemImportado.uid || gerarUID(itemImportado))) ||
+        dadosMateriaLocal.find(l => l.conteudo === itemImportado.conteudo);
+
+    const corpo = document.getElementById('corpoTabelaDiff');
+    if (!corpo) return; // Segurança caso o modal não esteja no DOM
+
+    corpo.innerHTML = "";
+
+    // Renderiza os blocos (Nuvem acima, Local abaixo)
+    const htmlNuvem = montarBlocoFull(itemImportado, materia, "NUVEM (Vindo da Nuvem/Arquivo)", "table-success", "border-success", true);
+    const htmlLocal = montarBlocoFull(itemLocal, materia, "LOCAL (Atual neste dispositivo)", "table-danger", "border-danger", false);
+    const espacador = `<tr><td colspan="10" class="p-2 border-0"></td></tr>`;
+
+    corpo.innerHTML = htmlNuvem + espacador + htmlLocal;
+
+    // --- NOVA LÓGICA DE CLIQUE (SEM BUSCAR POR ID) ---
+    const checkboxPrincipal = document.querySelector(`.check-item-import[data-materia="${materia}"][data-index="${index}"]`);
+
+    // Usamos um único listener no corpo da tabela para capturar os botões dinâmicos
+    corpo.onclick = (e) => {
+        const btn = e.target.closest('.btn-acao-diff');
+        if (!btn) return;
+
+        const acao = btn.getAttribute('data-acao');
+        if (checkboxPrincipal) {
+            // Se for nuvem (true), se for local (false)
+            checkboxPrincipal.checked = (acao === 'nuvem');
+            checkboxPrincipal.dispatchEvent(new Event('change'));
+        }
+
+        // Fecha o modal após a escolha
+        const mElem = document.getElementById('modalDiff');
+        const mInstance = bootstrap.Modal.getInstance(mElem) || new bootstrap.Modal(mElem);
+        mInstance.hide();
+    };
+
+    // Abre o modal
+    const modalDiff = new bootstrap.Modal(document.getElementById('modalDiff'));
+    modalDiff.show();
+}
+
+function montarBlocoFull(item, materia, label, classeCor, borderCor, isNuvem) {
+    if (!item) return `<tr class="${classeCor}"><td colspan="10" class="p-4 text-center text-muted">Registro não encontrado.</td></tr>`;
+
+    const checks = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+    let checksHtml = '';
+
+    checks.forEach(c => {
+        const isChecked = String(item[c]) === "true" || item[c] === true;
+        const icon = isChecked ? 'bi-check-square-fill text-success' : 'bi-square text-muted';
+        checksHtml += `<td class="text-center border-start" style="width: 50px;"><i class="bi ${icon} fs-5"></i></td>`;
+    });
+
+    const labelStyle = !isNuvem ? 'text-danger fw-bold' : 'text-muted fw-bold';
+
+    // Configuração do Botão Lado a Lado
+    const btnTexto = isNuvem ? 'Pegar da nuvem' : 'Manter local';
+    const btnClasse = isNuvem ? 'btn-success' : 'btn-outline-danger';
+    const btnIcone = isNuvem ? 'bi-cloud-download' : 'bi-device-hdd';
+    const acao = isNuvem ? 'nuvem' : 'local';
+
+    return `
+        <tr class="bg-light align-middle">
+            <td colspan="10" class="py-2 px-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="${labelStyle}" style="font-size: 0.75rem;">${label}</span>
+                    <button type="button" class="btn btn-sm ${btnClasse} btn-acao-diff shadow-sm" data-acao="${acao}">
+                        <i class="bi ${btnIcone} me-1"></i> ${btnTexto}
+                    </button>
+                </div>
+            </td>
+        </tr>
+        <tr class="${classeCor} align-middle">
+            <td class="small fw-bold text-primary px-3" style="width: 20%;">${materia}</td>
+            <td class="small fw-bold" style="width: 35%;">${item.conteudo || ''}</td>
+            ${checksHtml}
+        </tr>
+        <tr class="${classeCor}">
+            <td colspan="10" class="p-2">
+                <div class="p-3 bg-white border ${borderCor} rounded" style="max-height: 180px; overflow-y: auto; color: #333; font-size: 0.85rem;">
+                    ${item.obs || '<span class="text-muted fst-italic">Sem observações.</span>'}
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function atracarEventosDiff() {
+    document.querySelectorAll('.btn-ver-diff').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation(); // Impede que o clique "vaze" para a linha (tr)
+            const mat = btn.getAttribute('data-materia');
+            const idx = btn.getAttribute('data-index');
+            abrirVisualizadorDiff(mat, idx);
+        };
+    });
 }
 
 // Função para filtrar as linhas visíveis
@@ -3010,12 +3236,11 @@ function filtrarHTML(str) {
 
 async function executarImportacaoSeletiva() {
     const selecionados = document.querySelectorAll('.check-item-import:checked');
-    if (!selecionados.length) {
-        exibirAlerta("Selecione ao menos um item.", "warning");
-        return;
-    }
 
-    if (!confirm(`⚠️ Confirma importação dos ${selecionados.length} itens selecionados?`)) return;
+    // Se não houver nada selecionado, apenas avisamos e procedemos com a sincronia de "manutenção"
+    if (selecionados.length === 0) {
+        if (!confirm("Nenhum item da nuvem foi selecionado. Isso manterá seus dados locais atuais e atualizará a nuvem para que outros dispositivos fiquem iguais a este. Prosseguir?")) return;
+    }
 
     mostrarOverlay();
     //Dá tempo para o navegador iniciar a animação
@@ -3088,17 +3313,11 @@ async function executarImportacaoSeletiva() {
         // --- SINCRONIA PÓS-ESCOLHA ---
         const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
         if (chave && chave.includes("_key_")) {
-            // Se veio de um conflito de nuvem (pick), já temos o timestamp oficial
-            if (window.sincroniaPendenteAposEscolha) {
-                localStorage.setItem("last_local_save_time", window.sincroniaPendenteAposEscolha);
-                window.sincroniaPendenteAposEscolha = null;
-            }
-
             // Sobe a nova versão mesclada para a nuvem
+            CloudSync.pending = true;
             await persistirSnapshotTotal();
         }
-        dispararAlertaReload("Seleção importada e sincronizada!", 1);
-
+        dispararAlertaReload();
     } catch (err) {
         console.error(err);
         await esconderOverlay();
