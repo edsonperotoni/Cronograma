@@ -1815,13 +1815,10 @@ async function enableEditModeAllRows() {
 async function saveAllRows() {
     if (!currentMateria || isProcessingUI) return;
 
-    if (document.querySelectorAll('.is-editing').size > 0) {
-
+    // 1. Limpeza dos Editores (Se houver linhas em edição)
+    if (document.querySelectorAll('.is-editing').length > 0) {
         isProcessingUI = true;
-
         try {
-
-            // Destrói os editores de forma sequencial e segura
             const ids = Object.keys(activeEditors);
             for (const id of ids) {
                 if (activeEditors[id]) {
@@ -1833,44 +1830,46 @@ async function saveAllRows() {
                     delete activeEditors[id];
                 }
             }
-
-            // Remove classes de edição ANTES de salvar os dados brutos
             document.querySelectorAll('.is-editing').forEach(tr => tr.classList.remove('is-editing'));
-
-
-
         } catch (err) {
-            console.error("Erro ao salvar:", err);
-            exibirAlerta("Erro ao salvar dados", "danger");
+            console.error("Erro ao fechar editores:", err);
         } finally {
             isProcessingUI = false;
         }
     }
 
-    if (!hasUnsavedChanges) {
-        // Se não há mudanças, apenas limpamos o modo de edição visualmente
-        // sem disparar o overlay ou o processo de gravação física.
-        return;
-    }
-
+    // 2. Verificação de necessidade de salvamento
+    // Importante: hasUnsavedChanges deve ser verdadeiro se houve edição 
+    // ou se o CloudSync.pending está true
+    if (!hasUnsavedChanges) return;
 
     try {
+        isProcessingUI = true;
 
-        saveData(); // Grava no localStorage
-        saveColumnNames();
-        loadRows(); // Recria a tabela
+        // --- SALVAMENTO LOCAL ---
+        saveData();         // Grava os dados da matéria atual no LocalStorage
+        saveColumnNames();  // Grava as preferências de colunas
+        loadRows();         // Atualiza a visualização da tabela
 
         setUnsavedChanges(false);
-        exibirAlerta("Tudo salvo e organizado!", "success");
+
+        // --- SALVAMENTO NA NUVEM (SNAPSHOT TOTAL) ---
+        // Aqui integramos a persistência atômica que revisamos antes
+        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+        if (chave && chave.includes("_key_")) {
+            // Chamamos a função que verifica o hash antes de fazer o upload
+            await persistirSnapshotTotal();
+        }
+
+        exibirAlerta("Tudo salvo e sincronizado!", "success");
 
     } catch (err) {
-        console.error("Erro ao salvar:", err);
-        exibirAlerta("Erro ao salvar dados", "danger");
+        console.error("Falha no processo de persistência:", err);
+        exibirAlerta("Erro ao salvar ou sincronizar dados", "danger");
     } finally {
         isProcessingUI = false;
     }
 }
-
 // Função que o botão da tabela chama
 function abrirModalLimpeza() {
     if (!currentMateria || isProcessingUI) return;
