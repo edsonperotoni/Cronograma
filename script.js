@@ -10,6 +10,7 @@ let accessToken = null;
 
 let rowToDelete = null;
 let isDeletingFullMateria = false;
+let isProcessingUI = false; // Semáforo global
 
 let overlayStartTime = 0;
 const MIN_OVERLAY_TIME_DEFAULT = 2800; // 2.8 segundos
@@ -23,13 +24,18 @@ let resolveRestoreForcado;
 let resolveConsentimento;
 let promessaConflito = null;
 
-// Substitua a variável let cloudSyncPending por estas funções:
 const CloudSync = {
+    // Controla se existe uma operação de rede ATIVA agora (Memória)
+    // Isso evita o log duplicado que vimos antes
+    isProcessing: false,
+
+    // Controla se há alterações locais que ainda não subiram (LocalStorage)
     get isPending() {
         return localStorage.getItem("config_vBorda_cloud_pending") === "true";
     },
     set pending(status) {
         localStorage.setItem("config_vBorda_cloud_pending", status);
+        // Opcional: Atualizar algum ícone de nuvem na UI aqui
     }
 };
 
@@ -47,10 +53,454 @@ if (window.location.hostname !== "localhost" && window.location.hostname !== "12
     console.warn = function () { };
 }
 
+function configurarListeners() {
+    console.log("⌨️ Configurando ouvintes de eventos v4.0.0...");
+    // Ela é apenas um apelido (alias) para o document.getElementById.
+    const select = (id) => document.getElementById(id);
+
+    // --- BOTÕES DE CONTROLE SUPERIOR ---
+    // Google Drive Auth
+    const btnGoogle = select('btn-google-auth');
+    if (btnGoogle) {
+        btnGoogle.removeAttribute('onclick');
+        btnGoogle.addEventListener('click', solicitarAcessoDrive);
+    }
+
+    // Impressão
+    const btnPrint = select('btn-imprimir');
+    if (btnPrint) {
+        btnPrint.removeAttribute('onclick');
+        btnPrint.addEventListener('click', () => {
+            saveAllRows(); // Garante salvamento antes de imprimir
+            const printMateria = document.getElementById('print-materia-name');
+            if (printMateria) printMateria.innerText = currentMateria || "Geral";
+            window.print();
+        });
+    }
+
+    // Configurações (Abre o modal e carrega dados)
+    const btnCfg = select('btn-config');
+    if (btnCfg) {
+        btnCfg.removeAttribute('onclick');
+        btnCfg.addEventListener('click', prepararConfiguracoes);
+    }
+
+    // Sobre (Apenas garante o salvamento ao abrir o modal)
+    const btnSobre = select('btn-sobre');
+    if (btnSobre) {
+        btnSobre.removeAttribute('onclick');
+        btnSobre.addEventListener('click', saveAllRows);
+    }
+
+    // --- GESTÃO DE MATÉRIAS (INPUT E SELECT) ---
+
+    // Renomear matéria ao perder o foco do input
+    const inputTitulo = select('materiaTitulo');
+    if (inputTitulo) {
+        inputTitulo.addEventListener('blur', updateMateriaName);
+    }
+
+    // Trocar de matéria ao selecionar no dropdown
+    const comboMateria = select('materiaSelect');
+    if (comboMateria) {
+        comboMateria.addEventListener('change', (e) => {
+            // O e.target.value captura o valor selecionado no <select>
+            switchMateria(e.target.value);
+        });
+    }
+
+    // --- BOTÕES DE AÇÃO PRINCIPAL ---
+
+    // Salvar Tudo (Local + Firestore com verificação de Hash)
+    const btnSave = select('btnSalvarTudo');
+    if (btnSave) {
+        btnSave.addEventListener('click', async () => {
+            // O safeWrapper impede cliques duplos durante o processamento
+            await safeWrapper(async () => await saveAllRows());
+        });
+    }
+
+    // Habilitar Edição em todas as linhas
+    const btnEdit = select('btnEditarTudo');
+    if (btnEdit) {
+        btnEdit.addEventListener('click', enableEditModeAllRows);
+    }
+
+    // Excluir matéria completa
+    const btnDelete = select('btnExcluirMateria');
+    if (btnDelete) {
+        btnDelete.addEventListener('click', deleteFullMateria);
+    }
+
+    // --- CABEÇALHO DA TABELA ---
+
+    // Botão Marcar Atrasados
+    const btnAtrasados = select('btnLimparAtrasados');
+    if (btnAtrasados) {
+        btnAtrasados.addEventListener('click', abrirModalLimpeza);
+    }
+
+    // Botão Incluir Novo Conteúdo (Cabeçalho)
+    const btnAdd = select('btnIncluirConteudo');
+    if (btnAdd) {
+        btnAdd.addEventListener('click', addEmptyRow);
+    }
+
+    // Monitoramento Dinâmico das Colunas (t, e1, e2, e3, e4, e5, e6)
+    ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].forEach(key => {
+        const inputCol = select(`colName_${key}`);
+        if (inputCol) {
+            // Sincroniza labels ao digitar (oninput)
+            inputCol.addEventListener('input', syncModalLabels);
+
+            // Marca como não salvo ao mudar o valor (onchange)
+            inputCol.addEventListener('change', () => setUnsavedChanges(true));
+        }
+    });
+
+    // --- GESTÃO DE CONFLITOS DE SINCRONIA ---
+
+    // Mesclar (Merge)
+    const btnMerge = select('btnConflitoMerge');
+    if (btnMerge) {
+        btnMerge.addEventListener('click', () => {
+            // Chamamos a função passando o parâmetro de ação
+            resolverConflitoNuvem('merge');
+        });
+    }
+
+    // Escolher itens (Pick)
+    const btnPick = select('btnConflitoPick');
+    if (btnPick) {
+        btnPick.addEventListener('click', () => {
+            resolverConflitoNuvem('pick');
+        });
+    }
+
+    // Substituir tudo (Replace)
+    const btnReplace = select('btnConflitoReplace');
+    if (btnReplace) {
+        btnReplace.addEventListener('click', () => {
+            resolverConflitoNuvem('replace');
+        });
+    }
+
+    // Cancelar / Agora não
+    const btnCancelConflito = select('btnConflitoCancel');
+    if (btnCancelConflito) {
+        btnCancelConflito.addEventListener('click', () => {
+            // Passar null ou fechar o modal manualmente
+            resolverConflitoNuvem(null);
+        });
+    }
+
+    // --- SINCRONIA DO MODAL DE CONFIGURAÇÕES ---
+    ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'].forEach(col => {
+        // Listener para os Inputs de Texto
+        const inputModal = select(`modalColName_${col}`);
+        if (inputModal) {
+            inputModal.addEventListener('input', () => syncFromModal(col));
+        }
+
+        // Listener para os Checkboxes de Visibilidade
+        const checkHide = select(`hide_${col}`);
+        if (checkHide) {
+            checkHide.addEventListener('change', () => {
+                setUnsavedChanges(true);
+                // Se você tiver uma função que aplica a visibilidade na hora:
+                // applyVisibility(); 
+            });
+        }
+    });
+
+    // --- BOTÃO APLICAR (MODAL CONFIG) ---
+    const btnApply = select('btnAplicarVisibilidade');
+    if (btnApply) {
+        btnApply.addEventListener('click', async () => {
+            // 1. Executa a sua função de UI para esconder/mostrar colunas
+            applyVisibility();
+
+            // 2. Dispara o salvamento completo para persistir os novos nomes
+            await safeWrapper(async () => await saveAllRows());
+
+            // Opcional: Fechar o modal após aplicar (se for o comportamento desejado)
+            // const modalElement = document.getElementById('modalConfig');
+            // const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            // if (modalInstance) modalInstance.hide();
+        });
+    }
+
+    // --- ABA BACKUP (EXPORTAR / IMPORTAR) ---
+
+    // Download do JSON
+    const btnExport = select('btnExportLocal');
+    if (btnExport) {
+        btnExport.addEventListener('click', exportBackup);
+    }
+
+    // Upload do JSON
+    const inputImport = select('importFile');
+    if (inputImport) {
+        inputImport.addEventListener('change', function () {
+            // Passamos 'this' para que a função receba o input e acesse os arquivos
+            openImportModal(this);
+        });
+    }
+
+    // Botão de Pânico
+    const btnPanic = select('btnPanicRestore');
+    if (btnPanic) {
+        btnPanic.addEventListener('click', restaurarSnapshotEmergencial);
+    }
+
+    // --- ABA GOOGLE DRIVE E CLOUD (MODAL CONFIG) ---
+
+    // Exportar para o Drive
+    const btnDriveExport = select('btn-google-export');
+    if (btnDriveExport) {
+        btnDriveExport.addEventListener('click', exportarParaGoogleDrive);
+    }
+
+    // Importar do Drive
+    const btnDriveImport = select('btn-google-import');
+    if (btnDriveImport) {
+        btnDriveImport.addEventListener('click', restaurarGoogleDrive);
+    }
+
+    // Forçar Restauração da Nuvem (Firestore)
+    const btnCloudRestore = select('btn-force-cloud-restore');
+    if (btnCloudRestore) {
+        btnCloudRestore.addEventListener('click', async () => {
+            // Usamos o safeWrapper para evitar múltiplos disparos durante o fetch
+            await safeWrapper(async () => await confirmarRestauracaoForcadaNuvem());
+        });
+    }
+
+    // --- ABA INTELIGÊNCIA ARTIFICIAL (MODAL CONFIG) ---
+
+    // Botão Principal de IA
+    const btnIA = select('btnProcessarIA');
+    if (btnIA) {
+        btnIA.addEventListener('click', async () => {
+            // Usamos o safeWrapper para proteger a chamada pesada da IA
+            await safeWrapper(async () => await acionarIA());
+        });
+    }
+
+    // Input de Arquivo da IA (se houver lógica ao selecionar o arquivo)
+    const inputIA = select('iaFile');
+    if (inputIA) {
+        inputIA.addEventListener('change', function () {
+            // Se você tiver uma função específica para o 'onchange' do arquivo IA, chame aqui.
+            // Ex: processarArquivoIA(this);
+        });
+    }
+
+    // --- ABA CONTRIBUINTE (CHAVE DE ACESSO) ---
+    const inputChave = select('inputChaveAcesso');
+    if (inputChave) {
+        inputChave.addEventListener('change', async () => {
+            // Chamamos sua função de salvamento de chave
+            // Geralmente essa função valida a chave e atualiza o estado global
+            await saveChaveContribuinte();
+
+            // Opcional: Se a chave for válida, você pode disparar 
+            // uma verificação de status imediata
+            // if (typeof consultarStatusChave === 'function') consultarStatusChave();
+        });
+    }
+
+    // --- MODAL DE CONFIRMAÇÃO DE RESTAURAÇÃO FORÇADA ---
+
+    // Botão Cancelar
+    const btnCancelRestore = select('btnCancelRestoreForcado');
+    if (btnCancelRestore) {
+        btnCancelRestore.addEventListener('click', () => {
+            fecharModalRestoreForcado(false);
+        });
+    }
+
+    // Botão Confirmar (Sim, Restaurar)
+    const btnConfirmRestore = select('btnConfirmRestoreForcado');
+    if (btnConfirmRestore) {
+        btnConfirmRestore.addEventListener('click', () => {
+            fecharModalRestoreForcado(true);
+        });
+    }
+
+    // --- MODAL DE OPÇÕES DE IMPORTAÇÃO (UPLOAD JSON) ---
+
+    // Botão Mesclar
+    const btnImpMerge = select('btnImportMerge');
+    if (btnImpMerge) {
+        btnImpMerge.addEventListener('click', () => confirmImport('merge'));
+    }
+
+    // Botão Escolher Manualmente (Pick)
+    const btnImpPick = select('btnImportPick');
+    if (btnImpPick) {
+        btnImpPick.addEventListener('click', () => prepararEscolhaImport());
+    }
+
+    // Botão Substituir Integralmente
+    const btnImpReplace = select('btnImportReplace');
+    if (btnImpReplace) {
+        btnImpReplace.addEventListener('click', () => confirmImport('replace'));
+    }
+    // --- MODAL DE SELEÇÃO SELETIVA (IMPORTAÇÃO) ---
+
+    // Checkbox "Marcar Todos"
+    const checkTodos = select('checkMarcarTodosImport');
+    if (checkTodos) {
+        checkTodos.addEventListener('change', function () {
+            // Passamos 'this' (o próprio checkbox) para manter a compatibilidade
+            toggleTodosImport(this);
+        });
+    }
+
+    // Filtro por Matéria (Select)
+    const filtroMat = select('filtroMateriaImport');
+    if (filtroMat) {
+        filtroMat.addEventListener('change', filtrarTabelaImport);
+    }
+
+    // Busca por Texto (Input)
+    const buscaImp = select('buscaConteudoImport');
+    if (buscaImp) {
+        // 'input' é melhor que 'change' aqui pois filtra enquanto o usuário digita
+        buscaImp.addEventListener('input', filtrarTabelaImport);
+    }
+
+    // Botão Final de Confirmar Importação
+    const btnConfirmSeletiva = select('btnConfirmarImportSeletiva');
+    if (btnConfirmSeletiva) {
+        btnConfirmSeletiva.addEventListener('click', async () => {
+            // Usamos o safeWrapper por ser uma operação de escrita em massa
+            await safeWrapper(async () => await executarImportacaoSeletiva());
+        });
+    }
+
+    // --- MODAL NOVA MATÉRIA ---
+
+    const inputNovaMateria = select('novoNomeMateria');
+    const btnNovaMateria = select('btnConfirmarNovaMateria');
+
+    if (btnNovaMateria) {
+        btnNovaMateria.addEventListener('click', async () => {
+            // Usamos o safeWrapper pois criar matéria dispara o salvamento
+            await safeWrapper(async () => await confirmarNovaMateria());
+        });
+    }
+
+    // Bônus: Atalho para o teclado
+    if (inputNovaMateria) {
+        inputNovaMateria.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Evita comportamentos estranhos do form
+                btnNovaMateria.click();
+            }
+        });
+    }
+
+    // --- MODAL DE CHAVE INVÁLIDA / EXPIRADA ---
+
+    // Botão Corrigir (Apenas fecha o modal para o usuário editar a chave)
+    const btnCorrigir = select('btnCorrigirChave');
+    if (btnCorrigir) {
+        btnCorrigir.addEventListener('click', () => {
+            fecharModalChaveInvalida(false);
+        });
+    }
+
+    // Botão Remover (Desloga e limpa o estado da chave anterior)
+    const btnRemover = select('btnRemoverChave');
+    if (btnRemover) {
+        btnRemover.addEventListener('click', () => {
+            fecharModalChaveInvalida(true);
+        });
+    }
+
+    // --- MODAL DE ERRO DE SINCRONIA AO SAIR ---
+
+    // Botão Cancelar (Usuário decide ficar para tentar sincronizar novamente)
+    const btnCancelSair = select('btnCancelarSairSync');
+    if (btnCancelSair) {
+        btnCancelSair.addEventListener('click', () => {
+            fecharModalErroSync(false);
+        });
+    }
+
+    // Botão Confirmar (Usuário aceita sair mesmo com erro de sincronia)
+    const btnConfirmSair = select('btnConfirmarSairSemSync');
+    if (btnConfirmSair) {
+        btnConfirmSair.addEventListener('click', () => {
+            fecharModalErroSync(true);
+        });
+    }
+
+    // --- MODAL DE TROCA DE CONTA E CONFLITO ---
+
+    // Listeners para Troca Simples
+    const btnCancelTroca = select('btnCancelarTroca');
+    if (btnCancelTroca) {
+        btnCancelTroca.addEventListener('click', () => fecharModalTroca(null));
+    }
+
+    const btnConfTroca = select('btnConfirmarTrocaLimpar');
+    if (btnConfTroca) {
+        btnConfTroca.addEventListener('click', () => fecharModalTroca('trocar'));
+    }
+
+    // Listeners para Conflito Inicial
+    const btnCancelConf = select('btnCancelarConflito');
+    if (btnCancelConf) {
+        btnCancelConf.addEventListener('click', () => fecharModalTroca(null));
+    }
+
+    const btnKeepLocal = select('btnManterDadosLocal');
+    if (btnKeepLocal) {
+        btnKeepLocal.addEventListener('click', () => fecharModalTroca('manter_local'));
+    }
+
+    const btnFetchCloud = select('btnBaixarDadosNuvem');
+    if (btnFetchCloud) {
+        btnFetchCloud.addEventListener('click', () => fecharModalTroca('baixar_nuvem'));
+    }
+
+    // --- MODAL DE CONSENTIMENTO / TERMOS ---
+
+    // Botão Cancelar
+    const btnCancelConsent = select('btnCancelarConsentimento');
+    if (btnCancelConsent) {
+        btnCancelConsent.addEventListener('click', () => {
+            fecharModalConsentimento(false);
+        });
+    }
+
+    // Botão Confirmar (Aceitar e Ativar)
+    const btnConfirmConsent = select('btnConfirmarConsentimento');
+    if (btnConfirmConsent) {
+        btnConfirmConsent.addEventListener('click', () => {
+            // Só dispara se o botão não estiver disabled (o navegador já garante isso, mas é boa prática)
+            fecharModalConsentimento(true);
+        });
+    }
+    // --- COMPORTAMENTO DA TABELA (INDICADOR DE SCROLL) ---
+    const tabelaContainer = select('tabela-container');
+    if (tabelaContainer) {
+        tabelaContainer.addEventListener('scroll', function () {
+            const indicador = this.parentElement.querySelector('.scroll-indicator');
+            if (indicador) indicador.style.display = 'none';
+        }, { once: true }); // O 'once: true' faz o listener se auto-destruir após o primeiro scroll (economiza memória)
+    }
+}
+
 // ==========================================
 // 🚀 INÍCIO (Ao carregar a página)
 // ==========================================
 window.onload = () => {
+    configurarListeners();
+
     // --- 🛠️ LÓGICA DE MIGRAÇÃO DE BANCO DE DADOS ---
     const lastVersion = localStorage.getItem("app_version_installed");
 
@@ -403,7 +853,7 @@ document.querySelector('#tableBody').addEventListener('click', function (e) {
     }
 });
 
-let isProcessingUI = false; // Semáforo global
+
 
 // Adicione esta chamada no seu fluxo de inicialização
 async function inicializarSincronia() {
@@ -1034,7 +1484,6 @@ async function saveChaveContribuinte() {
 
         renderizarStatusIA(dadosValidacao);
         checkInterfaceState();
-        exibirAlerta(`Conectado como ${dadosValidacao.nome}!`, "success");
 
         // Busca automática se o local estiver vazio
         if (!temDadosLocais && temDadosNuvem) {
@@ -1205,7 +1654,7 @@ async function processarArquivoIA(input) {
     }
     if (!input.files.length) return;
     const file = input.files[0];
-    const btnIa = document.querySelector('button[onclick="acionarIA()"]');
+    const btnIa = document.getElementById('btnProcessarIA'); // ID novo que colocamos no HTML
     const originalText = btnIa.innerHTML;
     btnIa.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processando...`;
     btnIa.disabled = true;
@@ -1710,21 +2159,22 @@ function processarRestauracaoTotal(data) {
 async function persistirSnapshotTotal() {
     const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
     if (!chave || !chave.includes("_key_")) return;
+    if (CloudSync.isProcessing) return;
+    if (!CloudSync.isPending) return;
 
     try {
+        CloudSync.isProcessing = true; // Fecha o semáforo
         console.log("☁️ Consultando estado da nuvem antes de salvar...");
 
-        // 1. Gera o hash do que temos LOCALMENTE agora
         const hashLocal = await gerarHashLocal();
 
-        // 2. Consulta o status na nuvem
+        // 1. Consulta o status na nuvem
         const responseStatus = await fetch(`${BASE_URL_SYNC}/nuvem/check-status`, {
             headers: { "authorization": chave }
         });
 
         if (responseStatus.ok) {
             const status = await responseStatus.json();
-            // Se o hash da nuvem for igual ao local, encerramos por aqui
             if (status.metadata && status.metadata.hash === hashLocal) {
                 console.log("✅ Nuvem já está atualizada (Hashes coincidem).");
                 CloudSync.pending = false;
@@ -1732,9 +2182,10 @@ async function persistirSnapshotTotal() {
             }
         }
 
-        // 3. Se os hashes forem diferentes, enviamos os dados
+        // 2. Enviando os dados (Hashes diferentes ou erro no status)
         console.log("📤 Enviando atualizações para o Firestore...");
         const fullJson = await getDadosJsonLocais();
+
         const responseSync = await fetch(`${BASE_URL_SYNC}/nuvem/sync`, {
             method: "POST",
             headers: {
@@ -1748,18 +2199,33 @@ async function persistirSnapshotTotal() {
             })
         });
 
-        if (!responseSync.ok) throw new Error("Falha no upload");
-
+        // 3. AGORA SIM: Pegamos o resultado antes de testar
         const result = await responseSync.json();
-        localStorage.setItem("last_local_save_time", result.server_time);
-        CloudSync.pending = false;
-        console.log("✅ Snapshot sincronizado com sucesso no Firestore.");
 
-        return true;
+        if (responseSync.ok && result.status === 'success') {
+            localStorage.setItem("last_local_save_time", result.server_time);
+            CloudSync.pending = false;
+            console.log("✅ Snapshot sincronizado com sucesso no Firestore.");
+
+            // Exibimos a mensagem de sucesso aqui
+            exibirAlerta("Tudo salvo e sincronizado na nuvem!");
+            return true;
+        } else {
+            // Se o servidor respondeu mas deu erro (ex: 403)
+            throw new Error(result.detail || result.message || "Erro no servidor");
+        }
 
     } catch (err) {
-        console.error("❌ Erro na persistência:", err.message);
-        return false;
+        console.error("❌ Erro na persistência nuvem:", err);
+
+        // Em vez de dar throw e travar tudo, avisamos que salvou só local
+        exibirAlerta("Salvo localmente (Serviço da Nuvem está offline)", "warning");
+
+        // Retornamos true para o safeWrapper não exibir outro erro genérico, 
+        // pois já tratamos o aviso visual aqui.
+        return true;
+    } finally {
+        CloudSync.isProcessing = false; // Abre o semáforo independente de erro/sucesso
     }
 }
 
@@ -1813,7 +2279,8 @@ async function enableEditModeAllRows() {
 }
 
 async function saveAllRows() {
-    if (!currentMateria || isProcessingUI) return;
+
+    if (!currentMateria) return;
 
     // 1. Limpeza dos Editores (Se houver linhas em edição)
     if (document.querySelectorAll('.is-editing').length > 0) {
@@ -1851,17 +2318,16 @@ async function saveAllRows() {
         saveColumnNames();  // Grava as preferências de colunas
         loadRows();         // Atualiza a visualização da tabela
 
-        setUnsavedChanges(false);
-
         // --- SALVAMENTO NA NUVEM (SNAPSHOT TOTAL) ---
         // Aqui integramos a persistência atômica que revisamos antes
         const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
         if (chave && chave.includes("_key_")) {
             // Chamamos a função que verifica o hash antes de fazer o upload
             await persistirSnapshotTotal();
+        } else {
+            exibirAlerta("Tudo salvo!", "success");
         }
 
-        exibirAlerta("Tudo salvo e sincronizado!", "success");
 
     } catch (err) {
         console.error("Falha no processo de persistência:", err);
@@ -2753,29 +3219,48 @@ function iniciarMonitoramentoRemoto() {
 }
 
 function exibirAvisoMudancaExterna(dataSinc) {
+    // 1. Evita duplicados
     if (document.getElementById('alerta-nuvem-externa')) return;
 
     const dataFormatada = new Date(dataSinc).toLocaleTimeString();
     const alerta = document.createElement('div');
     alerta.id = 'alerta-nuvem-externa';
 
-    // Estilização fixa no topo, estilo "toast" moderno
     alerta.className = 'alert alert-primary position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg d-flex align-items-center';
     alerta.style.zIndex = "10001";
     alerta.style.minWidth = "300px";
     alerta.style.borderLeft = "5px solid #0d6efd";
 
+    // Injetamos o HTML com IDs claros
     alerta.innerHTML = `
         <div class="me-auto">
             <i class="bi bi-cloud-arrow-down-fill me-2"></i>
             <strong>Nuvem atualizada às ${dataFormatada}</strong>
             <div class="small opacity-75">Outro dispositivo salvou mudanças.</div>
         </div>
-        <button class="btn btn-sm btn-primary ms-3 fw-bold" onclick="location.reload()">ATUALIZAR</button>
-        <button class="btn-close ms-2" onclick="this.parentElement.remove()" style="font-size: 0.7rem;"></button>
+        <button id="btnAtualizarNuvemExterna" class="btn btn-sm btn-primary ms-3 fw-bold">ATUALIZAR</button>
+        <button id="btnCloseAlertaExterno" class="btn-close ms-2" style="font-size: 0.7rem;"></button>
     `;
 
-    document.body.append(alerta);
+    // 2. Adicionamos ao corpo da página
+    document.body.appendChild(alerta);
+
+    // 3. AGORA, atracamos os listeners manualmente
+    const btnAtu = alerta.querySelector('#btnAtualizarNuvemExterna');
+    const btnClose = alerta.querySelector('#btnCloseAlertaExterno');
+
+    if (btnAtu) {
+        btnAtu.addEventListener('click', () => {
+            console.log("🔄 Recarregando por mudança externa...");
+            window.location.href = window.location.href;
+        });
+    }
+
+    if (btnClose) {
+        btnClose.addEventListener('click', () => {
+            alerta.remove();
+        });
+    }
 }
 
 function solicitarAcessoDrive() {
@@ -2960,6 +3445,8 @@ window.switchMateria = switchMateria;
 window.confirmarNovaMateria = confirmarNovaMateria;
 window.deleteFullMateria = deleteFullMateria;
 window.updateMateriaName = updateMateriaName;
+window.setUnsavedChanges = setUnsavedChanges;
+
 
 // --- Operações na Tabela ---
 window.saveAllRows = saveAllRows;

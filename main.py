@@ -3,7 +3,7 @@ import json
 import os
 import re
 import time
-from datetime import datetime, timezone  # Para uso limpo no código
+from datetime import date, datetime, timezone  # Importe datetime também
 
 import httpx
 import pandas as pd  # suporte arquivo de Excel e CSV
@@ -109,17 +109,28 @@ async def validar_usuario(authorization: str, exige_cota: bool = False):
     raw_expira = user_data.get("expira", "2026-12-31")
     try:
         if isinstance(raw_expira, str):
-            data_expira = datetime.strptime(raw_expira.split("T")[0], "%Y-%m-%d")
+            # Usamos datetime para ler a string e extraímos apenas a .date()
+            data_expira = datetime.strptime(raw_expira.split("T")[0], "%Y-%m-%d").date()
         else:
-            data_expira = raw_expira.replace(tzinfo=None)
+            # Se vier do Firestore como Timestamp, extraímos a .date()
+            data_expira = (
+                raw_expira.date() if hasattr(raw_expira, "date") else raw_expira
+            )
 
-        if datetime.now() > data_expira:
+        # O segredo: comparamos date.today() com a data de expiração
+        if date.today() > data_expira:
             raise HTTPException(
                 status_code=403,
                 detail=f"Sua chave de contribuinte expirou em {str(data_expira)}",
             )
+    except HTTPException:
+        # Se já for uma HTTPException (expirado), repassa ela
+        raise
     except Exception as e:
-        raise HTTPException(status_code=403, detail=f"{str(e.detail)}")
+        # Se for um erro de código (tipo o AttributeError anterior), mostra o erro real
+        raise HTTPException(
+            status_code=403, detail=f"Erro na validação de data: {str(e)}"
+        )
 
     # 4. Verificação de Cota (Opcional, pois o sync não gasta cota, só o processar)
     if exige_cota:
@@ -422,8 +433,8 @@ async def processar(file: UploadFile = File(...), authorization: str = Header(No
     content = await file.read()
     conteudo_extraido = extrair_conteudo(content, file.filename)
 
-    hoje = datetime.date.today().isoformat()
-    ano_atual = datetime.date.today().year
+    hoje = date.today().isoformat()
+    ano_atual = date.today().year
 
     try:
         target_model = "gemini-2.5-flash"
