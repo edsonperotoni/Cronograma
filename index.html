@@ -306,7 +306,7 @@ Aqui é onde os dados vão aparecer de verdade.
 
                 <div class="d-grid gap-2 mt-3">
                     <button id="btnConflitoMerge" class="btn btn-outline-primary text-start p-3">
-                        <div class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Mesclar Dados (Recomendado)</div>
+                        <div class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Mesclar Dados</div>
                         <div class="small opacity-75">Mantém o que você tem e adiciona as novidades da nuvem.</div>
                     </button>
 
@@ -762,7 +762,7 @@ Aqui é onde os dados vão aparecer de verdade.
     </div>
 
     <div class="modal fade" id="modalEscolherImport" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title">Selecionar Conteúdos para Importar</h5>
@@ -770,6 +770,7 @@ Aqui é onde os dados vão aparecer de verdade.
                 </div>
                 <div class="p-2 bg-light border-bottom">
                     <div class="row g-2 align-items-center">
+
                         <div class="col-12 col-md-4">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" id="checkMarcarTodosImport">
@@ -791,19 +792,26 @@ Aqui é onde os dados vão aparecer de verdade.
                         <small class="text-muted" id="infoQtdImport"></small>
                     </div>
                 </div>
-                <div class="modal-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
+                <!-- Modal Body com padding p-3 para afastar das bordas do modal -->
+                <div class="modal-body p-3">
+                    <div class="table-responsive rounded border shadow-sm">
+                        <!-- Adicionado align-middle para centralizar verticalmente o conteúdo das células -->
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-dark"> <!-- Cabeçalho escuro para melhor contraste -->
                                 <tr>
-                                    <th style="width: 40px;" class="text-center">#</th>
+                                    <!-- px-3 adiciona o respiro lateral interno necessário -->
+                                    <th style="width: 60px;" class="text-center px-3">#</th>
                                     <th style="width: 100px;" class="text-center">Status</th>
-                                    <th style="width: 100px;">Data</th>
-                                    <th style="width: 150px;">Matéria</th>
-                                    <th>Conteúdo</th>
+                                    <th style="width: 110px;" class="text-center">Data</th>
+                                    <th style="width: 180px;">Matéria</th>
+                                    <th class="px-3">Conteúdo</th>
+                                    <!-- Coluna para o botão do olho (Diff) -->
+                                    <th style="width: 80px;" class="text-center px-3">Diff</th>
                                 </tr>
                             </thead>
-                            <tbody id="listaEscolherImport"></tbody>
+                            <tbody id="listaEscolherImport">
+                                <!-- O JavaScript deve preencher as células mantendo o px-3 nas extremidades -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -817,23 +825,38 @@ Aqui é onde os dados vão aparecer de verdade.
     </div>
 
     <div class="modal fade" id="modalDiff" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content shadow-lg border-primary">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title text-primary fw-bold">
-                        <i class="bi bi-question-circle me-2"></i>O que você quer manter?
+        <!-- Trocado modal-lg por modal-xl para dar fôlego ao conteúdo -->
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow-lg border-primary border-2">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-arrow-left-right me-2"></i>Confronto de Versões: Nuvem vs Local
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-bordered mb-0">
-                            <tbody id="corpoTabelaDiff"></tbody>
+
+                <!-- Adicionado p-3 para criar o respiro em volta das tabelas internas -->
+                <div class="modal-body p-3 bg-light">
+                    <div class="alert alert-info py-2 small mb-3 border-0 shadow-sm">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Compare as informações abaixo e clique no botão verde para <strong>Importar</strong> ou no
+                        vermelho para <strong>Manter o dado atual</strong> deste computador.
+                    </div>
+
+                    <div class="table-responsive rounded border bg-white shadow-sm">
+                        <table class="table table-bordered mb-0 align-middle">
+                            <tbody id="corpoTabelaDiff">
+                                <!-- O JS preenche aqui -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Cancelar</button>
+
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal">
+                        Fechar sem decidir
+                    </button>
                 </div>
             </div>
         </div>

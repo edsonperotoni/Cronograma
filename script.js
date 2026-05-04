@@ -1494,7 +1494,14 @@ async function saveChaveContribuinte() {
 
     // --- CENÁRIO B: NOVA CONEXÃO / TROCA ---
     if (chaveAntiga && (hasUnsavedChanges || CloudSync.isPending)) {
-        await persistirSnapshotTotal();
+        const sucessoSync = await persistirSnapshotTotal();
+        if (!sucessoSync) {
+            const sairMesmoAssim = await confirmarErroSyncModal();
+            if (!sairMesmoAssim) {
+                input.value = chaveAntiga;
+                return;
+            }
+        }
     }
 
     const dadosValidacao = await validarChaveNoServidor(novaChave);
@@ -1514,7 +1521,10 @@ async function saveChaveContribuinte() {
                     await executarDownloadForcadoFirestore();
                     return; // O download já faz o reload
                 } else if (decisao === 'manter_local') {
-                    exibirAlerta("Ótimo! Seus dados locais serão sincronizados na nova conta.", "success");
+                    CloudSync.pending = true;
+                    localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                    await persistirSnapshotTotal();
+                    exibirAlerta(`Bem-vindo de volta, ${dadosValidacao.nome}! Sincronizado com a nuvem.`, "success");
                     // Não limpamos aqui! Queremos manter o local.
                 } else {
                     input.value = "";
@@ -1522,6 +1532,7 @@ async function saveChaveContribuinte() {
                 }
             } else {
                 localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                CloudSync.pending = true;
                 await persistirSnapshotTotal();
                 exibirAlerta(`Bem-vindo, ${dadosValidacao.nome}! Sincronizado com a nuvem.`, "success");
             }
@@ -1586,6 +1597,7 @@ async function validarChaveNoServidor(chave) {
         return {
             valido: response.ok && dados.valido,
             nome: dados.nome || "Usuário",
+            tem_nuvem: dados.tem_nuvem,
             uso_atual: dados.uso_atual,
             cota_maxima: dados.cota_maxima,
             expiracao: dados.expiracao
@@ -2347,7 +2359,6 @@ async function enableEditModeAllRows() {
 }
 
 async function saveAllRows() {
-
     if (!currentMateria) return;
 
     // 1. Limpeza dos Editores (Se houver linhas em edição)
@@ -2358,6 +2369,19 @@ async function saveAllRows() {
             for (const id of ids) {
                 if (activeEditors[id]) {
                     try {
+                        const editor = activeEditors[id];
+                        const conteudo = editor.getData(); // 1. Pega o dado ANTES de destruir
+                        const tr = document.getElementById(id);
+
+                        if (tr) {
+                            // 2. Propaga manualmente para a div de visualização
+                            const vObs = tr.querySelector('.view-obs');
+                            if (vObs) vObs.innerHTML = conteudo;
+
+                            // 3. Garante que a div de backup também tenha o dado
+                            const editorDiv = tr.querySelector('.val-obs-editor');
+                            if (editorDiv) editorDiv.innerHTML = conteudo;
+                        }
                         await activeEditors[id].destroy();
                     } catch (e) {
                         console.warn(`Erro ao destruir editor ${id}:`, e);
@@ -2967,10 +2991,10 @@ async function prepararEscolhaImport() {
     const modalIni = bootstrap.Modal.getInstance(document.getElementById('modalImport'));
     if (modalIni) modalIni.hide();
 
-    let totalItens = 0;
+    let totalItensNoArquivo = 0;
+    let itensParaMostrar = 0;
     const materiasNoJson = Object.keys(tempImportData.allData).sort();
 
-    // 1. Preenche o Select de matérias
     materiasNoJson.forEach(materia => {
         const opt = document.createElement('option');
         opt.value = materia;
@@ -2978,30 +3002,25 @@ async function prepararEscolhaImport() {
         selectFiltro.appendChild(opt);
     });
 
-    // 2. Loop principal (Assíncrono para processar os Hashes)
     for (const materia of materiasNoJson) {
-        // Busca correta usando o PREFIX do seu sistema
         const dadosMateriaLocal = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
 
         for (const [index, item] of tempImportData.allData[materia].entries()) {
-            totalItens++;
+            totalItensNoArquivo++;
 
-            // --- Lógica de Identificação de Mudança ---
-            // 1. Tenta pelo UID (ID único)
             let itemLocal = dadosMateriaLocal.find(l => (l.uid || gerarUID(l)) === (item.uid || gerarUID(item)));
-
-            // 2. Fallback: Se não achar por UID, busca pelo CONTEÚDO exato
             if (!itemLocal) {
                 itemLocal = dadosMateriaLocal.find(l => l.conteudo === item.conteudo);
             }
 
-            let statusBadge = '<span class="badge bg-success">NOVO</span>';
+            let statusBadge = '';
             let btnDiff = '';
+            let statusTipo = 'novo';
 
             if (itemLocal) {
-                // Se o item existe, comparamos o hash para ver se conteúdo/checks/obs mudaram
                 const mudou = await detectarAlteracao(itemLocal, item);
                 if (mudou) {
+                    statusTipo = 'modificado';
                     statusBadge = '<span class="badge bg-warning text-dark">MODIFICADO</span>';
                     btnDiff = `
                     <button type="button" class="btn btn-sm btn-outline-primary ms-2 btn-ver-diff" 
@@ -3009,43 +3028,37 @@ async function prepararEscolhaImport() {
                         <i class="bi bi-eye"></i>
                     </button>`;
                 } else {
-                    statusBadge = '<span class="badge bg-light text-muted opacity-50">IDÊNTICO</span>';
+                    // SE É IGUAL, PULA PARA O PRÓXIMO ITEM (NÃO GERA LINHA NA TABELA)
+                    continue;
                 }
+            } else {
+                statusBadge = '<span class="badge bg-success">NOVO</span>';
             }
-            // ------------------------------------------
+
+            itensParaMostrar++; // Contador de linhas reais na tabela
 
             const tr = document.createElement('tr');
             tr.setAttribute('data-materia-row', materia);
             tr.setAttribute('data-conteudo-row', (item.conteudo || "").toLowerCase());
+            tr.setAttribute('data-status-row', statusTipo);
 
             tr.innerHTML = `
-                <td class="text-center">
+                <td class="text-center px-3">
                     <input class="form-check-input check-item-import" type="checkbox" 
-                        data-materia="${materia}" data-index="${index}" 
-                        ${(!itemLocal || statusBadge.includes('MODIFICADO')) ? 'checked' : ''}>
+                        data-materia="${materia}" data-index="${index}" checked>
                 </td>
                 <td class="small text-center">${statusBadge}</td>
-                <td class="small">${formatDateToBR(item.data)}</td>
+                <td class="small text-center">${formatDateToBR(item.data)}</td>
                 <td class="small fw-bold text-primary">${materia}</td>
-                <td class="small">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span>${item.conteudo || '<span class="text-muted italic">Sem título</span>'}</span>
-                        ${btnDiff}
-                    </div>
+                <td class="small px-3">
+                    <span>${item.conteudo || '<span class="text-muted italic">Sem título</span>'}</span>
                 </td>
+                <td class="text-center px-3"> ${btnDiff}</td>
             `;
 
             tr.style.cursor = "pointer";
-
-            // Gerenciamento de cliques na linha
             tr.onclick = (e) => {
-                // Se clicar no botão de olho ou no ícone dentro dele, para aqui
-                if (e.target.closest('.btn-ver-diff')) {
-                    e.stopPropagation();
-                    return;
-                }
-
-                // Se não foi no checkbox, inverte o estado dele
+                if (e.target.closest('.btn-ver-diff')) { e.stopPropagation(); return; }
                 if (e.target.type !== 'checkbox') {
                     const cb = tr.querySelector('.check-item-import');
                     cb.checked = !cb.checked;
@@ -3056,101 +3069,130 @@ async function prepararEscolhaImport() {
         }
     }
 
-    document.getElementById('infoQtdImport').innerText = `${totalItens} itens no arquivo`;
-    document.getElementById('checkMarcarTodosImport').checked = false;
+    // Se não houver nada novo para mostrar, avisa o usuário
+    if (itensParaMostrar === 0) {
+        lista.innerHTML = `<tr><td colspan="6" class="text-center p-5 text-muted">
+            <i class="bi bi-check-all fs-1 d-block mb-2 text-success"></i>
+            Tudo em dia! Todos os itens do arquivo já estão no seu computador.
+        </td></tr>`;
+    }
+
+    document.getElementById('infoQtdImport').innerText = `${itensParaMostrar} itens novos ou modificados`;
+    document.getElementById('checkMarcarTodosImport').checked = itensParaMostrar > 0;
     document.getElementById('buscaConteudoImport').value = "";
 
-    // Abre o modal de escolha
     new bootstrap.Modal(document.getElementById('modalEscolherImport')).show();
-
-    // Ativa os listeners do botão de olho
     atracarEventosDiff();
 }
 
 function abrirVisualizadorDiff(materia, index) {
     const itemImportado = tempImportData.allData[materia][index];
     const dadosMateriaLocal = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+
+    // 1. Carrega a config exata (Ex: config_vBorda_Biologia)
+    const rawConfig = localStorage.getItem(CONFIG_PREFIX + materia);
+    const cfg = rawConfig ? JSON.parse(rawConfig) : {};
+
+    // 2. Define quais colunas mostrar (Respeitando seu visibleCols)
+    let colunasVisiveis = ["t", "e1", "e2", "e3", "e4", "e5", "e6"];
+    if (cfg.visibleCols && Array.isArray(cfg.visibleCols)) {
+        colunasVisiveis = cfg.visibleCols;
+    } else if (cfg.hiddenCols && Array.isArray(cfg.hiddenCols)) {
+        colunasVisiveis = colunasVisiveis.filter(c => !cfg.hiddenCols.includes(c));
+    }
+
+    // 3. Mapeia os nomes das colunas conforme gravado (cfg["t"], cfg["e1"]...)
+    const labelsFormatadas = {
+        t: cfg.t || "T",
+        e1: cfg.e1 || "E1",
+        e2: cfg.e2 || "E2",
+        e3: cfg.e3 || "E3",
+        e4: cfg.e4 || "E4",
+        e5: cfg.e5 || "E5",
+        e6: cfg.e6 || "E6"
+    };
+
     const itemLocal = dadosMateriaLocal.find(l => (l.uid || gerarUID(l)) === (itemImportado.uid || gerarUID(itemImportado))) ||
         dadosMateriaLocal.find(l => l.conteudo === itemImportado.conteudo);
 
     const corpo = document.getElementById('corpoTabelaDiff');
-    if (!corpo) return; // Segurança caso o modal não esteja no DOM
-
+    if (!corpo) return;
     corpo.innerHTML = "";
 
-    // Renderiza os blocos (Nuvem acima, Local abaixo)
-    const htmlNuvem = montarBlocoFull(itemImportado, materia, "NUVEM (Vindo da Nuvem/Arquivo)", "table-success", "border-success", true);
-    const htmlLocal = montarBlocoFull(itemLocal, materia, "LOCAL (Atual neste dispositivo)", "table-danger", "border-danger", false);
-    const espacador = `<tr><td colspan="10" class="p-2 border-0"></td></tr>`;
+    const htmlNuvem = montarBlocoFull(itemImportado, materia, "NUVEM (Vindo da Nuvem/Arquivo)", "table-success", "border-success", true, labelsFormatadas, colunasVisiveis);
+    const htmlLocal = montarBlocoFull(itemLocal, materia, "LOCAL (Atual neste dispositivo)", "table-danger", "border-danger", false, labelsFormatadas, colunasVisiveis);
 
+    const espacador = `<tr><td colspan="20" class="p-2 border-0"></td></tr>`;
     corpo.innerHTML = htmlNuvem + espacador + htmlLocal;
 
-    // --- NOVA LÓGICA DE CLIQUE (SEM BUSCAR POR ID) ---
     const checkboxPrincipal = document.querySelector(`.check-item-import[data-materia="${materia}"][data-index="${index}"]`);
-
-    // Usamos um único listener no corpo da tabela para capturar os botões dinâmicos
     corpo.onclick = (e) => {
         const btn = e.target.closest('.btn-acao-diff');
         if (!btn) return;
-
-        const acao = btn.getAttribute('data-acao');
         if (checkboxPrincipal) {
-            // Se for nuvem (true), se for local (false)
-            checkboxPrincipal.checked = (acao === 'nuvem');
+            checkboxPrincipal.checked = (btn.getAttribute('data-acao') === 'nuvem');
             checkboxPrincipal.dispatchEvent(new Event('change'));
         }
-
-        // Fecha o modal após a escolha
-        const mElem = document.getElementById('modalDiff');
-        const mInstance = bootstrap.Modal.getInstance(mElem) || new bootstrap.Modal(mElem);
-        mInstance.hide();
+        bootstrap.Modal.getInstance(document.getElementById('modalDiff')).hide();
     };
 
-    // Abre o modal
-    const modalDiff = new bootstrap.Modal(document.getElementById('modalDiff'));
-    modalDiff.show();
+    new bootstrap.Modal(document.getElementById('modalDiff')).show();
 }
 
-function montarBlocoFull(item, materia, label, classeCor, borderCor, isNuvem) {
-    if (!item) return `<tr class="${classeCor}"><td colspan="10" class="p-4 text-center text-muted">Registro não encontrado.</td></tr>`;
+function montarBlocoFull(item, materia, label, classeCor, borderCor, isNuvem, labels, colunasVisiveis) {
+    if (!item) return `<tr class="${classeCor}"><td colspan="20" class="p-4 text-center text-muted">Registro não encontrado.</td></tr>`;
 
-    const checks = ['t', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6'];
+    let headerChecksHtml = '';
     let checksHtml = '';
 
-    checks.forEach(c => {
+    colunasVisiveis.forEach(c => {
+        const nomeColuna = labels[c] || c.toUpperCase();
+        headerChecksHtml += `<td class="text-center border-start bg-light py-0 px-1" style="font-size: 0.65rem; color: #666; width: 55px; font-weight: bold;">${nomeColuna}</td>`;
+
         const isChecked = String(item[c]) === "true" || item[c] === true;
         const icon = isChecked ? 'bi-check-square-fill text-success' : 'bi-square text-muted';
-        checksHtml += `<td class="text-center border-start" style="width: 50px;"><i class="bi ${icon} fs-5"></i></td>`;
+        checksHtml += `<td class="text-center border-start" style="width: 55px;"><i class="bi ${icon} fs-5"></i></td>`;
     });
 
-    const labelStyle = !isNuvem ? 'text-danger fw-bold' : 'text-muted fw-bold';
+    const totalCols = 3 + colunasVisiveis.length;
 
-    // Configuração do Botão Lado a Lado
-    const btnTexto = isNuvem ? 'Pegar da nuvem' : 'Manter local';
-    const btnClasse = isNuvem ? 'btn-success' : 'btn-outline-danger';
-    const btnIcone = isNuvem ? 'bi-cloud-download' : 'bi-device-hdd';
-    const acao = isNuvem ? 'nuvem' : 'local';
+    // Pegamos o HTML das observações e forçamos o 'disabled' em qualquer checkbox da Todo-List
+    let obsProtegida = item.obs || '<span class="text-muted fst-italic">Sem observações.</span>';
+
+    if (typeof obsProtegida === 'string') {
+        // Esta regex encontra <input type="checkbox" e garante que tenha o atributo disabled
+        obsProtegida = obsProtegida.replace(/<input\s+type="checkbox"/g, '<input type="checkbox" disabled="disabled"');
+    }
 
     return `
         <tr class="bg-light align-middle">
-            <td colspan="10" class="py-2 px-3 border-bottom">
+            <td colspan="${totalCols}" class="py-2 px-3 border-bottom">
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="${labelStyle}" style="font-size: 0.75rem;">${label}</span>
-                    <button type="button" class="btn btn-sm ${btnClasse} btn-acao-diff shadow-sm" data-acao="${acao}">
-                        <i class="bi ${btnIcone} me-1"></i> ${btnTexto}
+                    <span class="${!isNuvem ? 'text-danger fw-bold' : 'text-muted fw-bold'}" style="font-size: 0.75rem;">${label}</span>
+                    <button type="button" class="btn btn-sm ${isNuvem ? 'btn-success' : 'btn-outline-danger'} btn-acao-diff shadow-sm px-3" data-acao="${isNuvem ? 'nuvem' : 'local'}">
+                        <i class="bi ${isNuvem ? 'bi-cloud-download' : 'bi-device-hdd'} me-1"></i> 
+                        ${isNuvem ? 'Pegar da nuvem' : 'Manter local'}
                     </button>
                 </div>
             </td>
         </tr>
+        
+        <tr class="align-middle" style="line-height: 1;">
+            <td colspan="3" class="bg-white border-bottom-0"></td>
+            ${headerChecksHtml}
+        </tr>
+
         <tr class="${classeCor} align-middle">
-            <td class="small fw-bold text-primary px-3" style="width: 20%;">${materia}</td>
-            <td class="small fw-bold" style="width: 35%;">${item.conteudo || ''}</td>
+            <td class="small fw-bold text-primary px-3" style="min-width: 120px;">${materia}</td>
+            <td class="small text-center border-start" style="width: 90px;">${item.data || '--/--/--'}</td>
+            <td class="small fw-bold border-start px-2">${item.conteudo || ''}</td>
             ${checksHtml}
         </tr>
+
         <tr class="${classeCor}">
-            <td colspan="10" class="p-2">
-                <div class="p-3 bg-white border ${borderCor} rounded" style="max-height: 180px; overflow-y: auto; color: #333; font-size: 0.85rem;">
-                    ${item.obs || '<span class="text-muted fst-italic">Sem observações.</span>'}
+            <td colspan="${totalCols}" class="p-2">
+                <div class="p-3 bg-white border ${borderCor} rounded shadow-sm" style="max-height: 150px; overflow-y: auto; color: #333; font-size: 0.85rem;">
+                  ${obsProtegida}
                 </div>
             </td>
         </tr>
@@ -3172,10 +3214,11 @@ function atracarEventosDiff() {
 function filtrarTabelaImport() {
     const filtroMateria = document.getElementById('filtroMateriaImport').value;
     const buscaTexto = document.getElementById('buscaConteudoImport').value.toLowerCase();
-    const linhas = document.querySelectorAll('#listaEscolherImport tr');
-    let visiveis = 0;
+    const linhas = document.querySelectorAll('#listaEscolherImport tr[data-materia-row]'); // Pega apenas linhas de dados
 
-    document.getElementById('checkMarcarTodosImport').checked = false;
+    let visiveis = 0;
+    const checkTodos = document.getElementById('checkMarcarTodosImport');
+    if (checkTodos) checkTodos.checked = false;
 
     linhas.forEach(tr => {
         const mat = tr.getAttribute('data-materia-row');
@@ -3190,12 +3233,12 @@ function filtrarTabelaImport() {
             visiveis++;
         } else {
             tr.style.display = "none";
-            // CRÍTICO: Desmarca o checkbox de linhas que foram escondidas pelo filtro
             if (cb) cb.checked = false;
         }
     });
 
-    document.getElementById('infoQtdImport').innerText = `${visiveis} itens visíveis`;
+    const info = document.getElementById('infoQtdImport');
+    if (info) info.innerText = `${visiveis} itens filtrados`;
 }
 
 // Função Marcar/Desmarcar Todos
