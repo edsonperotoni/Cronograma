@@ -3069,6 +3069,56 @@ async function prepararEscolhaImport() {
         }
     }
 
+    // 3. Identificar itens que existem LOCALMENTE mas NÃO estão no arquivo (Candidatos à exclusão)
+    const materiasLocais = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+
+    for (const materia of materiasLocais) {
+        // Só verificamos se a matéria estiver presente no arquivo de importação
+        // para evitar que um backup parcial delete matérias inteiras do seu PC.
+        if (tempImportData.allData[materia]) {
+            const dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+            const itensNoArquivo = tempImportData.allData[materia];
+
+            for (const itemLocal of dadosLocais) {
+                const uidLocal = itemLocal.uid || gerarUID(itemLocal);
+                // Verifica se este UID local existe no arquivo que veio da nuvem
+                const existeNaCloud = itensNoArquivo.some(imp => (imp.uid || gerarUID(imp)) === uidLocal);
+
+                if (!existeNaCloud) {
+                    itensParaMostrar++;
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-materia-row', materia);
+                    tr.setAttribute('data-status-row', 'excluir'); // STATUS PARA A DECISÃO
+                    tr.className = "table-danger-subtle"; // Linha levemente avermelhada
+
+                    tr.innerHTML = `
+                    <td class="text-center px-3">
+                        <input class="form-check-input check-item-import check-item-excluir" type="checkbox" 
+                            data-materia="${materia}" data-uid="${uidLocal}">
+                    </td>
+                    <td class="small text-center"><span class="badge bg-danger">REMOVER</span></td>
+                    <td class="small text-center text-muted">${formatDateToBR(itemLocal.data)}</td>
+                    <td class="small fw-bold text-danger">${materia}</td>
+                    <td class="small px-3 text-muted">
+                        <del>${itemLocal.conteudo || 'Sem título'}</del>
+                        <small class="d-block text-danger" style="font-size: 0.6rem;">Não encontrado na nuvem</small>
+                    </td>
+                    <td class="text-center px-3">---</td>
+                `;
+
+                    tr.style.cursor = "pointer";
+                    tr.onclick = (e) => {
+                        if (e.target.type !== 'checkbox') {
+                            const cb = tr.querySelector('.check-item-import');
+                            cb.checked = !cb.checked;
+                        }
+                    };
+                    lista.appendChild(tr);
+                }
+            }
+        }
+    }
+
     // Se não houver nada novo para mostrar, avisa o usuário
     if (itensParaMostrar === 0) {
         lista.innerHTML = `<tr><td colspan="6" class="text-center p-5 text-muted">
@@ -3278,39 +3328,39 @@ function filtrarHTML(str) {
 }
 
 async function executarImportacaoSeletiva() {
-    const selecionados = document.querySelectorAll('.check-item-import:checked');
+    // 1. Separa os checkboxes por intenção
+    const selecionadosParaGravar = document.querySelectorAll('.check-item-import:checked:not(.check-item-excluir)');
+    const selecionadosParaDeletar = document.querySelectorAll('.check-item-excluir:checked');
 
-    // Se não houver nada selecionado, apenas avisamos e procedemos com a sincronia de "manutenção"
-    if (selecionados.length === 0) {
-        if (!confirm("Nenhum item da nuvem foi selecionado. Isso manterá seus dados locais atuais e atualizará a nuvem para que outros dispositivos fiquem iguais a este. Prosseguir?")) return;
+    // Se nada foi selecionado, procedemos com a sincronia de "manutenção" (seu local vira a verdade)
+    if (selecionadosParaGravar.length === 0 && selecionadosParaDeletar.length === 0) {
+        if (!confirm("Nenhum item foi selecionado. Isso manterá seus dados locais atuais e atualizará a nuvem para que outros dispositivos fiquem iguais a este. Prosseguir?")) return;
+    } else {
+        // Confirmação clara do que será feito
+        const msg = `Confirmar sincronização?\n- ${selecionadosParaGravar.length} inclusões/edições\n- ${selecionadosParaDeletar.length} exclusões`;
+        if (!confirm(msg)) return;
     }
 
     mostrarOverlay();
-    //Dá tempo para o navegador iniciar a animação
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-        // Pequena pausa para UI respirar
         await new Promise(r => setTimeout(r, 300));
-
         await criarSnapshotEmergencial();
 
         let currentList = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
-        selecionados.forEach(cb => {
+        // --- PARTE A: PROCESSAR GRAVAÇÕES E EDIÇÕES ---
+        selecionadosParaGravar.forEach(cb => {
             const materia = cb.getAttribute('data-materia');
             const index = cb.getAttribute('data-index');
-
-            // Recupera o item vindo da IA ou arquivo
             const itemParaImportar = tempImportData.allData?.[materia]?.[index];
 
             if (!itemParaImportar || typeof itemParaImportar.conteudo === 'undefined') return;
 
-            // 1. Garantia de que o item ganhe um UID (essencial para dados vindos da IA)
             const novoUID = itemParaImportar.uid || gerarUID(itemParaImportar);
             itemParaImportar.uid = novoUID;
 
-            // 2. Garantia da matéria na lista mestra
             if (!currentList.includes(materia)) {
                 currentList.push(materia);
                 if (tempImportData.configs?.[materia]) {
@@ -3319,44 +3369,44 @@ async function executarImportacaoSeletiva() {
             }
 
             let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
-
-            // 3. Lógica de Upsert baseada no UID gerado
             const idxExistente = dadosLocais.findIndex(d => (d.uid || gerarUID(d)) === novoUID);
 
-            // Sanitização dos textos para evitar lixo HTML
             const itemSanitizado = {
                 ...itemParaImportar,
                 data: higienizarData(filtrarHTML(itemParaImportar.data)),
                 conteudo: filtrarHTML(itemParaImportar.conteudo)
             };
 
-            if (idxExistente !== -1) {
-                // Sobrescreve se já existir
-                dadosLocais[idxExistente] = itemSanitizado;
-            } else {
-                // Adiciona se for novo
-                dadosLocais.push(itemSanitizado);
-            }
+            if (idxExistente !== -1) dadosLocais[idxExistente] = itemSanitizado;
+            else dadosLocais.push(itemSanitizado);
 
-            // ORDENAÇÃO ANTES DE GRAVAR:
             dadosLocais.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
         });
 
-        // Se esta importação manual nasceu de um conflito de sincronia (opção 'pick')
+        // --- PARTE B: PROCESSAR EXCLUSÕES (A nova lógica) ---
+        selecionadosParaDeletar.forEach(cb => {
+            const materia = cb.getAttribute('data-materia');
+            const uidParaRemover = cb.getAttribute('data-uid');
+
+            let dadosLocais = JSON.parse(localStorage.getItem(PREFIX + materia) || "[]");
+            // Filtra removendo o item que não existe mais na nuvem
+            dadosLocais = dadosLocais.filter(d => (d.uid || gerarUID(d)) !== uidParaRemover);
+
+            localStorage.setItem(PREFIX + materia, JSON.stringify(dadosLocais));
+        });
+
+        // --- PARTE C: FINALIZAÇÃO E ALINHAMENTO ---
         if (window.sincroniaPendenteAposEscolha) {
             localStorage.setItem("last_local_save_time", window.sincroniaPendenteAposEscolha);
-            window.sincroniaPendenteAposEscolha = null; // Limpa a flag para a próxima vez
-            console.log("⏰ Relógio local alinhado após escolha manual da nuvem.");
+            window.sincroniaPendenteAposEscolha = null;
+            console.log("⏰ Relógio local alinhado.");
         }
 
-        // Atualiza a lista mestra sem duplicatas
         localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
 
-        // --- SINCRONIA PÓS-ESCOLHA ---
         const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
         if (chave && chave.includes("_key_")) {
-            // Sobe a nova versão mesclada para a nuvem
             CloudSync.pending = true;
             await persistirSnapshotTotal();
         }
