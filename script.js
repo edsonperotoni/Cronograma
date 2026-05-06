@@ -1089,7 +1089,7 @@ function mostrarOverlay(mensagem = "Processando...") {
 
         // 🏆 Categoria: Motivação e Foco
         "A paciência é a chave para o 10...",
-        "Devagar se vai ao longe (e se passa em Cálculo)...",
+        "Devagar se vai ao longe (e se passa em Medicina)...",
         "Construindo seu castelo, tijolo por tijolo...",
         "Seu esforço de hoje é o seu sucesso de amanhã...",
         "Quase lá! Não desista agora...",
@@ -2589,7 +2589,7 @@ function deleteRow(i) {
     new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
 }
 
-function executeRowDeletion(tr) { tr.remove(); saveData(); rowToDelete = null; }
+function executeRowDeletion(tr) { tr.remove(); saveData(); rowToDelete = null; setUnsavedChanges(true); }
 
 
 async function updateMateriaName() {
@@ -2772,6 +2772,7 @@ function executeFullMateriaDeletion() {
     localStorage.setItem(LIST_KEY, JSON.stringify(l));
     switchMateria("");
     closeModals();
+    setUnsavedChanges(true);
 }
 
 

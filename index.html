@@ -516,20 +516,21 @@ Aqui é onde os dados vão aparecer de verdade.
                                 </div>
 
                                 <div class="row g-4 mb-2">
-                                    <div class="col-12 col-md-6 text-center">
+                                    <div class="col-12 col-md-6">
                                         <h6 class="fw-bold mb-3 text-muted small text-uppercase">Exportar</h6>
                                         <!-- Adicionado id="btnExportLocal" -->
                                         <button id="btnExportLocal"
                                             class="btn btn-light border w-100 btn-sm py-2 shadow-sm fw-bold">
-                                            <i class="bi bi-download me-2 text-dark"></i>Download JSON
+                                            <i class="bi bi-download me-2 text-dark"></i>Salvar backup neste dispositivo
                                         </button>
                                     </div>
-                                    <div class="col-12 col-md-6 text-center">
+                                    <div class="col-12 col-md-6">
                                         <h6 class="fw-bold mb-3 text-muted small text-uppercase">Importar</h6>
                                         <label for="importFile"
                                             class="btn btn-light border w-100 btn-sm py-2 shadow-sm fw-bold mb-0"
                                             style="cursor: pointer;">
-                                            <i class="bi bi-upload me-2 text-primary"></i>Upload JSON
+                                            <i class="bi bi-upload me-2 text-primary"></i>Carregar backup deste
+                                            dispositivo
                                         </label>
 
                                         <input type="file" id="importFile" class="d-none" accept=".json">
@@ -556,22 +557,29 @@ Aqui é onde os dados vão aparecer de verdade.
                                 <div
                                     class="alert alert-primary border-0 shadow-sm py-3 px-3 small d-flex align-items-center mb-4">
                                     <i class="bi bi-google me-3 fs-4"></i>
-                                    <div><strong>Google Drive Pessoal</strong><br>Exporte ou importe do seu google drive
-                                        pessoal o backup .json (Faça o login no Google Drive primeiro).</div>
+                                    <div><strong>Google Drive Pessoal</strong><br>Exporte ou importe um backup do seu
+                                        google drive
+                                        pessoal. <span class="badge bg-primary ms-2" style="font-size: 0.5rem;">Faça o
+                                            login no Google Drive primeiro</span>
+                                    </div>
                                 </div>
                                 <div class="row g-3">
+
                                     <div class="col-12 col-md-6">
+                                        <h6 class="fw-bold mb-3 text-muted small text-uppercase">Exportar</h6>
                                         <button id="btn-google-export"
                                             class="btn btn-outline-primary w-100 btn-sm py-2 shadow-sm fw-bold" disabled
                                             title="Requer Chave Ativa">
-                                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Enviar ao Drive
+                                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Salvar backup no Google Drive
                                         </button>
                                     </div>
                                     <div class="col-12 col-md-6">
+                                        <h6 class="fw-bold mb-3 text-muted small text-uppercase">Importar</h6>
                                         <button id="btn-google-import"
                                             class="btn btn-outline-primary w-100 btn-sm py-2 shadow-sm fw-bold" disabled
                                             title="Requer Chave Ativa">
-                                            <i class="bi bi-cloud-download-fill me-2"></i>Baixar do Drive
+                                            <i class="bi bi-cloud-download-fill me-2"></i>Carregar backup do Google
+                                            Drive
                                         </button>
                                     </div>
                                 </div>
@@ -619,8 +627,8 @@ Aqui é onde os dados vão aparecer de verdade.
                                             accept=".pdf,.html,.txt,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png">
 
                                         <div class="mt-3 p-2 bg-light rounded" style="font-size: 0.65rem;">
-                                            <i class="bi bi-info-circle me-1"></i> A IA extrai datas e temas
-                                            automaticamente, organizando-os em seu cronograma.
+                                            <i class="bi bi-info-circle me-1"></i> A IA extrai matérias e conteúdos do
+                                            arquivo selecionado, automaticamente, prontos para serem importados.
                                         </div>
                                     </div>
                                 </div>
@@ -733,7 +741,7 @@ Aqui é onde os dados vão aparecer de verdade.
                     <div class="d-grid gap-2 mt-3">
                         <!-- Opção: Mesclar -->
                         <button id="btnImportMerge" class="btn btn-outline-primary text-start p-3">
-                            <div class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Mesclar Dados (Recomendado)</div>
+                            <div class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Mesclar Dados</div>
                             <div class="small opacity-75">Mantém o que você tem e adiciona as novidades do arquivo.
                             </div>
                         </button>
@@ -1030,13 +1038,16 @@ Aqui é onde os dados vão aparecer de verdade.
                             </h6>
                             <ul class="small text-secondary">
                                 <li><strong>Engine Gemini 2.5 Flash:</strong> Processamento ultra-rápido via Google
-                                    GenAI SDK, garantindo estruturação de conteúdos com precisão cirúrgica.</li>
+                                    GenAI SDK, com a engine de IA que permite processamento em tempo real, equilibrando
+                                    a
+                                    inteligência necessária para tarefas difíceis com a agilidade exigida pela
+                                    experiência do usuário moderno </li>
                                 <li><strong>Importação Multi-formato:</strong> Extração inteligente de dados de arquivos
                                     <strong>PDF (até 5 pág.), Word, Excel, CSV</strong> e <strong>Imagens</strong> via
                                     OCR nativo.
                                 </li>
                                 <li><strong>Mapeamento por UID:</strong> Identificação única de temas que permite
-                                    mesclagens inteligentes e evita duplicatas, mesmo em fluxos complexos de importação.
+                                    mesclagens sem duplicatas, mesmo em fluxos complexos de importação.
                                 </li>
                             </ul>
 
@@ -1085,7 +1096,7 @@ Aqui é onde os dados vão aparecer de verdade.
                             <h6 class="fw-bold text-primary mt-3"><i class="bi bi-magic me-2"></i>Automação Cronológica
                             </h6>
                             <ul class="small text-secondary">
-                                <li><strong>Ordenação Nativa:</strong> Reorganização automática inteligente por data
+                                <li><strong>Ordenação Nativa:</strong> Reorganização automática por data
                                     após qualquer mesclagem ou edição.</li>
                                 <li><strong>Destaque de Status:</strong> Identificação visual imediata de prazos: <span
                                         class="badge bg-danger-subtle text-danger">rosa para atrasos</span> e <span
