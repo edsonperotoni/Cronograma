@@ -1156,9 +1156,7 @@ tr.is-editing .view-mode {
     width: 100%;
     height: 100%;
     background: rgba(15, 23, 42, 0.85);
-    /* Azul marinho profundo */
     backdrop-filter: blur(8px);
-    /* Efeito de vidro jateado */
     display: none;
     flex-direction: column;
     align-items: center;
@@ -1166,24 +1164,10 @@ tr.is-editing .view-mode {
     z-index: 9999;
     color: #f8fafc;
     font-family: 'Inter', sans-serif;
-}
 
-.spinner-restore {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-left-color: #3b82f6;
-    /* Azul brilhante */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-    /* Força a aceleração de hardware */
-    will-change: transform;
-    backface-visibility: hidden;
-    perspective: 1000;
-    transform: translateZ(0);
-    /* Truque clássico para GPU */
+    /* ADICIONE ISSO: Garante que o conteúdo nunca encoste nas bordas */
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 #loading-text {
@@ -1191,30 +1175,34 @@ tr.is-editing .view-mode {
     letter-spacing: -0.025em;
     margin-bottom: 8px;
 
-    /* 1. Defina o fundo primeiro */
+    /* ADICIONE ISSO: Para textos longos não quebrarem feio no celular */
+    text-align: center;
+    max-width: 100%;
+
     background: linear-gradient(to right, #60a5fa, #a78bfa);
-
-    /* 2. Recorte o fundo para o formato do texto (Vendor Prefixes) */
     -webkit-background-clip: text;
-    /* Para Chrome, Safari e Edge */
-    -moz-background-clip: text;
-    /* Para versões legadas do Firefox */
     background-clip: text;
-    /* Propriedade padrão W3C */
-
-    /* 3. Deixe o preenchimento transparente para o gradiente aparecer */
     -webkit-text-fill-color: transparent;
-    /* Necessário para Webkit */
     color: transparent;
-    /* Fallback padrão */
 }
 
 .loading-subtext p {
     font-size: 0.9rem;
     color: #94a3b8;
-    max-width: 250px;
+
+    /* AJUSTE AQUI: 250px é muito pouco para celulares modernos com fontes grandes. 
+       Usar 100% com um max-width um pouco maior (ou remove-lo) dá o respiro. */
+    max-width: 320px;
+    width: 100%;
+
     text-align: center;
     font-style: italic;
+
+    /* ADICIONE ISSO: Garante margens automáticas para centralizar */
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.4;
+    /* Melhora a leitura no celular */
 }
 
 .badge-study {
