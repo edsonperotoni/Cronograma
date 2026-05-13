@@ -21,7 +21,7 @@ Regras de Negócio:
 Retorne APENAS o JSON puro seguindo este modelo exato:
 {{
     "app": "Cronograma",
-    "version": "3.5.0",
+    "version": "4.0.1",
     "list": ["Nome da Matéria"],
     "allData": {{
         "Nome da Matéria": [

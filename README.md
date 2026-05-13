@@ -1,4 +1,4 @@
-# 📚 Cronograma de Matérias v4.0.0 🚀
+# 📚 Cronograma de Matérias v4.0.1 🚀
 
 Uma aplicação full-stack de alta performance para organização de rotinas de estudo, integrando **Inteligência Artificial de última geração** e **sincronização híbrida em nuvem**.
 

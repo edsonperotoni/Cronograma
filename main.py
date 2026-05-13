@@ -47,7 +47,9 @@ else:
         "http://127.0.0.1:5500",
     ]
 
-REGEX_CHAVE = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,7}+_key_[a-zA-Z0-9]+$"
+# --- CONFIGURAÇÃO DE SEGURANÇA ---
+# Aceita APENAS chaves no padrão: crono_premium_ + 32 caracteres hexadecimais
+REGEX_CHAVE = r"^crono_premium_[a-f0-9]{32}$"
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,63 +78,57 @@ async def obter_email_google(token: str):
 
 async def validar_usuario(authorization: str, exige_cota: bool = False):
     """
-    Centraliza todas as validações de segurança e regras de negócio.
+    Centraliza todas as validações de segurança e regras de negócio do Cronograma.
     Retorna os dados do usuário e a referência do documento se tudo estiver OK.
     """
     if not authorization:
-        raise HTTPException(
-            status_code=401, detail="Chave de contribuinte não fornecida."
-        )
+        raise HTTPException(status_code=401, detail="Chave premium não fornecida.")
 
-    # 1. Busca no Firestore
+    authorization = authorization.strip()
     user_ref = db_firestore.collection("usuarios").document(authorization)
     user_doc = user_ref.get()
-    authorization = authorization.strip()
 
+    # 1. Validação rigorosa da estrutura da chave via Regex
     if not re.match(REGEX_CHAVE, authorization, re.IGNORECASE):
         raise HTTPException(
-            status_code=400, detail="O formato da chave de contribuinte é inválido."
+            status_code=400, detail="Formato de chave premium inválido."
         )
 
     if not user_doc.exists:
-        raise HTTPException(status_code=403, detail="Chave de contribuinte inválida.")
+        raise HTTPException(
+            status_code=403, detail="Chave premium inválida ou não encontrada."
+        )
 
     user_data = user_doc.to_dict()
 
-    # 2. Verificação de Ativo
+    # 2. Verificação de Status Ativo
     if not user_data.get("ativo", True):
         raise HTTPException(
-            status_code=403, detail="Esta chave de contribuinte está desativada."
+            status_code=403, detail="Esta chave premium está desativada."
         )
 
-    # 3. Verificação de Expiração (Robusta para String ou Datetime)
+    # 3. Verificação de Expiração (Blindada contra diferentes formatos do Firestore)
     raw_expira = user_data.get("expira", "2026-12-31")
     try:
         if isinstance(raw_expira, str):
-            # Usamos datetime para ler a string e extraímos apenas a .date()
             data_expira = datetime.strptime(raw_expira.split("T")[0], "%Y-%m-%d").date()
         else:
-            # Se vier do Firestore como Timestamp, extraímos a .date()
             data_expira = (
                 raw_expira.date() if hasattr(raw_expira, "date") else raw_expira
             )
 
-        # O segredo: comparamos date.today() com a data de expiração
         if date.today() > data_expira:
             raise HTTPException(
-                status_code=403,
-                detail=f"Sua chave de contribuinte expirou em {str(data_expira)}",
+                status_code=403, detail=f"Sua licença expirou em {str(data_expira)}"
             )
     except HTTPException:
-        # Se já for uma HTTPException (expirado), repassa ela
         raise
     except Exception as e:
-        # Se for um erro de código (tipo o AttributeError anterior), mostra o erro real
         raise HTTPException(
             status_code=403, detail=f"Erro na validação de data: {str(e)}"
         )
 
-    # 4. Verificação de Cota (Opcional, pois o sync não gasta cota, só o processar)
+    # 4. Verificação de Cota de IA (Exclusivo do Cronograma)
     if exige_cota:
         uso = user_data.get("uso", 0)
         limite = user_data.get("limite", 0)
@@ -251,7 +247,7 @@ async def check_status(authorization: str = Header(None)):
     return {"status": "error", "message": "Sem dados"}
 
 
-@app.post("/validar-contribuinte")
+@app.post("/validar-premium")
 async def consultar_status_chave(req: ValidarChaveRequest):
     """Retorna os dados para o dashboard 'renderizarStatusIA' do frontend."""
     # O validar_usuario já cuida de lançar 400 ou 403 se a chave for ruim
@@ -265,6 +261,7 @@ async def consultar_status_chave(req: ValidarChaveRequest):
         "status": "success",
         "valido": True,
         "nome": user_data.get("nome", "Usuário"),
+        "email": user_data.get("email", "Usuário@email"),
         "tem_nuvem": user_data.get("possui_snapshot", False),
         "uso_atual": user_data.get("uso", 0),
         "cota_maxima": user_data.get("limite", 0),
@@ -283,12 +280,6 @@ async def exportar_para_drive(req: SyncRequest, authorization: str = Header(None
     # (acesso de chave em dicionário)
     email_google = await obter_email_google(req.google_token)
     email_firestore = user_data.get("email", "").lower().strip()
-
-    if not email_firestore:
-        # Se o email não estiver no documento, tentamos extrair da própria chave
-        # Já que sua chave segue o padrão email_key_...
-        if "_key_" in authorization:
-            email_firestore = authorization.split("_key_")[0].lower().strip()
 
     # Limpeza final para comparação justa
     email_firestore = email_firestore.lower().strip() if email_firestore else ""
@@ -357,12 +348,6 @@ async def importar_do_drive(req: TokenRequest, authorization: str = Header(None)
     # (acesso de chave em dicionário)
     email_google = await obter_email_google(req.google_token)
     email_firestore = user_data.get("email", "").lower().strip()
-
-    if not email_firestore:
-        # Se o email não estiver no documento, tentamos extrair da própria chave
-        # Já que sua chave segue o padrão email_key_...
-        if "_key_" in authorization:
-            email_firestore = authorization.split("_key_")[0].lower().strip()
 
     # Limpeza final para comparação justa
     email_firestore = email_firestore.lower().strip() if email_firestore else ""
@@ -554,7 +539,7 @@ async def sync_total_snapshot(req: SyncPayload, authorization: str = Header(None
 # Rota para o Front verificar se há algo novo ao carregar a página
 @app.get("/nuvem/restore")
 async def restore_from_cloud(authorization: str = Header(None)):
-    await validar_usuario(authorization)  # Valida se ainda é contribuinte
+    await validar_usuario(authorization)  # Valida se ainda é premium
 
     doc = db_firestore.collection("snapshots").document(authorization).get()
 

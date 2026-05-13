@@ -1,5 +1,5 @@
 // --- 📂 VARIÁVEIS GLOBAIS ---
-let app_version = "4.0.0";
+let app_version = "4.0.1";
 let activeEditors = {};
 let currentMateria = "";
 let tempImportData = null;
@@ -296,13 +296,13 @@ function configurarListeners() {
         });
     }
 
-    // --- ABA CONTRIBUINTE (CHAVE DE ACESSO) ---
+    // --- ABA PREMIUM (CHAVE DE ACESSO) ---
     const inputChave = select('inputChaveAcesso');
     if (inputChave) {
         inputChave.addEventListener('change', async () => {
             // Chamamos sua função de salvamento de chave
             // Geralmente essa função valida a chave e atualiza o estado global
-            await saveChaveContribuinte();
+            await saveChavePremium();
 
             // Opcional: Se a chave for válida, você pode disparar 
             // uma verificação de status imediata
@@ -532,8 +532,8 @@ window.onload = () => {
     }
     // ----------------------------------------------
 
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (chave && chave.includes("_key_")) {
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
+    if (chave && chave.includes("crono_premium_")) {
         const savedToken = sessionStorage.getItem('google_access_token');
         if (savedToken) {
             accessToken = savedToken;
@@ -541,7 +541,7 @@ window.onload = () => {
     }
     verificarBotaoPanico();
 
-    const chaveSalva = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
+    const chaveSalva = localStorage.getItem("config_vBorda_chave_premium") || "";
     document.getElementById('inputChaveAcesso').value = chaveSalva;
     renderizarEmailChave();
 
@@ -560,7 +560,7 @@ window.onload = () => {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
         const urlContador = "https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos";
         const htmlContador = `<img src="${urlContador}" alt="Contador de Acessos" />`;
-        const containers = document.querySelectorAll('#contador-container');
+        const containers = document.querySelectorAll('.contador-container');
         containers.forEach(div => div.innerHTML = htmlContador);
     }
 
@@ -574,7 +574,7 @@ window.onload = () => {
     const label_app_version = document.getElementById("app-version");
     label_app_version.innerText = app_version;
 
-    if (localStorage.getItem("config_vBorda_chave_contribuinte")) {
+    if (localStorage.getItem("config_vBorda_chave_premium")) {
         if (CloudSync.isPending) {
             console.log("⚠️ Detectada pendência de sincronia de uma sessão anterior.");
             setUnsavedChanges(true); // Já deixa o botão de salvar em alerta
@@ -594,9 +594,9 @@ if (btnSalvar) {
 
 async function confirmarRestauracaoForcadaNuvem() {
     // Só permite se houver uma chave
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (!chave || !chave.includes("_key_")) {
-        exibirAlerta("Você precisa ter uma chave de contribuinte válida para restaurar da nuvem.", "warning");
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
+    if (!chave || !chave.includes("crono_premium_")) {
+        exibirAlerta("Você precisa ter uma chave premium válida para restaurar da nuvem.", "warning");
         return;
     }
 
@@ -617,7 +617,7 @@ function fecharModalRestoreForcado(confirmado) {
 }
 
 async function executarDownloadForcadoFirestore() {
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
 
     closeModals(); // Fecha o modal de config
     mostrarOverlay("Buscando sua última versão na nuvem...");
@@ -664,7 +664,7 @@ function fecharModalChaveInvalida(confirmado) {
         }
     }
 
-    // Resolve a promessa para que o fluxo do saveChaveContribuinte continue
+    // Resolve a promessa para que o fluxo do saveChavePremium continue
     if (resolveChaveInvalida) resolveChaveInvalida(confirmado);
 }
 
@@ -699,7 +699,7 @@ async function confirmarTrocaModal(nomeUsuario, temPendencia, tipo = 'troca') {
         footerSimples.classList.add('d-none');
         footerConflito.classList.remove('d-none');
     } else {
-        titulo.innerHTML = '<i class="bi bi-person-exclamation me-2"></i>Troca de Contribuinte';
+        titulo.innerHTML = '<i class="bi bi-person-exclamation me-2"></i>Troca de Premium';
         msg.innerHTML = `Você está prestes a alternar para a conta de: <br><strong class="fs-5">${nomeUsuario}</strong>`;
         textoAviso.innerText = "Isso removerá as matérias locais atuais para carregar o progresso da nova conta.";
         footerSimples.classList.remove('d-none');
@@ -725,8 +725,8 @@ async function executarFluxoSalvamentoCompleto() {
         await saveAllRows();
 
         // 2. Só tentamos a nuvem se houver algo para salvar e a chave estiver lá
-        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-        if (chave && chave.includes("_key_")) {
+        const chave = localStorage.getItem("config_vBorda_chave_premium");
+        if (chave && chave.includes("crono_premium_")) {
             await persistirSnapshotTotal();
         }
     } catch (err) {
@@ -775,7 +775,7 @@ document.addEventListener('change', (e) => {
 document.getElementById('inputChaveAcesso').addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
         e.preventDefault(); // Impede o comportamento padrão do navegador
-        await saveChaveContribuinte();
+        await saveChavePremium();
     }
 });
 
@@ -857,10 +857,10 @@ document.querySelector('#tableBody').addEventListener('click', function (e) {
 
 // Adicione esta chamada no seu fluxo de inicialização
 async function inicializarSincronia() {
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
     const list = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
 
-    if (!chave || !chave.includes("_key_")) return;
+    if (!chave || !chave.includes("crono_premium_")) return;
 
     try {
         const response = await fetch(`${BASE_URL_SYNC}/nuvem/restore`, {
@@ -1193,8 +1193,8 @@ document.getElementById('btnConfirmarAcaoExclusao').addEventListener('click', ()
 
 
 window.addEventListener('beforeunload', (e) => {
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-    const temChave = chave && chave.includes("_key_");
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
+    const temChave = chave && chave.includes("crono_premium_");
 
     // 1. Se não tem chave, a sincronia de nuvem não existe
     if (!temChave) {
@@ -1448,18 +1448,18 @@ function renderizarStatusIA(data) {
 }
 
 // ==========================================
-// 🔑 GESTÃO DE ACESSO E CONTRIBUINTE
+// 🔑 GESTÃO DE ACESSO E PREMIUM
 // ==========================================
 
 /**
- * Salva a nova chave de contribuinte com segurança.
+ * Salva a nova chave premium com segurança.
  * Garante que os dados locais sejam limpos ou salvos 
  * antes da troca para evitar colisão entre usuários diferentes.
  */
-async function saveChaveContribuinte() {
+async function saveChavePremium() {
     const input = document.getElementById('inputChaveAcesso');
     const novaChave = input.value.trim();
-    const chaveAntiga = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
+    const chaveAntiga = localStorage.getItem("config_vBorda_chave_premium") || "";
 
     if (novaChave === chaveAntiga) return;
 
@@ -1485,7 +1485,7 @@ async function saveChaveContribuinte() {
             }
         }
         console.log("🔌 Modo local ativado.");
-        localStorage.setItem("config_vBorda_chave_contribuinte", "");
+        localStorage.setItem("config_vBorda_chave_premium", "");
         CloudSync.pending = false;
         renderizarEmailChave();
         checkInterfaceState();
@@ -1517,12 +1517,12 @@ async function saveChaveContribuinte() {
 
                 if (decisao === 'baixar_nuvem') {
                     limparDadosLocaisParaNovoUsuario(); // Limpa antes de baixar
-                    localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                    localStorage.setItem("config_vBorda_chave_premium", novaChave);
                     await executarDownloadForcadoFirestore();
                     return; // O download já faz o reload
                 } else if (decisao === 'manter_local') {
                     CloudSync.pending = true;
-                    localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                    localStorage.setItem("config_vBorda_chave_premium", novaChave);
                     await persistirSnapshotTotal();
                     exibirAlerta(`Bem-vindo de volta, ${dadosValidacao.nome}! Sincronizado com a nuvem.`, "success");
                     // Não limpamos aqui! Queremos manter o local.
@@ -1531,7 +1531,7 @@ async function saveChaveContribuinte() {
                     return;
                 }
             } else {
-                localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+                localStorage.setItem("config_vBorda_chave_premium", novaChave);
                 CloudSync.pending = true;
                 await persistirSnapshotTotal();
                 exibirAlerta(`Bem-vindo, ${dadosValidacao.nome}! Sincronizado com a nuvem.`, "success");
@@ -1542,7 +1542,7 @@ async function saveChaveContribuinte() {
             const decisao = await confirmarTrocaModal(dadosValidacao.nome, CloudSync.isPending, 'troca');
             if (decisao === 'trocar') {
                 limparDadosLocaisParaNovoUsuario();
-                localStorage.setItem("config_vBorda_chave_contribuinte", novaChave); // Grava a nova chave antes de resetar
+                localStorage.setItem("config_vBorda_chave_premium", novaChave); // Grava a nova chave antes de resetar
                 closeModals(); // Fecha o modal de config e o de troca
                 dispararAlertaReload(`Conta alterada para ${dadosValidacao.nome}. Reiniciando...`, 1);
                 return; // Mata a execução aqui
@@ -1557,7 +1557,7 @@ async function saveChaveContribuinte() {
         }
 
         // Finalização da ativação para os casos que não deram 'return' (manter_local ou novo login)
-        localStorage.setItem("config_vBorda_chave_contribuinte", novaChave);
+        localStorage.setItem("config_vBorda_chave_premium", novaChave);
         CloudSync.pending = false;
 
         renderizarStatusIA(dadosValidacao);
@@ -1572,7 +1572,7 @@ async function saveChaveContribuinte() {
         // --- 🚨 CHAVE INVÁLIDA ---
         const prosseguir = await confirmarChaveInvalidaModal();
         if (prosseguir) {
-            localStorage.setItem("config_vBorda_chave_contribuinte", "");
+            localStorage.setItem("config_vBorda_chave_premium", "");
             CloudSync.pending = false;
             renderizarEmailChave();
             checkInterfaceState();
@@ -1588,7 +1588,7 @@ async function saveChaveContribuinte() {
  */
 async function validarChaveNoServidor(chave) {
     try {
-        const response = await fetch(`${BASE_URL_SYNC}/validar-contribuinte`, {
+        const response = await fetch(`${BASE_URL_SYNC}/validar-premium`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chave: chave })
@@ -1668,7 +1668,7 @@ function limparEstadoLocalTotal() {
 async function renderizarEmailChave() {
     const input = document.getElementById('inputChaveAcesso');
     const display = document.getElementById('displayEmailChave');
-    const label = document.getElementById('labelEmailContribuinte');
+    const label = document.getElementById('labelEmailPremium');
     const containerStatus = document.getElementById('containerStatusIA');
     const valor = input.value.trim();
 
@@ -1681,7 +1681,7 @@ async function renderizarEmailChave() {
     }
 
     try {
-        const response = await fetch(`${BASE_URL_SYNC}/validar-contribuinte`, {
+        const response = await fetch(`${BASE_URL_SYNC}/validar-premium`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chave: valor })
@@ -1691,7 +1691,7 @@ async function renderizarEmailChave() {
 
         if (!response.ok) {
             // O backend vai retornar 400 ou 403. Tratamos como inválida visualmente.
-            label.innerText = valor.includes("_key_") ? valor.split("_key_")[0] : "Usuário";
+            label.innerText = "Usuário";
             input.classList.remove('is-valid');
             input.classList.add('is-invalid');
             renderizarStatusIA({
@@ -1705,9 +1705,13 @@ async function renderizarEmailChave() {
 
         // Sucesso: Chave válida no Python e Firestore
         if (dados.status === "success" && dados.valido) {
-            label.innerText = valor.includes("_key_") ? valor.split("_key_")[0] : "Usuário Ativo";
-            display.style.display = "block";
-            input.classList.remove('is-invalid');
+            const display = document.getElementById('displayChaveAtiva');
+            const label = document.getElementById('labelEmailPremium'); // Reutilizando seu label original
+
+            // Exibimos o e-mail que o BACKEND nos confirmou que é o dono da chave
+            if (label) label.innerText = dados.email || "Usuário Premium";
+            if (display) display.style.display = "block";
+
             input.classList.add('is-valid');
             renderizarStatusIA(dados);
         }
@@ -1725,8 +1729,8 @@ async function renderizarEmailChave() {
 function acionarIA() { document.getElementById('iaFile').click(); }
 
 async function processarArquivoIA(input) {
-    const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (!chaveContribuinte) {
+    const chavePremium = localStorage.getItem("config_vBorda_chave_premium");
+    if (!chavePremium) {
         exibirAlerta("Chave de Acesso não encontrada!", "warning");
         input.value = "";
         return;
@@ -1744,7 +1748,7 @@ async function processarArquivoIA(input) {
             method: "POST",
             headers: {
                 // Esta chave deve ser IGUAL à CHAVE_CONTRIBUINTE_VALIDA no seu main.py
-                "authorization": chaveContribuinte
+                "authorization": chavePremium
             },
             body: formData
         });
@@ -2179,8 +2183,8 @@ function saveData() {
     setUnsavedChanges(false);
 
     // MARCA QUE A NUVEM ESTÁ DESATUALIZADA
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (!chave || !chave.includes("_key_")) {
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
+    if (!chave || !chave.includes("crono_premium_")) {
         localStorage.setItem("last_local_save_time", new Date().toISOString());
     } else {
         CloudSync.pending = true;
@@ -2236,8 +2240,8 @@ function processarRestauracaoTotal(data) {
 }
 
 async function persistirSnapshotTotal() {
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (!chave || !chave.includes("_key_")) return;
+    const chave = localStorage.getItem("config_vBorda_chave_premium");
+    if (!chave || !chave.includes("crono_premium_")) return;
     if (CloudSync.isProcessing) return;
     if (!CloudSync.isPending) return;
 
@@ -2412,8 +2416,8 @@ async function saveAllRows() {
 
         // --- SALVAMENTO NA NUVEM (SNAPSHOT TOTAL) ---
         // Aqui integramos a persistência atômica que revisamos antes
-        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-        if (chave && chave.includes("_key_")) {
+        const chave = localStorage.getItem("config_vBorda_chave_premium");
+        if (chave && chave.includes("crono_premium_")) {
             // Chamamos a função que verifica o hash antes de fazer o upload
             await persistirSnapshotTotal();
         } else {
@@ -2777,7 +2781,7 @@ function executeFullMateriaDeletion() {
 
 
 function checkInterfaceState() {
-    const chave = localStorage.getItem("config_vBorda_chave_contribuinte") || "";
+    const chave = localStorage.getItem("config_vBorda_chave_premium") || "";
     const hasM = !!currentMateria;
 
     // 1. Botões básicos da tabela (Salvar, Editar, Excluir)
@@ -2792,7 +2796,7 @@ function checkInterfaceState() {
     const tit = document.getElementById('materiaTitulo');
     if (tit) tit.disabled = !hasM;
 
-    // 2. Elementos que requerem Chave de Contribuinte
+    // 2. Elementos que requerem Chave de Premium
     const btnAuth = document.getElementById('btn-google-auth');
     const btExport = document.getElementById('btn-google-export');
     const btImport = document.getElementById('btn-google-import');
@@ -2804,7 +2808,7 @@ function checkInterfaceState() {
 
 
 
-    if (chave.trim() !== "" && chave.includes("_key_")) {
+    if (chave.trim() !== "" && chave.includes("crono_premium_")) {
         // MOSTRAR elementos de contribuição
         if (driveTab) driveTab.style.setProperty('display', 'block', 'important');
         if (iaTab) iaTab.style.setProperty('display', 'block', 'important');
@@ -2956,8 +2960,8 @@ async function confirmImport(mode, isSilent = false) {
         localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
 
         // --- SINCRONIA PÓS-IMPORTAÇÃO ---
-        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-        if (chave && chave.includes("_key_")) {
+        const chave = localStorage.getItem("config_vBorda_chave_premium");
+        if (chave && chave.includes("crono_premium_")) {
             console.log("📤 Dados importados localmente. Sincronizando nova mesclagem com a nuvem...");
             await persistirSnapshotTotal();
         }
@@ -3406,8 +3410,8 @@ async function executarImportacaoSeletiva() {
 
         localStorage.setItem(LIST_KEY, JSON.stringify([...new Set(currentList)]));
 
-        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
-        if (chave && chave.includes("_key_")) {
+        const chave = localStorage.getItem("config_vBorda_chave_premium");
+        if (chave && chave.includes("crono_premium_")) {
             CloudSync.pending = true;
             await persistirSnapshotTotal();
         }
@@ -3494,7 +3498,7 @@ function initTokenClient() {
 function iniciarMonitoramentoRemoto() {
     // Verifica a cada 2 minutos (60000ms * 2) - Equilíbrio entre real-time e economia
     setInterval(async () => {
-        const chave = localStorage.getItem("config_vBorda_chave_contribuinte");
+        const chave = localStorage.getItem("config_vBorda_chave_premium");
 
         // SÓ CHECA SE:
         // 1. Tem chave configurada
@@ -3593,8 +3597,8 @@ async function getDadosJsonLocais() {
 }
 
 async function exportarParaGoogleDrive() {
-    const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
-    if (!chaveContribuinte) {
+    const chavePremium = localStorage.getItem("config_vBorda_chave_premium");
+    if (!chavePremium) {
         exibirAlerta("Configure sua Chave de Acesso primeiro.", "warning");
         return;
     }
@@ -3622,7 +3626,7 @@ async function exportarParaGoogleDrive() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "authorization": chaveContribuinte
+                "authorization": chavePremium
             },
             body: JSON.stringify(payloadParaPython)
         });
@@ -3681,11 +3685,11 @@ async function restaurarGoogleDrive() {
             btnOriginal.innerHTML = '<i class="fas fa-cloud-download-alt fa-spin"></i> Buscando...';
         }
 
-        const chaveContribuinte = localStorage.getItem("config_vBorda_chave_contribuinte");
+        const chavePremium = localStorage.getItem("config_vBorda_chave_premium");
 
         const response = await fetch(`${BASE_URL_SYNC}/drive/importar`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "authorization": chaveContribuinte },
+            headers: { "Content-Type": "application/json", "authorization": chavePremium },
             body: JSON.stringify({
                 google_token: accessToken // O nome da chave aqui deve ser igual ao da classe TokenRequest
             })
@@ -3787,7 +3791,7 @@ window.syncFromModal = syncFromModal;
 window.syncModalLabels = syncModalLabels;
 
 // --- Segurança e Recuperação ---
-window.saveChaveContribuinte = saveChaveContribuinte;
+window.saveChavePremium = saveChavePremium;
 window.restaurarSnapshotEmergencial = restaurarSnapshotEmergencial;
 window.fecharModalRestoreForcado = fecharModalRestoreForcado;
 window.fecharModalChaveInvalida = fecharModalChaveInvalida;
