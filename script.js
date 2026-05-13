@@ -558,7 +558,7 @@ window.onload = () => {
     checkInterfaceState();
 
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-        const urlContador = "https://hits.sh/edsonperotoni.github.io/Cronograma.svg?color=0d6efd&label=acessos";
+        const urlContador = "https://hits.sh/cronograma-materias.com.br/Cronograma.svg?color=0d6efd&label=acessos";
         const htmlContador = `<img src="${urlContador}" alt="Contador de Acessos" />`;
         const containers = document.querySelectorAll('.contador-container');
         containers.forEach(div => div.innerHTML = htmlContador);
