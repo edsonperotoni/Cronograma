@@ -36,7 +36,7 @@ Uma aplicação full-stack de alta performance para organização de rotinas de 
 * **Linguagem:** Python 3.11+.
 * **Framework:** FastAPI + Uvicorn (Arquitetura assíncrona).
 * **Banco de Dados:** Google Firestore.
-* **Hospedagem:** Google Cloud Run (Serverless).
+* **Hospedagem:** Google Cloud Run (Serverless) para backend e GitHub Pages para frontend.
 
 ## 📦 Estrutura do Projeto
 ```text
